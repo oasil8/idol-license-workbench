@@ -24,3 +24,9 @@ export function summaryReason(summary){
  const {counts,pending,assets}=summary;
  return counts.conflict?`${counts.conflict}개 사용 자료가 현재 사용 조건과 충돌합니다.`:pending?`${pending}개 자료의 실제 사용 여부를 먼저 선택하세요.`:!assets.length?'실제 사용할 자료가 선택되지 않았습니다.':counts.review?`${counts.review}개 사용 자료의 근거·필수 조건을 보완하세요.`:'선택한 자료의 허용 근거가 확인되었습니다. 표시된 사용 조건을 이행하세요.';
 }
+
+export function contextConfirmationNotice(project,context=project.context){
+ if(conditionsConfirmed(project))return '';
+ const message='이 프로젝트의 사용 조건이 아직 확인되지 않았습니다. 상업 목적·외부 배포 여부를 실제 사용 방식에 맞게 확인한 뒤 적용하세요.';
+ return message+(['commercial','distribute','modified','network'].every(key=>!context?.[key])?' 현재 비상업·비배포 기준입니다.':'');
+}

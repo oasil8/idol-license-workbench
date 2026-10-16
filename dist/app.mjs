@@ -6,7 +6,7 @@ import {brandIcon} from './brand-icons.mjs';
 import {createCatalogSearch} from './catalog-search.mjs';
 import {compactResultMarkup,reviewStampMarkup,permissionMarkup,reviewReason,outcomeReason,resultItems} from './result-sections.mjs';
 import {cleanCandidates,sourceSearchName,verificationLabel,verificationMarkup} from './source-search.mjs';
-import {conditionsConfirmed,conditionsPrompt,selectionOf,selectionLabels,selectedAssets,projectSummary,summaryReason,commitChange} from './workflow.mjs';
+import {contextConfirmationNotice,conditionsConfirmed,conditionsPrompt,selectionOf,selectionLabels,selectedAssets,projectSummary,summaryReason,commitChange} from './workflow.mjs';
 import {assetSources,sourceTypes,sourceGroup,sourceSearchUrl,officialSuggestions} from './evidence-sources.mjs';
 import {reviewSourceConditions,supplementCodeLicense} from './official-sources.mjs';
 import {reviewAssignment} from './assignment.mjs';
@@ -64,6 +64,7 @@ function assessment(a,showDecision=true){
 function render(){const p=project();
  $('projectSelect').innerHTML=projects.map(x=>`<option value="${x.id}" ${x.id===current?'selected':''}>${esc(x.name)}</option>`).join('');
  if(contextDraftProject&&contextDraftProject!==current){contextDraft=undefined;contextDraftProject='';$('contextPending').textContent='';}
+ renderContextConfirmation(p,contextDraftProject===current&&contextDraft||p.context);
  $('projectTitle').textContent=p.name;const purpose={general:'일반 이용 · 직접 설정',steam:'Steam 출시',enterprise:'기업 사용·납품',conference:'학회·논문 공개',research:'연구 프로젝트'}[p.context.platform];const flags=[['commercial','상업 목적'],['distribute','외부 배포'],['modified','자료 수정'],['network','네트워크 서비스']].filter(([key])=>p.context[key]).map(([,label])=>label);const contextText=purpose+' · '+(flags.join(' · ')||'추가 조건 없음');$('contextSummary').textContent=contextText;$('reportContext').textContent='검토 기준: '+contextText+' · 결과는 적용 라이선스·계약상 허용 여부입니다. 실제 자료의 권리는 별도 확인 사항을 보세요.';
  for(const field of ['platform','commercial','distribute','modified','network']){if(field==='platform')$(field).value=(contextDraftProject===current&&contextDraft||p.context)[field];else $(field).checked=(contextDraftProject===current&&contextDraft||p.context)[field];}
  const summary=projectSummary(p),counts=summary.counts;
@@ -101,7 +102,8 @@ $('reportContent').onclick=e=>{const b=e.target.closest('[data-edit]');if(b){ope
 document.querySelectorAll('[data-view]').forEach(b=>b.onclick=()=>setView(b.dataset.view));
 
 function readContextDraft(){return {platform:$('platform').value,...Object.fromEntries(['commercial','distribute','modified','network'].map(k=>[k,$(k).checked]))};}
-function markContextDraft(){contextDraftProject=current;contextDraft=readContextDraft();$('contextPending').textContent='아직 적용하지 않은 변경입니다.';}
+function renderContextConfirmation(p,context){const notice=$('contextConfirmationNotice');notice.textContent=contextConfirmationNotice(p,context);notice.hidden=!notice.textContent;}
+function markContextDraft(){contextDraftProject=current;contextDraft=readContextDraft();renderContextConfirmation(project(),contextDraft);$('contextPending').textContent='아직 적용하지 않은 변경입니다.';}
 $('platform').onchange=()=>{const defaults=purposeDefaults($('platform').value);for(const k of ['commercial','distribute','modified','network'])$(k).checked=defaults[k];markContextDraft();};
 for(const k of ['commercial','distribute','modified','network'])$(k).onchange=markContextDraft;
 $('applyContext').onclick=()=>{
