@@ -84,3 +84,12 @@ test('resolved Tripo plan removes obsolete plan task while unknown retains it in
  assert.equal(norm(textOf(await pages({...sample,assets:[a]}))).includes(norm(task)),planType==='unknown');
  }
 });
+
+test('copyleft scope review is one check, never an obligation, in web and actual PDF',async()=>{
+ for(const license of ['GPL-3.0','LGPL-2.1-only','AGPL-3.0-only']){
+ const a={...sample.assets[4],license},r=evaluate(a,sample.context),items=resultItems(r,outcomeReason(a,r));
+ assert.ok(items.conditions.every(t=>!/(검토|확인)[.]?$/.test(t)));assert.equal(items.checks.filter(t=>t.includes('소스 제공')).length,1);
+ assert.equal(markup(a).split('소스 제공·재링크').length-1,1);
+ const pdf=norm(textOf(await pages({...sample,assets:[a]})));assert.equal(pdf.split(norm('소스 제공·재링크')).length-1,1);assert.ok(!pdf.includes(norm('소스 제공 의무 검토')));
+ }
+});
