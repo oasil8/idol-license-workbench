@@ -68,7 +68,7 @@ export const reportPrintCss = `
  .result-card,.assessment-sources,.material-evidence,.assignment-source,.verification-record {
   border:0!important; border-radius:0!important; box-shadow:none!important;
  }
- pre,blockquote { white-space:pre-wrap!important; overflow-wrap:anywhere!important; word-break:break-word; font:10pt/1.6 "Malgun Gothic",sans-serif; }
+ pre,blockquote { white-space:pre-wrap!important; overflow-wrap:anywhere!important; word-break:keep-all; font:10pt/1.6 "Malgun Gothic",sans-serif; }
  h2,h3,h4,summary { break-after:avoid; overflow-wrap:anywhere; }
  p,li { orphans:3; widows:3; overflow-wrap:anywhere; }
  .print-appendix { break-before:page; border:0; padding:0; }
@@ -78,5 +78,18 @@ export const reportPrintCss = `
  table { table-layout:fixed; width:100%; min-width:0!important; }
  td,th { overflow-wrap:anywhere; }
  thead { display:table-header-group; }
+
+ .result-card { break-inside:avoid; margin:12pt 0; }
+ .result-card p,.result-card li { font-size:10pt; line-height:1.45; margin:4pt 0; }
+ .result-card h3,.result-card h4 { margin:8pt 0 4pt; }
+ .result-card ul,.result-card details { margin:6pt 0; }
+ .result-card blockquote { margin:6pt 12pt; }
+ p,li,blockquote,h2,h3,h4,summary,td,th { word-break:keep-all; overflow-wrap:anywhere; }
+ #overall.conflict h2 { color:#9e3025; }
+ #overall.review h2 { color:#775310; }
+ #overall.conditions h2 { color:#16613c; }
+ .badge,#overall h2 { print-color-adjust:exact; -webkit-print-color-adjust:exact; }
+ .review-reason { color:#263e38; }
+
 }
 `;
