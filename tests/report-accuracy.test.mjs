@@ -43,3 +43,8 @@ test('rule date never impersonates an asset review in web or PDF',async()=>{
  assert.match(markup(sample.assets[0]),/검토일: 2026-10-16/);assert.match(textOf(await pages({...sample,assets:[sample.assets[0]]})),/검토일/);
  assert.deepEqual(evaluate({...a,sourceConditionsConfirmed:true,sourceConditionsDate:'2026-10-15'},sample.context).reviewDates,['2026-10-15']);
 });
+
+test('unconfirmed PDF retains actual counts without any verdict',async()=>{
+ const p={...sample,contextConfirmed:false},data=pdfReportData(p);assert.equal(data.usedCount,6);assert.equal(data.pending,1);assert.equal(data.items.length,0);
+ const text=textOf(await pages(p));assert.ok(norm(text).includes(norm('실제 사용 6개 · 선택 전 1개')));assert.doesNotMatch(text,/사용 가능|판단 보류|사용 불가/);
+});

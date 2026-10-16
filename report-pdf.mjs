@@ -2,7 +2,7 @@ import PDFDocument from 'pdfkit';
 import {existsSync} from 'node:fs';
 import {join} from 'node:path';
 import {evaluate,statuses,validateProject} from './dist/core.mjs';
-import {conditionsConfirmed,conditionsPrompt,projectSummary,summaryReason} from './dist/workflow.mjs';
+import {conditionsConfirmed,conditionsPrompt,selectedAssets,selectionOf,projectSummary,summaryReason} from './dist/workflow.mjs';
 import {displaySources,resultItems,outcomeReason} from './dist/result-sections.mjs';
 import {assetSources,sourceGroup} from './dist/evidence-sources.mjs';
 
@@ -12,7 +12,7 @@ export function originalKey(text) {
 }
 export function pdfReportData(input, includeOriginals=false) {
  const p=validateProject(input,{local:true});
- if(!conditionsConfirmed(p))return {name:p.name,context:p.context,status:conditionsPrompt,reason:'2단계에서 실제 사용 조건을 확인하고 적용하세요.',pending:0,items:[],originals:[],contextConfirmed:false};
+ if(!conditionsConfirmed(p))return {name:p.name,context:p.context,status:conditionsPrompt,reason:'2단계에서 실제 사용 조건을 확인하고 적용하세요.',usedCount:selectedAssets(p).length,pending:p.assets.filter(a=>selectionOf(a)==='pending').length,items:[],originals:[],contextConfirmed:false};
  const summary=projectSummary(p), originals=[];
  const add=(label,text)=>{if(!text?.trim())return;const key=originalKey(text);const existing=originals.find(x=>x.key===key);if(existing){if(!existing.labels.includes(label))existing.labels.push(label);}else originals.push({key,labels:[label],text});};
  const items=summary.assets.map(a=>{
@@ -30,7 +30,7 @@ export function pdfReportData(input, includeOriginals=false) {
    scope:({code:'코드·오픈소스 자체',model:'모델·가중치',service:'서비스·API 계약',bundle:'패키지·번들 전체'}[a.reviewScope]||({output:'AI 생성 결과물',weights:'모델 가중치',service:'API·서비스 계약',training:'학습·미세조정',other:'기타 이용'}[a.scope])||'등록한 자료 범위')};
  });
  if(includeOriginals)for(const d of p.assignment?.documents||[])add(d.name+' · '+(d.role==='feedback'?'피드백':'검토 자료'),d.text);
- return {name:p.name,context:p.context,status:statuses[summary.status],reason:summaryReason(summary),pending:summary.pending,items,originals};
+ return {name:p.name,context:p.context,status:statuses[summary.status],reason:summaryReason(summary),usedCount:summary.assets.length,pending:summary.pending,items,originals};
 }
 
 export async function createReportPdf(project,{includeOriginals=false}={}) {
@@ -48,7 +48,7 @@ export async function createReportPdf(project,{includeOriginals=false}={}) {
  heading('전체 결과: '+data.status);text(data.reason);
  const c=data.context;
  text(`사용 목적: ${ {general:'일반 이용',research:'연구',conference:'학회·논문',enterprise:'기업·납품',steam:'Steam 출시'}[c.platform]} · 상업 ${c.commercial?'예':'아니요'} · 배포 ${c.distribute?'예':'아니요'} · 수정 ${c.modified?'예':'아니요'} · 네트워크 ${c.network?'예':'아니요'}`,8);
- text(`실제 사용 ${data.items.length}개 · 선택 전 ${data.pending}개 · 전체 원문 부록 ${includeOriginals?'포함':'제외'}`,8);
+ text(`실제 사용 ${data.usedCount}개 · 선택 전 ${data.pending}개 · 전체 원문 부록 ${includeOriginals?'포함':'제외'}`,8);
  for(const [i,item] of data.items.entries()) {
   heading(`${i+1}. ${item.name} — ${item.status}`,12);text(item.reason);
   if(item.ruleDate)text('판정 규칙 기준일: '+item.ruleDate,8);
