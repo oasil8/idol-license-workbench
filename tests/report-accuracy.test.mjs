@@ -69,3 +69,10 @@ test('PDF wraps Korean words at spaces and long URLs stay inside page margins',a
  const long={...sample.assets[3],evidence:'https://github.com/mrdoob/three.js/blob/dev/'+ 'a'.repeat(300)+'/LICENSE'};
  for(const page of await pages({...sample,assets:[long]}))for(const item of page)if(item.str.trim())assert.ok(item.transform[4]>=41&&item.transform[4]+item.width<=554,item.str);
 });
+
+test('original appendix explains stored originals and built-in excerpts, even when empty',async()=>{
+ for(const p of [sample,{...sample,assets:[sample.assets[0]]}]){
+ const text=norm(textOf(await pages(p,{includeOriginals:true}))),title=norm('부록 · 전체 보관 원문'),notice=norm('앱에 저장된 원문만 포함합니다. 내장 검토 기록은 근거 문장과 링크만 본문에 표시합니다.');
+ assert.ok(text.indexOf(title)>=0);assert.ok(text.indexOf(notice)>text.indexOf(title));
+ }
+});

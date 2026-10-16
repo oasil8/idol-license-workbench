@@ -103,8 +103,10 @@ export async function createReportPdf(project,{includeOriginals=false}={}) {
   if(item.evidence&&!item.sources.length)text('입력 근거: '+item.evidence,8);
  }
  text('검토 기록이며 출시 승인·법률 의견이 아닙니다. 확인 날짜와 실제 적용 범위를 함께 확인하세요.',8,'#65766e');
- if(includeOriginals&&data.originals.length){
+ if(includeOriginals){
   doc.addPage();heading('부록 · 전체 보관 원문',15);
+  text('앱에 저장된 원문만 포함합니다. 내장 검토 기록은 근거 문장과 링크만 본문에 표시합니다.',9);
+  if(!data.originals.length)text('이 프로젝트에 저장된 원문이 없습니다.',9);
   text('추출 공백을 정리한 내용이 동일한 원문만 합칩니다. 다른 버전·조건은 별도로 보존합니다.',8);
   for(const [i,original] of data.originals.entries()){
    heading(`원문 ${i+1} · ${original.labels.join(' / ')}`,10);
