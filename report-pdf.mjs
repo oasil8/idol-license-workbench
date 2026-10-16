@@ -6,6 +6,8 @@ import {conditionsConfirmed,conditionsPrompt,selectedAssets,selectionOf,projectS
 import {displaySources,resultItems,outcomeReason} from './dist/result-sections.mjs';
 import {assetSources,sourceGroup} from './dist/evidence-sources.mjs';
 
+export const verdictColor=status=>({[statuses.conflict]:'#9e3025',[statuses.review]:'#775310',[statuses.conditions]:'#16613c'}[status]||'#263e38');
+
 // Ignore extraction whitespace only; changed words/conditions stay separate.
 export function originalKey(text) {
  return String(text).normalize('NFC').replace(/\s+/g,' ').trim();
@@ -42,10 +44,10 @@ export async function createReportPdf(project,{includeOriginals=false}={}) {
  const width=doc.page.width-84;
  const room=(height=40)=>{if(doc.y+height>doc.page.height-44)doc.addPage();};
  const text=(value,size=9,color='#263e38')=>{doc.fontSize(size).fillColor(color).text(String(value??''),42,doc.y,{width,lineGap:2,paragraphGap:3});};
- const heading=(value,size=12)=>{room(55);doc.moveDown(.4);text(value,size,'#086f64');doc.moveDown(.2);};
+ const heading=(value,size=12,color='#086f64')=>{room(55);doc.moveDown(.4);text(value,size,color);doc.moveDown(.2);};
  const list=(title,values)=>{heading(title,10);if(values.length)for(const value of values)text('• '+value);else text('추가 항목 없음',9,'#65766e');};
  text(data.name,18);text('IDOL License WORKBENCH · '+new Date().toLocaleDateString('ko-KR',{timeZone:'Asia/Seoul'}),8);
- heading('전체 결과: '+data.status);text(data.reason);
+ heading('전체 결과: '+data.status,12,verdictColor(data.status));text(data.reason);
  if(data.items.length){
   const columns=[42,124,229],widths=[82,105,width-187];
   const row=(values,header=false)=>{
@@ -53,7 +55,7 @@ export async function createReportPdf(project,{includeOriginals=false}={}) {
    const height=Math.max(26,...values.map((v,i)=>doc.heightOfString(v,{width:widths[i]-12})+14));
    if(doc.y+height>doc.page.height-44){doc.addPage();row(['항목','판정','한 줄 이유'],true);}
    const y=doc.y;doc.save().rect(42,y,width,height).fill(header?'#e8efec':'#ffffff').restore();
-   for(let i=0;i<values.length;i++){doc.fontSize(header?9:8).fillColor('#263e38').text(values[i],columns[i]+6,y+6,{width:widths[i]-12});}
+   for(let i=0;i<values.length;i++){doc.fontSize(header?9:8).fillColor(!header&&i===1?verdictColor(values[i]):'#263e38').text(values[i],columns[i]+6,y+6,{width:widths[i]-12});}
    doc.save().strokeColor('#c7d4cf').moveTo(42,y+height).lineTo(42+width,y+height).stroke().restore();doc.y=y+height;
   };
   row(['항목','판정','한 줄 이유'],true);
@@ -66,7 +68,7 @@ export async function createReportPdf(project,{includeOriginals=false}={}) {
  text(`실제 사용 ${data.usedCount}개 · 선택 전 ${data.pending}개 · 전체 원문 부록 ${includeOriginals?'포함':'제외'}`,8);
  if(data.items.length)doc.addPage();
  for(const [i,item] of data.items.entries()) {
-  heading(`${i+1}. ${item.name} — ${item.status}`,12);text(item.reason);
+  heading(`${i+1}. ${item.name} — ${item.status}`,12,verdictColor(item.status));text(item.reason);
   if(item.ruleDate)text('판정 규칙 기준일: '+item.ruleDate,8);
   for(const date of item.reviewDates||[])text('검토일: '+date,8);for(const warning of item.reviewWarnings||[])text(warning,9);
   list('지켜야 할 조건',item.conditions);list('확인 필요한 부분',item.checks);

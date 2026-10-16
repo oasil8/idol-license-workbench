@@ -54,3 +54,10 @@ test('first PDF page summarizes all used items, conflicts first, and long tables
  assert.ok(first.indexOf('Tripo')<first.indexOf('Midjourney'));assert.ok(first.indexOf('Midjourney')<first.indexOf('Meshy'));
  const many={...sample,assets:Array.from({length:45},(_,i)=>({...sample.assets[3],name:'Library '+i}))};const rendered=await pages(many);assert.ok(textOf([rendered[1]]).includes('한 줄 이유'));assert.ok(textOf(rendered).includes('Library 44'));
 });
+
+test('PDF uses three distinct verdict colors and retains text labels',async()=>{
+ const {OPS}=await import('pdfjs-dist/legacy/build/pdf.mjs');const doc=await getDocument({data:new Uint8Array(await createReportPdf(sample)),useSystemFonts:true}).promise;
+ const ops=await (await doc.getPage(1)).getOperatorList();const colors=ops.fnArray.flatMap((op,i)=>op===OPS.setFillRGBColor?[String(ops.argsArray[i])]:[]);
+ for(const hex of ['#9e3025','#775310','#16613c'])assert.ok(colors.some(c=>c===hex||c===hex.slice(1).match(/../g).map(x=>parseInt(x,16)).join(',')),hex+JSON.stringify(colors));
+ const first=textOf([(await pages())[0]]);for(const label of ['사용 불가','판단 보류','사용 가능'])assert.ok(first.includes(label));
+});
