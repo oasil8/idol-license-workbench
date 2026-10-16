@@ -23,6 +23,8 @@ export function officialSuggestions(a){
  const references=referenceCatalog.filter(x=>x.name.toLowerCase()===name).map(x=>({type:'suggested',label:x.name+' 공식 프로젝트 · 적용 자료 확인',url:x.url,note:'프로젝트 참고 링크입니다. 실제 버전·모델·서비스 계약의 이용 허가를 확인한 기록이 아닙니다.'}));
  const codeReferences=codeLicenseRecords.filter(r=>r.names.some(n=>n.normalize('NFKC').toLowerCase()===name)).flatMap(r=>[{type:'suggested',label:r.names[0]+' 공식 라이선스',url:r.url,date:r.date,note:r.scope+'에 대한 참고 링크입니다. 다른 버전·배포판·서비스 계약에는 자동 적용하지 않습니다.'},{type:'suggested',label:r.names[0]+' 공식 프로젝트',url:r.home,date:r.date,note:r.scope}]);
  const result=references.concat(codeReferences,suggestions.filter(([names])=>names.some(n=>n.toLowerCase()===name)||(a.provider==='huggingface'&&names[0]==='Hugging Face')).map(([,label,url,note])=>({type:'suggested',label,url,date:'2026-10-15',note:'공식 페이지 주소를 확인한 날짜입니다. 이 자료의 허가 근거로 검증한 것은 아닙니다. '+note})));
+ const known=officialSource(a);
+ if(!result.length&&known)result.push({type:'suggested',label:known.title,url:known.url,note:'앱에 등록된 공식 출처의 참고 링크입니다. 실시간 조회나 개별 자료의 이용 허가 확인이 아닙니다. 적용 범위: '+known.scope});
  return [...new Map(result.map(source=>[source.url,source])).values()];
 }
 export function sourceGroup(s){

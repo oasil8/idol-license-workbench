@@ -35,3 +35,10 @@ test('code projects expose exact official licenses without duplicate homepage li
  assert.equal(new Set(refs.map(r=>r.url)).size,refs.length);
  assert.ok(refs.every(r=>r.type==='suggested'));
 });
+
+test('catalog reuses known official sources when a separate suggestion is missing',async()=>{
+ const {catalog}=await import('../dist/catalog.mjs');const {officialSource}=await import('../dist/official-sources.mjs');
+ for(const item of catalog.filter(a=>officialSource(a))){const before=commercialVerdict(item,context),refs=officialSuggestions(item);assert.ok(refs.length,item.name);assert.ok(refs.every(r=>r.type==='suggested'));assert.deepEqual(commercialVerdict(item,context),before);}
+ for(const id of ['tripo','openai','anthropic']){const item=catalog.find(a=>a.id===id),ref=officialSuggestions(item)[0];assert.equal(ref.url,officialSource(item).url);assert.equal(sourceGroup(ref),'참고 링크 · 적용 미확인');assert.equal(ref.date,undefined);assert.ok(!ref.clause&&!ref.verification);}
+ assert.deepEqual(officialSuggestions({name:'Unknown Service',provider:'other'}),[]);
+});
