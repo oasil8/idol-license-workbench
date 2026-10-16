@@ -43,7 +43,7 @@ export function resultItems(r,reason=''){
  return {conditions:unique((r.tasks||[]).filter(t=>!r.conflicts?.includes(t))),checks:unique([...(r.status==='review'?r.blockers||[]:[]),...(r.humanChecks||[])])};
 }
 
-export function reviewStampMarkup(r,esc){return (r.reviewDates||[]).map(d=>'<small>검토일: '+esc(d)+'</small>').join('')+(r.reviewWarnings||[]).map(w=>'<p class="warning">'+esc(w)+'</p>').join('');}
+export function reviewStampMarkup(r,esc){return (r.ruleDate?'<small>판정 규칙 기준일: '+esc(r.ruleDate)+'</small>':'')+(r.reviewDates||[]).map(d=>'<small>검토일: '+esc(d)+'</small>').join('')+(r.reviewWarnings||[]).map(w=>'<p class="warning">'+esc(w)+'</p>').join('');}
 
 export function displaySources(r,rows){
  const dates=new Set(r.reviewDates||[]);let marked=false;

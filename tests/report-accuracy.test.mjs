@@ -36,3 +36,10 @@ test('obligations exclude unresolved checks and shared checks occur once per ite
  for(const phrase of ['과거 생성물','제3자 권리'])assert.ok(text.split(norm(phrase)).length-1<=1,item.name+phrase);
  }
 });
+
+test('rule date never impersonates an asset review in web or PDF',async()=>{
+ const a=sample.assets[3];assert.doesNotMatch(markup(a),/검토일/);assert.match(markup(a),/판정 규칙 기준일/);
+ const text=textOf(await pages({...sample,assets:[a]}));assert.doesNotMatch(text,/검토일/);assert.ok(norm(text).includes(norm('판정 규칙 기준일: 2026-10-16')));
+ assert.match(markup(sample.assets[0]),/검토일: 2026-10-16/);assert.match(textOf(await pages({...sample,assets:[sample.assets[0]]})),/검토일/);
+ assert.deepEqual(evaluate({...a,sourceConditionsConfirmed:true,sourceConditionsDate:'2026-10-15'},sample.context).reviewDates,['2026-10-15']);
+});
