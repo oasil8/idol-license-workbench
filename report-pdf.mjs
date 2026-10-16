@@ -1,4 +1,4 @@
-import {resultBodyLayout as pdfBodyLayout} from './dist/result-layout.mjs';
+import {resultBodyLayout as pdfBodyLayout,commonGroups} from './dist/result-layout.mjs';
 import {normalizeAsset,assetScope} from './dist/asset-normalization.mjs';
 import PDFDocument from 'pdfkit';
 import {existsSync} from 'node:fs';
@@ -115,9 +115,11 @@ export async function createReportPdf(project,{includeOriginals=false}={}) {
   doc.fontSize(size);const valueWrapped=wrapped(value),height=doc.heightOfString(valueWrapped,{width,lineGap:1})+2;
   room(height);doc.fillColor(color).text(valueWrapped,42,doc.y,{width,lineGap:1,link});doc.y+=2;
  };
- if(layout.common.length){
-  drawBlock({value:'공통 확인사항',size:13,color:'#086f64'});
-  for(const note of layout.common)drawBlock({value:'• '+note.text+' (해당 항목: '+note.names.join(', ')+')',size:8.5});
+ for(const [kind,title] of commonGroups){
+  const notes=layout.common.filter(note=>note.kind===kind);
+  if(!notes.length)continue;
+  drawBlock({value:title,size:13,color:'#086f64'});
+  for(const note of notes)drawBlock({value:'• '+note.text+' (해당 항목: '+note.names.join(', ')+')',size:8.5});
   doc.y+=6;
  }
  for(const [i,item] of layout.items.entries()){

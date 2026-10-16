@@ -1,4 +1,4 @@
-import {resultBodyLayout} from './result-layout.mjs';
+import {resultBodyLayout,commonGroups} from './result-layout.mjs';
 import {evaluate,statuses} from './core.mjs';
 import {reviewAge} from './official-sources.mjs';
 import {candidateNotice} from './evidence-sources.mjs';
@@ -25,14 +25,16 @@ function taskButton(text,a,esc){
  return action&&a.id?` <button type="button" class="text-button" data-edit="${esc(a.id)}" data-field="${action.field}">${action.label}</button>`:'';
 }
 export function commonChecksMarkup(layout,esc,{buttons=true}={}){
- if(!layout.common.length)return '';
- return `<section class="report-item common-checks"><h3>공통 확인사항</h3><ul>${layout.common.map(note=>{
-  const shortcuts=buttons?layout.items.filter(item=>note.sourceTexts.some(text=>item.allTasks.includes(text))).map(item=>{
-   const button=taskButton(note.text,item.a,esc);
-   return button?` <span>${esc(item.name)}:${button}</span>`:'';
-  }).join(''):'';
-  return `<li>${esc(note.text)} (해당 항목: ${esc(note.names.join(', '))})${shortcuts}</li>`;
- }).join('')}</ul></section>`;
+ return commonGroups.map(([kind,title])=>{
+  const notes=layout.common.filter(note=>note.kind===kind);
+  return notes.length?`<section class="report-item common-checks"><h3>${title}</h3><ul>${notes.map(note=>{
+   const shortcuts=buttons?layout.items.filter(item=>note.sourceTexts.some(text=>item.allTasks.includes(text))).map(item=>{
+    const button=taskButton(note.text,item.a,esc);
+    return button?` <span>${esc(item.name)}:${button}</span>`:'';
+   }).join(''):'';
+   return `<li>${esc(note.text)} (해당 항목: ${esc(note.names.join(', '))})${shortcuts}</li>`;
+  }).join('')}</ul></section>`:'';
+ }).join('');
 }
 
 export function permissionMarkup(a,r,esc){
@@ -108,7 +110,7 @@ export function compactResultMarkup(a,r,rows,esc,parts){
  a=normalizeAsset(a);
  const reason=outcomeReason(a,r),{conditions,checks}=parts||resultItems(r,reason),todo=[...conditions,...checks];
  const excerpts=[...new Set([...(r.reviewedEvidence?.excerpts||a.terms?.excerpts||[]),...rows.flatMap(s=>(s.verification?.excerpts||[]).map(e=>e.text))])].filter(t=>!reason.includes(t)&&!todo.includes(t));
- return `<p class="review-scope">검토 범위: ${esc(assetScope(a))}</p><p class="review-reason">${esc(reason)}</p>${r.status==='conflict'?`<p class="conflict-next-action">${esc(conflictNextAction)}</p>`:''}${reviewStampMarkup(r,esc)}<h4>해야 할 일</h4><ul>${todo.map(t=>`<li>${esc(t)}${taskButton(t,a,esc)}</li>`).join('')||'<li>추가 항목 없음</li>'}</ul><section class="report-citations"><h4>근거 링크</h4>${candidateNotice(a)?`<p>${esc(candidateNotice(a))}</p>`:''}${displaySources(r,rows).map(s=>`<p><a href="${esc(s.url)}" target="_blank" rel="noopener noreferrer">${esc(s.label)} ↗</a>${s.recordLabel?` · ${esc(s.recordLabel)}`:''}${s.date?` · ${esc(s.dateLabel)}: ${esc(s.date)}`:''}${s.warning?` · ${esc(s.warning)}`:''}</p>`).join('')||'<p>확인한 근거 없음</p>'}</section>${excerpts.length?`<details class="material-evidence"><summary>원문 발췌</summary>${excerpts.map(t=>`<blockquote>${esc(t)}</blockquote>`).join('')}</details>`:''}`;
+ return `<p class="review-scope">검토 범위: ${esc(assetScope(a))}</p><p class="review-reason">${esc(reason)}</p>${r.status==='conflict'?`<p class="conflict-next-action">${esc(conflictNextAction)}</p>`:''}${reviewStampMarkup(r,esc)}${todo.length?`<h4>해야 할 일</h4><ul>${todo.map(t=>`<li>${esc(t)}${taskButton(t,a,esc)}</li>`).join('')}</ul>`:''}<section class="report-citations"><h4>근거 링크</h4>${candidateNotice(a)?`<p>${esc(candidateNotice(a))}</p>`:''}${displaySources(r,rows).map(s=>`<p><a href="${esc(s.url)}" target="_blank" rel="noopener noreferrer">${esc(s.label)} ↗</a>${s.recordLabel?` · ${esc(s.recordLabel)}`:''}${s.date?` · ${esc(s.dateLabel)}: ${esc(s.date)}`:''}${s.warning?` · ${esc(s.warning)}`:''}</p>`).join('')||'<p>확인한 근거 없음</p>'}</section>${excerpts.length?`<details class="material-evidence"><summary>원문 발췌</summary>${excerpts.map(t=>`<blockquote>${esc(t)}</blockquote>`).join('')}</details>`:''}`;
 }
 
 export function inputForTask(text,a){
