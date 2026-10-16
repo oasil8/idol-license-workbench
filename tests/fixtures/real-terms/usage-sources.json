@@ -1,0 +1,39 @@
+{
+  "snapshots": [
+    {
+      "file": "runway.txt",
+      "url": "https://runway.com/terms-ofuse",
+      "checkedOn": "2026-10-15",
+      "sha256": "d0204ca6f4be51f86c4ff7470252c2fe1cb3dc88b40f51e388a56ebdd90fcb1b"
+    },
+    {
+      "file": "recraft.txt",
+      "url": "https://www.recraft.ai/legal/terms",
+      "checkedOn": "2026-10-15",
+      "sha256": "b52e39cbe7137adfd7363e119b082dee22fd98c039728deda1b00d53c3128744"
+    },
+    {
+      "file": "stability.txt",
+      "url": "https://stability.ai/terms-of-service",
+      "checkedOn": "2026-10-15",
+      "sha256": "6b4b7b9d8fd239d6f8c64c15d76ae29d6b130bf9ec500b52e072cb8c92043850"
+    },
+    {
+      "file": "lodash-license.txt",
+      "url": "https://raw.githubusercontent.com/lodash/lodash/4.17.21/LICENSE",
+      "checkedOn": "2026-10-15",
+      "sha256": "f71e8ed126b46346494aad5486874cd8f0aafe95092ed67d2e3cb6110f939abc"
+    },
+    {
+      "file": "minilm-card.txt",
+      "url": "https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/raw/main/README.md",
+      "checkedOn": "2026-10-15",
+      "sha256": "dcd602d2fd35c203a247304a06fec6654a12f7941b739f9221a064fe8dc3b7f0"
+    }
+  ],
+  "limitations": [
+    "CC BY 4.0 / BY-NC 4.0: official legalcode inspected through web tool; direct full download returned HTTP403 for BY. No bypass.",
+    "MiniLM card states Apache-2.0. Model weights were not downloaded or independently audited.",
+    "Image/audio real cases: ESO potw2337b and Winter princess Music Archive distribution pages and copyright policy inspected with web tool; saved media-cases.json records scope, credits and exceptions. Media binary contents and third-party rights not audited."
+  ]
+}

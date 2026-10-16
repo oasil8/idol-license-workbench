@@ -1,0 +1,1 @@
+TEST FIXTURE: As between you and OpenAI, you (a) retain your ownership rights in Input and (b) own the Output.

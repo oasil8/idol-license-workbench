@@ -1,0 +1,19 @@
+IDOL License WORKBENCH — 화면 개선 참고 사례 (2026-10-15)
+
+Linear 검색: https://linear.app/docs/search
+적용: 이름으로 찾아 들어가는 통합 검색.
+
+IBM Carbon 선택 입력: https://www.carbondesignsystem.com/building-blocks/core/components/dropdown/guidelines
+적용: 검색 가능한 선택지, 목록 밖 직접 입력, 짧고 명확한 레이블.
+
+GOV.UK Check answers: https://design-system.service.gov.uk/patterns/check-answers/
+GOV.UK Question pages: https://design-system.service.gov.uk/patterns/question-pages/
+적용: 입력과 결과 확인 분리, 단계별 목적 설명, 명확한 저장 동작.
+
+권리 범위 참고:
+https://creativecommons.org/faq/index.html
+https://wiki.creativecommons.org/wiki/CC0_FAQ
+https://www.fab.com/eula?lang=en
+https://github.com/licensee/licensee/blob/main/docs/what-we-look-at.md
+콘텐츠 이용 허가와 제3자 상표·디자인 등의 권리, 개별 계약 적용 여부는 구분합니다.
+이번 조사에서 실제 사용자 대상 사용성 실험이나 개별 자동차의 법률 판정은 수행하지 않았습니다.
