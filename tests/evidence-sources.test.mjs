@@ -30,5 +30,5 @@ test('matching website verification does not relabel a manually supplied terms r
  const url='https://example.com/terms',date='2026-10-15T01:00:00Z';
  const a={name:'Example',kind:'ai',provider:'other',scope:'output',terms:{method:'manual',sourceUrl:url,checkedAt:date,summary:'User supplied text'},sourceCandidates:[{url,query:'Example',title:'Website',searchedAt:date,verification:{url,query:'Example',status:'matched',checkedAt:date,text:'Fetched independently',reason:'Address matched'}}]};
  const rows=assetSources(a,context,now),row=rows.find(s=>s.url===url);
- assert.equal(rows.filter(s=>s.url===url).length,1);assert.equal(row.type,'manual');assert.equal(row.note,'User supplied text');assert.equal(row.date,date);assert.equal(row.verification.text,'Fetched independently');
+ assert.equal(rows.filter(s=>s.url===url).length,1);assert.equal(row.type,'manual');assert.equal(row.note,'User supplied text');assert.equal(row.date,date);assert.equal(row.verification,undefined);assert.equal(a.sourceCandidates[0].verification.text,'Fetched independently');
 });

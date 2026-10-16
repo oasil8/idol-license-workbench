@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import {getDocument} from 'pdfjs-dist/legacy/build/pdf.mjs';
-import {createReportPdf,pdfReportData} from '../report-pdf.mjs';
+import {createReportPdf,pdfReportData,pdfBodyLayout} from '../report-pdf.mjs';
 import {evaluate} from '../dist/core.mjs';
 import {outcomeReason,resultItems,compactResultMarkup} from '../dist/result-sections.mjs';
 import {assetSources} from '../dist/evidence-sources.mjs';
@@ -40,7 +40,7 @@ test('obligations exclude unresolved checks and shared checks occur once per ite
 test('rule date never impersonates an asset review in web or PDF',async()=>{
  const a=sample.assets[3];assert.doesNotMatch(markup(a),/검토일/);assert.match(markup(a),/판정 규칙 기준일/);
  const text=textOf(await pages({...sample,assets:[a]}));assert.doesNotMatch(text,/검토일/);assert.ok(norm(text).includes(norm('판정 규칙 기준일: 2026-10-16')));
- assert.match(markup(sample.assets[0]),/검토일: 2026-10-16/);assert.match(textOf(await pages({...sample,assets:[sample.assets[0]]})),/검토일/);
+ assert.match(markup(sample.assets[0]),/기록일: 2026-10-16/);assert.match(textOf(await pages({...sample,assets:[sample.assets[0]]})),/기록일/);
  assert.deepEqual(evaluate({...a,sourceConditionsConfirmed:true,sourceConditionsDate:'2026-10-15'},sample.context).reviewDates,['2026-10-15']);
 });
 
@@ -65,14 +65,14 @@ test('PDF uses three distinct verdict colors and retains text labels',async()=>{
 test('PDF wraps Korean words at spaces and long URLs stay inside page margins',async()=>{
  const {wrapPdfText}=await import('../report-pdf.mjs');assert.equal(wrapPdfText('권리입니다 확보되지는 않습니다',s=>s.length,10),'권리입니다\n확보되지는 않습니다');assert.equal(wrapPdfText('abcdefghijk',s=>s.length,4),'abcd\nefgh\nijk');
  const rendered=await pages();const lines=[];for(const page of rendered){let line='';for(const item of page){line+=item.str;if(item.hasEOL){lines.push(line);line='';}}if(line)lines.push(line);}
- for(const item of pdfReportData(sample).items)for(const sentence of [item.reason,...item.conditions,...item.checks])for(const word of sentence.split(/\s+/).filter(w=>/^[가-힣]+[.,:]?$/.test(w)))assert.ok(lines.some(l=>l.includes(word)),word);
+ const layout=pdfBodyLayout(pdfReportData(sample).items);for(const sentence of [...layout.common.map(n=>n.text),...layout.items.flatMap(item=>[item.reason,...item.conditions.slice(0,3),...item.checks.slice(0,3)])])for(const word of sentence.split(/\s+/).filter(w=>/^[가-힣]+[.,:]?$/.test(w)))assert.ok(lines.some(l=>l.includes(word)),word);
  const long={...sample.assets[3],evidence:'https://github.com/mrdoob/three.js/blob/dev/'+ 'a'.repeat(300)+'/LICENSE'};
  for(const page of await pages({...sample,assets:[long]}))for(const item of page)if(item.str.trim())assert.ok(item.transform[4]>=41&&item.transform[4]+item.width<=554,item.str);
 });
 
 test('original appendix explains stored originals and built-in excerpts, even when empty',async()=>{
  for(const p of [sample,{...sample,assets:[sample.assets[0]]}]){
- const text=norm(textOf(await pages(p,{includeOriginals:true}))),title=norm('부록 · 전체 보관 원문'),notice=norm('앱에 저장된 원문만 포함합니다. 내장 검토 기록은 근거 문장과 링크만 본문에 표시합니다.');
+ const text=norm(textOf(await pages(p,{includeOriginals:true}))),title=norm('부록 · 전체 보관 원문'),notice=norm('앱에 저장된 원문과 검토 기록의 발췌를 포함합니다. 실시간 조회한 원문이 아니며 출처와 적용 범위를 확인하세요.');
  assert.ok(text.indexOf(title)>=0);assert.ok(text.indexOf(notice)>text.indexOf(title));
  }
 });
@@ -81,7 +81,10 @@ test('resolved Tripo plan removes obsolete plan task while unknown retains it in
  const task='서비스·플랜을 지정하고 최신 약관 조회 실행';
  for(const planType of ['free','unknown']){
  const a={...sample.assets[2],planType};assert.equal(markup(a).includes(task),planType==='unknown');
- assert.equal(norm(textOf(await pages({...sample,assets:[a]}))).includes(norm(task)),planType==='unknown');
+ const data=pdfReportData({...sample,assets:[a]}),layout=pdfBodyLayout(data.items),pdf=norm(textOf(await pages({...sample,assets:[a]})));
+ assert.equal(data.items[0].checks.includes(task),planType==='unknown');
+ const visible=layout.items[0].checks.slice(0,3).includes(task)||layout.common.some(n=>n.text===task);
+ assert.equal(pdf.includes(norm(task)),visible);if(planType==='unknown'&&!visible)assert.ok(pdf.includes(norm('전체 목록은 웹 화면에 있습니다.')));
  }
 });
 

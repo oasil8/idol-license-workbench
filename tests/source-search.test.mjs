@@ -18,6 +18,6 @@ test('search candidates survive save/backup/report without granting permission',
  const local=validateProject(input,{local:true}),restored=validateProject(JSON.parse(JSON.stringify(local)));
  assert.deepEqual(restored.assets[0].sourceCandidates,local.assets[0].sourceCandidates);
  const a=restored.assets[0],r=commercialVerdict(a,restored.context);assert.equal(r.status,'review');
- const rows=assetSources(a,restored.context);assert.equal(rows[0].type,'candidate');assert.equal(sourceGroup(rows[0]),'검색 후보 · 확인 전');
- const html=buildProjectReport({...restored,contextConfirmed:true});assert.match(html,/검색 후보 · 확인 전/);assert.match(html,/검색일:/);assert.ok(html.includes(candidate.url));
+ const rows=assetSources(a,restored.context);assert.deepEqual(rows,[]);
+ const html=buildProjectReport({...restored,contextConfirmed:true});assert.match(html,/확인 전 검색 후보 1개 · 근거로 사용하지 않음/);assert.ok(!html.includes(candidate.url));
 });

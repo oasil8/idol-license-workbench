@@ -17,8 +17,8 @@ test('known services receive reference links without changing license clearance'
 });
 test('ambiguous and unrelated names do not inherit a service URL',()=>{
  for(const name of ['Copilot','example-dependency','SunoClone','Gemini library'])assert.deepEqual(officialSuggestions({name}),[]);
- assert.deepEqual(officialSuggestions({name:'Suno',serviceName:'Different Service'}),[]);
- assert.equal(officialSuggestions({name:'generated asset',provider:'huggingface'}).length,1);
+ assert.deepEqual(officialSuggestions({kind:'ai',name:'Suno',serviceName:'Different Service'}),[]);
+ assert.equal(officialSuggestions({kind:'ai',name:'generated asset',provider:'huggingface'}).length,1);
  assert.equal(new URL(sourceSearchUrl({name:'a&b #test'})).searchParams.get('q'),'a&b #test official website license terms');
 });
 test('fetched text, historic review and unverified sources stay distinguishable',()=>{

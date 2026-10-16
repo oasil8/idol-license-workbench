@@ -1,3 +1,4 @@
+import {normalizeAsset} from './asset-normalization.mjs';
 // Curated public-source observations, reviewed 2026-10-15; never user/project data.
 const observedOn='2026-10-15';
 const records=[
@@ -24,6 +25,7 @@ const records=[
 ].map(([id,names,title,url,clause,note,scope])=>({id,names,title,url,clause,note,scope,observedOn:['meshy','openai','anthropic','tripo','runway','copilot','elevenlabs','midjourney'].includes(id)?'2026-10-16':observedOn}));
 
 export function officialSource(a){
+ a=normalizeAsset(a);
  const text=String(a.serviceName||a.name||'').normalize('NFKC').trim().toLowerCase();
  return records.find(r=>['tripo','meshy','openai','anthropic'].includes(a.provider)?r.id===a.provider:r.names.some(n=>n.toLowerCase()===text));
 }

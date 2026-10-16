@@ -1,0 +1,114 @@
+{
+  "name": "혼합 자료 리포트",
+  "context": {
+    "platform": "steam",
+    "commercial": true,
+    "distribute": true,
+    "modified": false,
+    "network": false
+  },
+  "contextConfirmed": true,
+  "assets": [
+    {
+      "name": "lodash",
+      "version": "4.17.21",
+      "kind": "code",
+      "license": "MIT",
+      "evidence": "https://raw.githubusercontent.com/lodash/lodash/4.17.21/LICENSE",
+      "confirmed": true,
+      "serviceName": "Runway",
+      "provider": "other",
+      "scope": "output",
+      "planType": "paid",
+      "selection": "used"
+    },
+    {
+      "name": "MiniLM 가중치",
+      "kind": "model",
+      "license": "Apache-2.0",
+      "evidence": "https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2",
+      "confirmed": true,
+      "scope": "output",
+      "selection": "used"
+    },
+    {
+      "name": "Suno",
+      "kind": "ai",
+      "provider": "other",
+      "serviceName": "Suno",
+      "scope": "output",
+      "planType": "unknown",
+      "sourceCandidates": [
+        {
+          "query": "Suno",
+          "url": "https://suno.com/terms",
+          "title": "suno.com",
+          "searchedAt": "2026-10-16T00:00:00Z"
+        },
+        {
+          "query": "Suno",
+          "url": "https://sunnoai.com/general-commercial-terms/",
+          "title": "sunnoai.com",
+          "searchedAt": "2026-10-16T00:00:00Z"
+        },
+        {
+          "query": "Suno",
+          "url": "https://www.suno-api.io/en/blog/suno-commercial-use-license-letter/",
+          "title": "www.suno-api.io",
+          "searchedAt": "2026-10-16T00:00:00Z"
+        }
+      ],
+      "selection": "used"
+    },
+    {
+      "name": "terms-sample.pdf",
+      "kind": "code",
+      "sourceCandidates": [
+        {
+          "query": "terms-sample.pdf",
+          "url": "https://www.apple.com/legal/sla/docs/Pages.pdf",
+          "title": "www.apple.com",
+          "searchedAt": "2026-10-16T00:00:00Z"
+        },
+        {
+          "query": "terms-sample.pdf",
+          "url": "https://termly.io/resources/templates/terms-of-use-template/",
+          "title": "termly.io",
+          "searchedAt": "2026-10-16T00:00:00Z"
+        },
+        {
+          "query": "terms-sample.pdf",
+          "url": "https://www.microsoft.com/en-us/servicesagreement",
+          "title": "www.microsoft.com",
+          "searchedAt": "2026-10-16T00:00:00Z"
+        }
+      ],
+      "selection": "used"
+    },
+    {
+      "name": "Meshy",
+      "kind": "ai",
+      "provider": "meshy",
+      "scope": "output",
+      "planType": "free",
+      "selection": "used"
+    },
+    {
+      "name": "Tripo",
+      "kind": "ai",
+      "provider": "tripo",
+      "scope": "output",
+      "planType": "free",
+      "selection": "used"
+    },
+    {
+      "name": "Midjourney",
+      "kind": "ai",
+      "provider": "other",
+      "serviceName": "Midjourney",
+      "scope": "output",
+      "planType": "unknown",
+      "selection": "used"
+    }
+  ]
+}

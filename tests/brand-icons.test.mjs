@@ -2,6 +2,9 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {brandIcon,brandOf} from '../dist/brand-icons.mjs';
 import {buildProjectReport} from '../dist/report.mjs';
+test('non-AI materials ignore an old service identity in live result icons',()=>{
+ assert.equal(brandOf({kind:'code',name:'lodash',provider:'other',serviceName:'Runway'}),'');
+});
 test('service icons use bundled images and unknown names retain a neutral fallback',()=>{
  assert.match(brandIcon({name:'Meshy',kind:'ai'}),/src="data:image/);
  assert.match(brandIcon({name:'Hugging Face 모델',kind:'ai'}),/src="data:image/);

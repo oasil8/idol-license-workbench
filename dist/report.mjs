@@ -1,11 +1,12 @@
+import {normalizeAsset,assetScope} from './asset-normalization.mjs';
 import {installReportPrint,reportPrintCss} from './print-report.mjs';
 import {brandIcon,brandIconCss} from './brand-icons.mjs';
-import {reviewStampMarkup,permissionMarkup,outcomeReason,resultItems} from './result-sections.mjs';
+import {displaySources,reviewStampMarkup,permissionMarkup,outcomeReason,resultItems} from './result-sections.mjs';
 import {evidenceMarkup} from './document-text.mjs';
 import {verificationMarkup} from './source-search.mjs';
 import {conditionsConfirmed,conditionsPrompt,projectSummary,summaryReason,selectionOf,selectionLabels} from './workflow.mjs';
 import {evaluate,commercialVerdict,statuses,projectTasks,RULE_DATE} from './core.mjs';
-import {assetSources,sourceTypes,sourceGroup} from './evidence-sources.mjs';
+import {candidateNotice,assetSources,sourceTypes,sourceGroup} from './evidence-sources.mjs';
 import {reviewAssignment} from './assignment.mjs';
 const esc=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 function inline(value){
@@ -50,6 +51,7 @@ export function reportHtml(markdown){
 export function buildProjectReport(p){
  if(!conditionsConfirmed(p))return reportHtml('# '+p.name+'\n\n'+conditionsPrompt+'\n\n2단계에서 사용 조건을 확인하고 적용하세요.');
  const summary=projectSummary(p),c=p.context;
+ summary.assets=summary.assets.map(normalizeAsset);
  const paragraph=text=>`<p>${esc(text)}</p>`;
  const sourceLink=source=>`<a href="${esc(source.url)}" target="_blank" rel="noopener noreferrer">${esc(source.label)}</a>`;
  const list=items=>items.length?'<ul>'+[...new Set(items)].map(x=>`<li>${esc(x)}</li>`).join('')+'</ul>':'<p>추가 항목 없음</p>';
@@ -71,11 +73,11 @@ export function buildProjectReport(p){
   if(r.evidenceMethod==='manual')body+='<p class="evidence-origin">직접 입력한 약관 기준 · 공식 출처 자동 검증 아님</p>';
   if(r.status!==purpose.status)body+=`<p class="comparison">상업 이용으로 바꾸면: ${esc(statuses[purpose.status])}</p>`+list(purpose.notes);
   body+='<div class="material-overview">'+permissionMarkup(a,r,esc)+'<section class="report-conditions"><h3>지켜야 할 조건</h3>'+list(conditions)+'</section><section class="report-checks"><h3>확인 필요한 부분</h3>'+list(checks)+'</section></div>';
-  const citations=assetSources(a,c);
-  body+='<section class="report-citations"><h3>근거·출처 요약</h3>'+citations.map(source=>`<p><strong>${esc(sourceGroup(source))}</strong> · ${sourceLink(source)}${source.date?' · '+esc(source.date):''}<span class="print-url">${esc(source.url)}</span>${source.scope?'<br>적용 범위: '+esc(source.scope):''}</p>`).join('')+(citations.length?'':'<p>등록된 출처 링크가 없습니다. 상세 근거에서 입력한 원문을 확인하세요.</p>')+'</section>';
+  const citations=displaySources(r,assetSources(a,c));
+  body+='<section class="report-citations"><h3>근거·출처 요약</h3>'+paragraph(candidateNotice(a))+citations.map(source=>`<p><strong>${esc(sourceGroup(source))}</strong> · ${sourceLink(source)}${source.date?' · '+esc(source.dateLabel)+': '+esc(source.date):''}${source.warning?' · '+esc(source.warning):''}<span class="print-url">${esc(source.url)}</span>${source.scope?'<br>적용 범위: '+esc(source.scope):''}</p>`).join('')+(citations.length?'':'<p>등록된 출처 링크가 없습니다. 상세 근거에서 입력한 원문을 확인하세요.</p>')+'</section>';
   body+='<details class="material-evidence"><summary>상세 근거·출처·원문 보기</summary><div class="evidence-body">';
   body+='<h3>결과 설명</h3>'+list(r.notes.filter(n=>!reason.includes(n)&&!conditions.includes(n)&&!checks.includes(n)));
-  const metadata=[['검토 범위',({code:'코드·오픈소스 자체',model:'모델·가중치',service:'서비스·API 계약',bundle:'패키지·번들 전체'}[a.reviewScope]||a.reviewScope)],['비영리 기관 조건',a.license==='LicenseRef-OpenSees'?(a.nonprofitEntityConfirmed?'교육·연구·비영리 기관 해당 확인':'해당 여부 미확인'):''],['버전',a.version],['라이선스',t?.license||a.license],['플랜',a.plan||({free:'무료',paid:'일반 유료',business:'기업·별도 계약'}[a.planType])],['생성·구매일',a.date],['결과물 종류',({code:'코드',text:'텍스트·문서',image:'이미지·디자인',model:'3D 모델',audio:'음악·음성',video:'영상',data:'데이터',other:'기타'}[a.outputType]||a.outputType)],['이용 설명',a.useDescription]].filter(([,v])=>v);
+  const metadata=[['검토 범위',assetScope(a)],['비영리 기관 조건',a.license==='LicenseRef-OpenSees'?(a.nonprofitEntityConfirmed?'교육·연구·비영리 기관 해당 확인':'해당 여부 미확인'):''],['버전',a.version],['라이선스',t?.license||a.license],['플랜',a.plan||({free:'무료',paid:'일반 유료',business:'기업·별도 계약'}[a.planType])],['생성·구매일',a.date],['결과물 종류',({code:'코드',text:'텍스트·문서',image:'이미지·디자인',model:'3D 모델',audio:'음악·음성',video:'영상',data:'데이터',other:'기타'}[a.outputType]||a.outputType)],['이용 설명',a.useDescription]].filter(([,v])=>v);
   if(metadata.length)body+='<dl class="report-metadata">'+metadata.map(([k,v])=>`<dt>${esc(k)}</dt><dd>${esc(v)}</dd>`).join('')+'</dl>';
   if(a.kind==='ai')body+=paragraph(`서비스: ${a.serviceName||a.provider||'미기록'} / 이용 범위: ${{output:'생성 결과물',service:'API·서비스 연동',weights:'모델 가중치',training:'학습·미세조정',other:'기타'}[a.scope]||'미확인'}`);
   body+='<h3>근거와 출처</h3>'+(a.evidence?raw('기록한 근거',a.evidence):'')+(a.notes?raw('검토 메모',a.notes):'');
@@ -90,7 +92,7 @@ export function buildProjectReport(p){
   }
   if(a.licenseDocument){const document=a.licenseDocument;body+=raw('추출한 라이선스 원문 · '+document.name,document.text);if(document.locations?.length)body+='<details><summary>라이선스 원문 위치별 보기</summary>'+document.locations.map(location=>'<h4>'+esc(location.label)+'</h4><pre>'+esc(document.text.slice(location.start,location.end))+'</pre>').join('')+'</details>';body+=list(document.warnings||[]);}
   body+=paragraph('원문 확인 기록은 해당 자료의 사용 허가 확정과 다릅니다. 참고 링크는 결과 근거로 자동 적용하지 않습니다.');
-  body+=citations.map(s=>`<article><p><strong>${esc(sourceGroup(s))}</strong></p><p>${sourceLink(s)} · ${esc(sourceTypes[s.type])}${s.date?' · '+(s.type==='suggested'?'주소 확인일: ':s.type==='candidate'?'검색일: ':'기록일: ')+esc(s.date):''}</p>${s.note&&!reason.includes(s.note)&&!conditions.includes(s.note)&&!checks.includes(s.note)?paragraph(s.note):''}${s.scope?paragraph('적용 범위: '+s.scope):''}${s.clause?paragraph('확인 부분: '+s.clause):''}${verificationMarkup(s.verification,esc,a)}</article>`).join('');
+  body+=citations.map(s=>`<article><p><strong>${esc(sourceGroup(s))}</strong></p><p>${sourceLink(s)} · ${esc(sourceTypes[s.type])}${s.date?' · '+(s.dateLabel+': ')+esc(s.date):''}</p>${s.warning?paragraph(s.warning):''}${s.note&&!reason.includes(s.note)&&!conditions.includes(s.note)&&!checks.includes(s.note)?paragraph(s.note):''}${s.scope?paragraph('적용 범위: '+s.scope):''}${s.clause?paragraph('확인 부분: '+s.clause):''}${verificationMarkup(s.verification,esc,a)}</article>`).join('');
   body+='</div></details><a class="back-to-index" href="#report-top">↑ 결과 요약으로</a></section>';
  }
  const omitted=p.assets.filter(a=>selectionOf(a)!=='used');

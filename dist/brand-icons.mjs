@@ -1,6 +1,8 @@
 import {icons} from './brand-icons-data.mjs';
+import {normalizeAsset} from './asset-normalization.mjs';
 const aliases={openai:['openai','chatgpt','챗지피티'],anthropic:['anthropic','claude','클로드'],huggingface:['hugging face','huggingface'],gemini:['gemini','nano banana','nanobanana','제미나이','나노바나나'],github:['github copilot','copilot','깃허브'],meshy:['meshy','메시','메쉬'],tripo:['tripo','트리포'],midjourney:['midjourney','미드저니'],suno:['suno','수노'],runway:['runway','런웨이']};
 export function brandOf(asset={}){
+ asset=normalizeAsset(asset);
  const provider=asset.provider||asset.aiProvider;
  if(icons[provider])return provider;
  const name=String(asset.serviceName||asset.name||'').toLowerCase();

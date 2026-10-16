@@ -22,5 +22,8 @@ test('Korean evidence disclosures escape text and are included in exported repor
  const html=verificationMarkup({...v,text:v.text+' Commercial use <script>alert(1)</script> is forbidden.'},esc,a);
  assert.match(html,/원문 근거 보기/);assert.ok(!html.includes('<script>'));assert.match(html,/원문 웹사이트 열기/);
  const report=buildProjectReport({contextConfirmed:true,name:'Test',context:{},assets:[{...a,selection:'used',sourceCandidates:[{query:v.query,url:v.url,searchedAt:v.checkedAt,verification:v}]}]});
- assert.match(report,/한국어 요약/);assert.match(report,/원문 근거 보기/);
+ assert.match(report,/확인 전 검색 후보 1개 · 근거로 사용하지 않음/);assert.doesNotMatch(report,/한국어 요약|원문 근거 보기|vendor.example.com|except remixes/);
+ const official={...v,query:'Suno',url:'https://suno.com/terms'};
+ const trusted=buildProjectReport({contextConfirmed:true,name:'Test',context:{},assets:[{...a,name:'Suno',selection:'used',sourceCandidates:[{query:official.query,url:official.url,searchedAt:official.checkedAt,verification:official}]}]});
+ assert.match(trusted,/한국어 요약/);assert.match(trusted,/원문 근거 보기/);
 });

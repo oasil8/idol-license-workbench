@@ -1,3 +1,6 @@
+import {reviewAge} from './official-sources.mjs';
+import {candidateNotice} from './evidence-sources.mjs';
+import {normalizeAsset,assetScope} from './asset-normalization.mjs';
 import {planImpact} from './ai.mjs';
 export function permissionMarkup(a,r,esc){
  let permission=r.status==='conditions'?(r.permissions||[]).join(' '):'';
@@ -48,20 +51,31 @@ export function summaryReasonText(reason,limit=56){
 
 export function resultItems(r,reason=''){
  const seen=new Set(),unique=items=>items.filter(t=>{const key=String(t).replace(/\s+/g,' ').trim();if(!key||seen.has(key)||reason.includes(key))return false;seen.add(key);return true;});
- return {conditions:unique((r.tasks||[]).filter(t=>!r.conflicts?.includes(t))),checks:unique([...(r.status==='review'?r.blockers||[]:[]),...(r.humanChecks||[])])};
+ const conditions=[],actions=[];
+ for(const task of (r.tasks||[]).filter(t=>!r.conflicts?.includes(t))){
+  // Keep the prohibition as an obligation when a sentence also requests a check.
+  const parts=task.includes('하지 말고,')?task.replace('하지 말고,','하지 마세요.\n').split('\n').map(t=>t.trim()):[task];
+  for(const part of parts)(/(?:확인하세요|검토(?:하세요)?|확인(?:해야 합니다|이 필요합니다)?)[.!?]?$/.test(part)?actions:conditions).push(part);
+ }
+ return {conditions:unique(conditions),checks:unique([...actions,...(r.status==='review'?r.blockers||[]:[]),...(r.humanChecks||[])])};
 }
 
-export function reviewStampMarkup(r,esc){return (r.ruleDate?'<small>판정 규칙 기준일: '+esc(r.ruleDate)+'</small>':'')+(r.reviewDates||[]).map(d=>'<small>검토일: '+esc(d)+'</small>').join('')+(r.reviewWarnings||[]).map(w=>'<p class="warning">'+esc(w)+'</p>').join('');}
+// Retained for report callers: source dates are rendered beside their own links.
+export function reviewStampMarkup(){return '';}
 
-export function displaySources(r,rows){
- const dates=new Set(r.reviewDates||[]);let marked=false;
- return rows.map(s=>{const date=s.date?.slice(0,10),builtIn=!marked&&r.evidenceMethod==='public-review'&&s.url===r.reviewedEvidence?.sourceUrl;if(builtIn)marked=true;const shown=date&&!dates.has(date)?date:'';if(date)dates.add(date);return {...s,date:shown,recordLabel:builtIn?'내장 검토 기록 · 실시간 조회 아님':''};});
+export function displaySources(r,rows,now=Date.now()){
+ return rows.map(s=>{
+  const rule=s.type==='rule',date=(s.date||(rule?r.ruleDate:''))?.slice(0,10)||'';
+  const dateLabel=rule?'판정 규칙 기준일':s.type==='suggested'?'주소 확인일':s.type==='candidate'?'검색일':'기록일';
+  return {...s,date,dateLabel,warning:rule?'':reviewAge(date,now),recordLabel:r.evidenceMethod==='public-review'&&s.url===r.reviewedEvidence?.sourceUrl?'내장 검토 기록 · 실시간 조회 아님':''};
+ });
 }
 
 export function compactResultMarkup(a,r,rows,esc){
+ a=normalizeAsset(a);
  const reason=outcomeReason(a,r),{conditions,checks}=resultItems(r,reason),todo=[...conditions,...checks];
  const excerpts=[...new Set([...(r.reviewedEvidence?.excerpts||a.terms?.excerpts||[]),...rows.flatMap(s=>(s.verification?.excerpts||[]).map(e=>e.text))])].filter(t=>!reason.includes(t)&&!todo.includes(t));
- return `<p class="review-reason">${esc(reason)}</p>${reviewStampMarkup(r,esc)}<h4>해야 할 일</h4><ul>${todo.map(t=>{const action=inputForTask(t,a);return `<li>${esc(t)}${action&&a.id?` <button type="button" class="text-button" data-edit="${esc(a.id)}" data-field="${action.field}">${action.label}</button>`:''}</li>`;}).join('')||'<li>추가 항목 없음</li>'}</ul><section class="report-citations"><h4>근거 링크</h4>${displaySources(r,rows).map(s=>`<p><a href="${esc(s.url)}" target="_blank" rel="noopener noreferrer">${esc(s.label)} ↗</a>${s.recordLabel?` · ${esc(s.recordLabel)}`:''}${s.date?` · 검토일: ${esc(s.date.slice(0,10))}`:''}</p>`).join('')||'<p>확인한 근거 없음</p>'}</section>${excerpts.length?`<details class="material-evidence"><summary>원문 발췌</summary>${excerpts.map(t=>`<blockquote>${esc(t)}</blockquote>`).join('')}</details>`:''}`;
+ return `<p class="review-scope">검토 범위: ${esc(assetScope(a))}</p><p class="review-reason">${esc(reason)}</p>${reviewStampMarkup(r,esc)}<h4>해야 할 일</h4><ul>${todo.map(t=>{const action=inputForTask(t,a);return `<li>${esc(t)}${action&&a.id?` <button type="button" class="text-button" data-edit="${esc(a.id)}" data-field="${action.field}">${action.label}</button>`:''}</li>`;}).join('')||'<li>추가 항목 없음</li>'}</ul><section class="report-citations"><h4>근거 링크</h4>${candidateNotice(a)?`<p>${esc(candidateNotice(a))}</p>`:''}${displaySources(r,rows).map(s=>`<p><a href="${esc(s.url)}" target="_blank" rel="noopener noreferrer">${esc(s.label)} ↗</a>${s.recordLabel?` · ${esc(s.recordLabel)}`:''}${s.date?` · ${esc(s.dateLabel)}: ${esc(s.date)}`:''}${s.warning?` · ${esc(s.warning)}`:''}</p>`).join('')||'<p>확인한 근거 없음</p>'}</section>${excerpts.length?`<details class="material-evidence"><summary>원문 발췌</summary>${excerpts.map(t=>`<blockquote>${esc(t)}</blockquote>`).join('')}</details>`:''}`;
 }
 
 export function inputForTask(text,a){

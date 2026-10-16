@@ -1,3 +1,5 @@
+import {normalizeAsset} from './asset-normalization.mjs';
+import {isOfficialCandidate} from './source-policy.mjs';
 import {referenceCatalog} from './catalog.mjs';
 import {cleanCandidates,verificationLabel,sourceSearchName} from './source-search.mjs';
 import {evaluate,commercialVerdict} from './core.mjs';
@@ -19,6 +21,7 @@ const suggestions=[
  [['Hugging Face','Hugging Face 모델','HuggingFace','허깅페이스'],'Hugging Face 서비스 약관','https://huggingface.co/terms-of-service','플랫폼 약관입니다. 개별 모델·데이터셋의 라이선스를 대신하지 않습니다.']
 ];
 export function officialSuggestions(a){
+ a=normalizeAsset(a);
  const name=String(a.serviceName||a.name||'').normalize('NFKC').trim().toLowerCase();
  const references=referenceCatalog.filter(x=>x.name.toLowerCase()===name).map(x=>({type:'suggested',label:x.name+' 공식 프로젝트 · 적용 자료 확인',url:x.url,note:'프로젝트 참고 링크입니다. 실제 버전·모델·서비스 계약의 이용 허가를 확인한 기록이 아닙니다.'}));
  const codeReferences=codeLicenseRecords.filter(r=>r.names.some(n=>n.normalize('NFKC').toLowerCase()===name)).flatMap(r=>[{type:'suggested',label:r.names[0]+' 공식 라이선스',url:r.url,date:r.date,note:r.scope+'에 대한 참고 링크입니다. 다른 버전·배포판·서비스 계약에는 자동 적용하지 않습니다.'},{type:'suggested',label:r.names[0]+' 공식 프로젝트',url:r.home,date:r.date,note:r.scope}]);
@@ -34,6 +37,7 @@ export function sourceGroup(s){
  return '미검증·재확인 기록';
 }
 export function sourceSearchUrl(a){
+ a=normalizeAsset(a);
  const name=String(a.serviceName||a.name||'').trim();
  return name?'https://www.google.com/search?q='+encodeURIComponent(name+' official website license terms'):'';
 }
@@ -47,7 +51,12 @@ export function evidenceUrls(text){
   return safeUrl(/^www\./i.test(url)?'https://'+url:url);
  }).filter(Boolean))];
 }
+export function candidateNotice(a){
+ const n=cleanCandidates(a.sourceCandidates).filter(s=>!isOfficialCandidate(sourceSearchName(a),s.url)).length;
+ return n?`확인 전 검색 후보 ${n}개 · 근거로 사용하지 않음`:'';
+}
 export function assetSources(a,c,now=Date.now()){
+ a=normalizeAsset(a);
  const rows=[],seen=new Set();
  const add=row=>{const url=safeUrl(row.url);if(!url)return;if(seen.has(url)){if(row.verification){const prior=rows.find(s=>s.url===url);if(!prior.contractDocument)prior.verification=row.verification;if(['candidate','user','suggested','rule'].includes(prior.type)){prior.type=row.type;prior.note=row.note;prior.date=row.type==='verified'?row.verification.checkedAt:row.date;}}return;}seen.add(url);rows.push({...row,url});};
  for(const d of evaluate(a,c).contractDocuments||[])add({contractDocument:true,type:'verified',label:d.label,url:d.url,date:d.checkedAt,clause:d.clause,scope:'일반·추가 약관 대조 · 현재 선택한 이용 범위',note:d.contractDate||'보관한 공식 원문',verification:{...d,finalUrl:d.url,query:a.serviceName||a.name,reason:'연결된 공식 원문과 검토한 본문 일치 확인',excerpts:d.excerpts||[]}});
@@ -62,8 +71,8 @@ export function assetSources(a,c,now=Date.now()){
  const reference=officialSource(a);
  if(reference)add({type:'reference',label:reference.title,url:reference.url,date:reference.observedOn,note:reference.note,scope:reference.scope,clause:reference.clause});
  for(const [label,url]of [...evaluate(a,c).sources,...commercialVerdict(a,c).sources])add({type:'rule',label,url,note:'이 문서를 참고한 규칙입니다. 해당 버전의 원문을 실시간 조회했다는 뜻은 아닙니다.'});
- for(const url of evidenceUrls(a.evidence))add({type:'user',label:'등록된 근거 링크',url,note:'사용자가 제공한 출처이며 진위·적용 범위는 별도 확인합니다.'});
+ for(const url of evidenceUrls(a.evidence))add({type:'user',label:'등록된 근거 링크',url,date:a.sourceConditionsConfirmed?a.sourceConditionsDate:undefined,note:'사용자가 제공한 출처이며 진위·적용 범위는 별도 확인합니다.'});
  for(const suggestion of officialSuggestions(a))add(suggestion);
- for(const item of cleanCandidates(a.sourceCandidates)){const label=verificationLabel(item,sourceSearchName(a),now);add({type:label==='공식 주소 대조 · 원문 확보'?'verified':'candidate',label:item.title,url:item.url,date:item.searchedAt,verification:item.verification,note:label+' · 검색어: '+item.query+' · '+(item.verification?.reason||'공식 사이트 여부·원문·버전·이용 허가는 아직 확인하지 않았습니다.')});}
+ for(const item of cleanCandidates(a.sourceCandidates).filter(s=>isOfficialCandidate(sourceSearchName(a),s.url))){const label=verificationLabel(item,sourceSearchName(a),now);add({type:label==='공식 주소 대조 · 원문 확보'?'verified':'candidate',label:item.title,url:item.url,date:item.searchedAt,verification:item.verification,note:label+' · 검색어: '+item.query+' · '+(item.verification?.reason||'공식 사이트 여부·원문·버전·이용 허가는 아직 확인하지 않았습니다.')});}
  return rows;
 }

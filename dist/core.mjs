@@ -1,3 +1,4 @@
+import {normalizeAsset} from './asset-normalization.mjs';
 import {evaluateContractBundle,cleanContractChoices} from './contract-review.mjs';
 import {categoryRecommendation} from './catalog.mjs';
 import {cleanCandidates} from './source-search.mjs';
@@ -42,6 +43,7 @@ export function projectTasks(p){
  return [...counts].map(([task,count])=>({task,count})).sort((a,b)=>b.count-a.count||a.task.localeCompare(b.task,'ko'));
 }
 export function evaluate(a,c,now=Date.now()){
+ a=normalizeAsset(a);
  const result=evaluateBase(a,c,now),review=reviewSourceConditions(appliedOfficialLicense(a)?{...a,confirmed:true}:a,c,now,{contractConfirmed:result.contractConfirmed});result.blockers ||= result.status==='review'?[...result.notes]:[];
  if(review&&!result.scopeUnresolved&&!(appliedOfficialLicense(a)?.id==='isaac-code-20261016'&&a.reviewScope==='code')){
   if(review.status==='conflict'){result.status='conflict';result.conflicts=[...(result.conflicts||[]),...review.conflicts];}

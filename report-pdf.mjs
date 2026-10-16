@@ -1,10 +1,11 @@
+import {normalizeAsset,assetScope} from './dist/asset-normalization.mjs';
 import PDFDocument from 'pdfkit';
 import {existsSync} from 'node:fs';
 import {join} from 'node:path';
 import {evaluate,statuses,validateProject} from './dist/core.mjs';
 import {conditionsConfirmed,conditionsPrompt,selectedAssets,selectionOf,projectSummary,summaryReason} from './dist/workflow.mjs';
 import {summaryReasonText,displaySources,resultItems,outcomeReason} from './dist/result-sections.mjs';
-import {assetSources,sourceGroup} from './dist/evidence-sources.mjs';
+import {candidateNotice,assetSources,sourceGroup} from './dist/evidence-sources.mjs';
 
 export const verdictColor=status=>({[statuses.conflict]:'#9e3025',[statuses.review]:'#775310',[statuses.conditions]:'#16613c'}[status]||'#263e38');
 
@@ -23,6 +24,23 @@ export function wrapPdfText(value,measure,width){
  }).join('\n');
 }
 
+export function pdfNameWords(value){
+ const words=String(value).trim().split(/\s+/),result=[];
+ for(let i=0;i<words.length;i++){
+  if(words[i]==='·'&&result.length)result[result.length-1]+=' ·'+(words[i+1]?' '+words[++i]:'');
+  else result.push(words[i]);
+ }
+ return result;
+}
+export function wrapPdfName(value,measure,width){
+ const lines=[];let line='';
+ for(const word of pdfNameWords(value)){
+  if(line&&measure(line+' '+word)>width){lines.push(line);line=word;}
+  else line+=(line?' ':'')+word;
+ }
+ return [...lines,line].join('\n');
+}
+
 // Ignore extraction whitespace only; changed words/conditions stay separate.
 export function originalKey(text) {
  return String(text).normalize('NFC').replace(/\s+/g,' ').trim();
@@ -32,22 +50,37 @@ export function pdfReportData(input, includeOriginals=false) {
  if(!conditionsConfirmed(p))return {name:p.name,context:p.context,status:conditionsPrompt,reason:'2단계에서 실제 사용 조건을 확인하고 적용하세요.',usedCount:selectedAssets(p).length,pending:p.assets.filter(a=>selectionOf(a)==='pending').length,items:[],originals:[],contextConfirmed:false};
  const summary=projectSummary(p), originals=[];
  const add=(label,text)=>{if(!text?.trim())return;const key=originalKey(text);const existing=originals.find(x=>x.key===key);if(existing){if(!existing.labels.includes(label))existing.labels.push(label);}else originals.push({key,labels:[label],text});};
- const items=summary.assets.map(a=>{
+ const items=summary.assets.map(normalizeAsset).map(a=>{
   const r=evaluate(a,p.context), parts=resultItems(r,outcomeReason(a,r)), sources=assetSources(a,p.context);
   if(includeOriginals){
    add(a.name+' · 저장된 약관 · '+(a.terms?.fileName||a.terms?.sourceUrl||''),a.terms?.originalText);
    add(a.name+' · '+a.licenseDocument?.name,a.licenseDocument?.text);
    add(a.name+' · 입력 근거',a.evidence);add(a.name+' · 검토 메모',a.notes);
-   for(const s of sources)add(a.name+' · '+s.label+' · '+s.url,s.verification?.text);
+   for(const s of sources){add(a.name+' · '+s.label+' · '+s.url,s.verification?.text);if(!s.verification?.text)add(a.name+' · '+s.label+' · 발췌',s.clause||s.verification?.excerpts?.map(x=>x.text).join('\n'));}
+   if(!a.terms?.originalText)add(a.name+' · 저장된 발췌',a.terms?.excerpts?.join('\n'));
   }
   const quotes=[...new Set([...(a.terms?.excerpts||[]),...sources.filter(s=>!s.contractDocument).flatMap(s=>(s.verification?.excerpts||[]).map(x=>x.text))].filter(Boolean))];
-  return {ruleDate:r.ruleDate,reviewDates:r.reviewDates,reviewWarnings:r.reviewWarnings,name:a.name,status:statuses[r.status],reason:outcomeReason(a,r),...parts,
-   sources:displaySources(r,sources).map(s=>({recordLabel:s.recordLabel,label:s.label,url:s.url,group:sourceGroup(s),date:s.date,scope:s.scope,note:outcomeReason(a,r).includes(s.note)?'':s.note,clause:outcomeReason(a,r).includes(s.clause)?'':s.clause,quote:s.contractDocument?s.verification?.excerpts?.[0]?.text:''})),
+  return {candidateNotice:candidateNotice(a),ruleDate:r.ruleDate,reviewDates:r.reviewDates,reviewWarnings:r.reviewWarnings,name:a.name,status:statuses[r.status],reason:outcomeReason(a,r),...parts,
+   sources:displaySources(r,sources).map(s=>({type:s.type,recordLabel:s.recordLabel,label:s.label,url:s.url,group:sourceGroup(s),date:s.date,dateLabel:s.dateLabel,warning:s.warning,scope:s.scope,note:outcomeReason(a,r).includes(s.note)?'':s.note,clause:outcomeReason(a,r).includes(s.clause)?'':s.clause,quote:s.contractDocument?s.verification?.excerpts?.[0]?.text:''})),
    quotes:quotes.slice(0,3),extraQuotes:Math.max(0,quotes.length-3),evidence:a.evidence,
-   scope:({code:'코드·오픈소스 자체',model:'모델·가중치',service:'서비스·API 계약',bundle:'패키지·번들 전체'}[a.reviewScope]||({output:'AI 생성 결과물',weights:'모델 가중치',service:'API·서비스 계약',training:'학습·미세조정',other:'기타 이용'}[a.scope])||'등록한 자료 범위')};
+   scope:assetScope(a)};
  });
  if(includeOriginals)for(const d of p.assignment?.documents||[])add(d.name+' · '+(d.role==='feedback'?'피드백':'검토 자료'),d.text);
  return {name:p.name,context:p.context,status:statuses[summary.status],reason:summaryReason(summary),usedCount:summary.assets.length,pending:summary.pending,items,originals};
+}
+
+export function pdfBodyLayout(items){
+ const uses=new Map();
+ for(const item of items)for(const text of [...item.conditions,...item.checks]){
+  const key=text.includes('제3자 권리')?'입력 자료·브랜드·디자인·상표·초상·음성·개인정보 등 제3자 권리는 실제 자료를 기준으로 별도 확인하세요. 라이선스·약관상 허용만으로 확보되는 권리가 아닙니다.':text;
+  if(!uses.has(key))uses.set(key,{text:key,names:[],sourceTexts:[]});
+  const note=uses.get(key);
+  if(!note.names.includes(item.name))note.names.push(item.name);
+  if(!note.sourceTexts.includes(text))note.sourceTexts.push(text);
+ }
+ const common=[...uses.values()].filter(({text,names})=>names.length>1||/제3자 권리|과거 생성물|Steam 공개|금지 콘텐츠|직접 입력.*출처/.test(text));
+ const shared=new Set(common.flatMap(n=>n.sourceTexts)),order=[statuses.conflict,statuses.review,statuses.conditions];
+ return {common,items:items.map(item=>({...item,conditions:item.conditions.filter(t=>!shared.has(t)),checks:item.checks.filter(t=>!shared.has(t))})).sort((a,b)=>order.indexOf(a.status)-order.indexOf(b.status))};
 }
 
 export async function createReportPdf(project,{includeOriginals=false}={}) {
@@ -61,17 +94,23 @@ export async function createReportPdf(project,{includeOriginals=false}={}) {
  const wrapped=(value,w=width)=>wrapPdfText(value,t=>doc.widthOfString(t),w-1);
  const text=(value,size=9,color='#263e38')=>{doc.fontSize(size).fillColor(color).text(wrapped(value),42,doc.y,{width,lineGap:2,paragraphGap:3});};
  const heading=(value,size=12,color='#086f64')=>{room(55);doc.moveDown(.4);text(value,size,color);doc.moveDown(.2);};
- const list=(title,values)=>{heading(title,10);if(values.length)for(const value of values)text('• '+value);else text('추가 항목 없음',9,'#65766e');};
  text(data.name,18);text('IDOL License WORKBENCH · '+new Date().toLocaleDateString('ko-KR',{timeZone:'Asia/Seoul'}),8);
+ const c=data.context;
+ text(`사용 목적: ${{general:'일반 이용',research:'연구',conference:'학회·논문',enterprise:'기업·납품',steam:'Steam 출시'}[c.platform]} · 상업 ${c.commercial?'예':'아니요'} · 배포 ${c.distribute?'예':'아니요'} · 수정 ${c.modified?'예':'아니요'} · 네트워크 ${c.network?'예':'아니요'}`,8);
  heading('전체 결과: '+data.status,12,verdictColor(data.status));text(data.reason);
+ if(data.items.length)text([statuses.conflict,statuses.review,statuses.conditions].map(status=>`${status} ${data.items.filter(i=>i.status===status).length}개`).join(' · '),8);
+ text(`실제 사용 ${data.usedCount}개 · 선택 전 ${data.pending}개 · 전체 원문 부록 ${includeOriginals?'포함':'제외'}`,8);
  if(data.items.length){
-  const columns=[42,124,229],widths=[82,105,width-187];
+  const columns=[42,180,290],widths=[138,110,width-248];
   const row=(values,header=false)=>{
-   doc.fontSize(header?9:8);values=values.map((v,i)=>wrapped(v,widths[i]-12));
-   const height=Math.max(26,...values.map((v,i)=>doc.heightOfString(v,{width:widths[i]-12})+14));
+   const sizes=values.map(()=>header?9:8);
+   doc.fontSize(sizes[0]);const longest=Math.max(...pdfNameWords(values[0]).map(w=>doc.widthOfString(w)),1);
+   sizes[0]*=Math.min(1,(widths[0]-14)/longest);
+   values=values.map((v,i)=>{doc.fontSize(sizes[i]);return i===0?wrapPdfName(v,t=>doc.widthOfString(t),widths[i]-14):wrapped(v,widths[i]-12);});
+   const height=Math.max(26,...values.map((v,i)=>{doc.fontSize(sizes[i]);return doc.heightOfString(v,{width:widths[i]-12})+14;}));
    if(doc.y+height>doc.page.height-44){doc.addPage();row(['항목','판정','한 줄 이유'],true);}
    const y=doc.y;doc.save().rect(42,y,width,height).fill(header?'#e8efec':'#ffffff').restore();
-   for(let i=0;i<values.length;i++){doc.fontSize(header?9:8).fillColor(!header&&i===1?verdictColor(values[i]):'#263e38').text(values[i],columns[i]+6,y+6,{width:widths[i]-12});}
+   for(let i=0;i<values.length;i++){doc.fontSize(sizes[i]).fillColor(!header&&i===1?verdictColor(values[i]):'#263e38').text(values[i],columns[i]+6,y+6,{width:widths[i]-12});}
    doc.save().strokeColor('#c7d4cf').moveTo(42,y+height).lineTo(42+width,y+height).stroke().restore();doc.y=y+height;
   };
   row(['항목','판정','한 줄 이유'],true);
@@ -79,33 +118,44 @@ export async function createReportPdf(project,{includeOriginals=false}={}) {
   for(const item of [...data.items].sort((a,b)=>order.indexOf(a.status)-order.indexOf(b.status))){const reason=summaryReasonText(item.reason);row([item.name,item.status,reason]);}
   doc.moveDown();
  }
- const c=data.context;
- text(`사용 목적: ${ {general:'일반 이용',research:'연구',conference:'학회·논문',enterprise:'기업·납품',steam:'Steam 출시'}[c.platform]} · 상업 ${c.commercial?'예':'아니요'} · 배포 ${c.distribute?'예':'아니요'} · 수정 ${c.modified?'예':'아니요'} · 네트워크 ${c.network?'예':'아니요'}`,8);
- text(`실제 사용 ${data.usedCount}개 · 선택 전 ${data.pending}개 · 전체 원문 부록 ${includeOriginals?'포함':'제외'}`,8);
+ const layout=pdfBodyLayout(data.items);
  if(data.items.length)doc.addPage();
- for(const [i,item] of data.items.entries()) {
-  heading(`${i+1}. ${item.name} — ${item.status}`,12,verdictColor(item.status));text(item.reason);
-  if(item.ruleDate)text('판정 규칙 기준일: '+item.ruleDate,8);
-  for(const date of item.reviewDates||[])text('검토일: '+date,8);for(const warning of item.reviewWarnings||[])text(warning,9);
-  list('지켜야 할 조건',item.conditions);list('확인 필요한 부분',item.checks);
-  heading('적용 범위·핵심 근거',10);text('검토 범위: '+item.scope);
-  for(const s of item.sources){
-   room(45);text(`${s.group} · ${s.label}${s.recordLabel?' · '+s.recordLabel:''}${s.date?' · '+s.date:''}`,9);
-   if(s.scope)text('적용 범위: '+s.scope,8);
-   if(s.note)text(s.note,8);
-   if(s.clause)text('근거: '+s.clause,8);
-   if(s.quote)text('원문 발췌: '+s.quote,8);
-   if(/^https?:\/\//i.test(s.url)){doc.fontSize(8).fillColor('#086f64').text(wrapped(s.url),42,doc.y,{width,link:s.url,lineGap:2});}
+ // Measure the same wrapped blocks we draw, keeping ordinary cards on one page.
+ const drawBlock=({value,size=8.5,color='#263e38',link})=>{
+  doc.fontSize(size);const valueWrapped=wrapped(value),height=doc.heightOfString(valueWrapped,{width,lineGap:1})+2;
+  room(height);doc.fillColor(color).text(valueWrapped,42,doc.y,{width,lineGap:1,link});doc.y+=2;
+ };
+ if(layout.common.length){
+  drawBlock({value:'공통 확인사항',size:13,color:'#086f64'});
+  for(const note of layout.common)drawBlock({value:'• '+note.text+' (해당 항목: '+note.names.join(', ')+')',size:8.5});
+  doc.y+=6;
+ }
+ for(const [i,item] of layout.items.entries()){
+  const blocks=[{value:`${i+1}. ${item.name}`,size:12,color:'#086f64'},{value:item.status+' · '+item.reason,size:9,color:verdictColor(item.status)}];
+  for(const [title,values] of [['지켜야 할 조건',item.conditions],['확인 필요',item.checks]]){
+   if(!values.length)continue;
+   blocks.push({value:title,size:9});
+   for(const value of values.slice(0,3))blocks.push({value:'• '+value});
+   if(values.length>3)blocks.push({value:`외 ${values.length-3}개 · 전체 목록은 웹 화면에 있습니다.`,size:8,color:'#65766e'});
   }
-  if(!item.sources.length)text('공식 출처 미등록. 입력 근거를 확인하세요.',8);
-  for(const quote of item.quotes)text('원문 발췌: '+quote,8);
-  if(item.extraQuotes)text(`추가 발췌 ${item.extraQuotes}개는 웹의 상세 근거에서 확인하세요.`,8);
-  if(item.evidence&&!item.sources.length)text('입력 근거: '+item.evidence,8);
+  blocks.push({value:'검토 범위: '+item.scope,size:8,color:'#65766e'});
+
+  for(const source of item.sources.slice(0,2)){
+   const kind=source.recordLabel||({'reference':'공식 기록·실시간 조회 아님','supplement':'공식 기록·실시간 조회 아님','verified':'공식 주소 대조 기록','suggested':'공식 참고·적용 미확인','rule':'규칙 참고','user':'직접 입력·출처 미검증','manual':'직접 입력·출처 미검증','candidate':'공식 도메인·원문 미확인'}[source.type])||source.group;
+   blocks.push({value:'근거: '+source.label+(source.date?' · '+source.dateLabel+': '+source.date:'')+' · '+kind+(source.warning?' · '+source.warning:''),size:7.5,color:'#65766e',link:source.url});
+  }
+  if(item.sources.length>2)blocks.push({value:`외 ${item.sources.length-2}개 · 전체 근거는 웹 화면에 있습니다.`,size:7.5,color:'#65766e'});
+  if(item.candidateNotice)blocks.push({value:item.candidateNotice,size:8,color:'#65766e'});
+  if(!item.sources.length&&item.evidence)blocks.push({value:'입력 근거: '+item.evidence,size:8});
+  const height=blocks.reduce((total,b)=>{doc.fontSize(b.size||8.5);return total+doc.heightOfString(wrapped(b.value),{width,lineGap:1})+2;},0)+14;
+  if(height<doc.page.height-84)room(height);
+  doc.y+=6;doc.save().strokeColor('#c7d4cf').moveTo(42,doc.y).lineTo(42+width,doc.y).stroke().restore();doc.y+=8;
+  for(const block of blocks)drawBlock(block);
  }
  text('검토 기록이며 출시 승인·법률 의견이 아닙니다. 확인 날짜와 실제 적용 범위를 함께 확인하세요.',8,'#65766e');
  if(includeOriginals){
   doc.addPage();heading('부록 · 전체 보관 원문',15);
-  text('앱에 저장된 원문만 포함합니다. 내장 검토 기록은 근거 문장과 링크만 본문에 표시합니다.',9);
+  text('앱에 저장된 원문과 검토 기록의 발췌를 포함합니다. 실시간 조회한 원문이 아니며 출처와 적용 범위를 확인하세요.',9);
   if(!data.originals.length)text('이 프로젝트에 저장된 원문이 없습니다.',9);
   text('추출 공백을 정리한 내용이 동일한 원문만 합칩니다. 다른 버전·조건은 별도로 보존합니다.',8);
   for(const [i,original] of data.originals.entries()){

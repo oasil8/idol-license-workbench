@@ -69,10 +69,11 @@ test('shared hosting domains rank only the official repository, not unrelated fo
 test('code candidate forms exclude hidden AI provider fields so official enrichment remains applicable',()=>{
  const code=fs.readFileSync(new URL('../dist/app.mjs',import.meta.url),'utf8');
  for(const kind of ['code','model','tool','image','audio','ai']){
-  const data={name:'OpenSees',kind,provider:'other',serviceName:'Old service',evidence:'https://opensees.github.io/OpenSeesDocumentation/developer/license.html'};
+  const data={name:'OpenSees',kind,scope:'output',planType:'paid',provider:'other',serviceName:'Old service',evidence:'https://opensees.github.io/OpenSeesDocumentation/developer/license.html'};
   const elements=Object.fromEntries(['nonprofitEntityConfirmed','apiAccessConfirmed','sourceConditionsConfirmed','confirmed','aiGenerated'].map(k=>[k,{checked:false}]));
-  const box={cleanContractChoices,workingContractChoices:{},$:()=>({elements,dataset:{}}),project:()=>({assets:[]}),editing:null,workingCandidates:[],workingTerms:undefined,crypto:{randomUUID:()=> 'test'},FormData:class{constructor(){return Object.entries(data);}}};
+  const box={normalizeAsset,cleanContractChoices,workingContractChoices:{},$:()=>({elements,dataset:{}}),project:()=>({assets:[]}),editing:null,workingCandidates:[],workingTerms:undefined,crypto:{randomUUID:()=> 'test'},FormData:class{constructor(){return Object.entries(data);}}};
   vm.createContext(box);vm.runInContext(code.slice(code.indexOf('function formAsset()'),code.indexOf('function updateForm()')),box);
-  const a=box.formAsset();assert.equal(a.provider,kind==='ai'?'other':'');assert.equal(a.serviceName,kind==='ai'?'Old service':'');
+  const a=box.formAsset();assert.equal(a.scope,kind==='ai'?'output':undefined);assert.equal(a.planType,kind==='ai'?'paid':undefined);assert.equal(a.provider,kind==='ai'?'other':undefined);assert.equal(a.serviceName,kind==='ai'?'Old service':undefined);
  }
 });
+import {normalizeAsset} from '../dist/asset-normalization.mjs';
