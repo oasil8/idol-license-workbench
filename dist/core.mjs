@@ -51,6 +51,7 @@ export function evaluate(a,c,now=Date.now()){
   result.humanChecks=[...new Set([...(result.humanChecks||[]),...review.missing])];result.blockers=[...new Set([...result.blockers,...review.blockers])];
   if(!result.sources.some(([,url])=>url===review.source.url))result.sources.push([review.source.title,review.source.url]);
  }
+ if(['conditions','conflict'].includes(result.status)&&a.planType&&a.planType!=='unknown')result.humanChecks=(result.humanChecks||[]).filter(t=>t!=='서비스·플랜을 지정하고 최신 약관 조회 실행');
  result.reviewDates=[...new Set([review?.source.observedOn,result.reviewedEvidence?.checkedAt?.slice(0,10),!a.terms?.imported&&!a.terms?.error?a.terms?.checkedAt?.slice(0,10):undefined,a.sourceConditionsConfirmed?a.sourceConditionsDate:undefined,appliedOfficialLicense(a)?.date].filter(Boolean))];
  result.reviewDates=result.reviewDates.filter(d=>/^\d{4}-\d{2}-\d{2}$/.test(d)&&Number.isFinite(Date.parse(d))&&Date.parse(d)<=now);
  if(!result.reviewDates.length)result.ruleDate=RULE_DATE;
