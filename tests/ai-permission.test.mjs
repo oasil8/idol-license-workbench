@@ -12,7 +12,7 @@ const candidate=(extra={})=>({url,query:'Tripo',searchedAt:new Date().toISOStrin
 test('verified official permission yields conditional contract result with separate human checks',()=>{
  const asset={...a,sourceCandidates:[candidate()]},r=evaluate(asset,c);
  assert.equal(r.status,'conditions');assert.equal(r.contractConfirmed,true);assert.ok(r.humanChecks.length);assert.deepEqual(r.blockers,[]);
- assert.match(buildProjectReport({name:'Test',context:c,assets:[asset]}),/확인 필요/);
+ assert.match(buildProjectReport({contextConfirmed:true,name:'Test',context:c,assets:[asset]}),/확인 필요/);
 });
 test('candidate, expired, truncated, imported, renamed and scope or plan uncertainty cannot clear AI rights',()=>{
  for(const extra of [{status:'candidate'},{checkedAt:'2020-01-01'},{truncated:true},{imported:true},{query:'Other'},{text:'No permission verified.'},{finalUrl:'https://example.com/terms'}])assert.equal(evaluate({...a,sourceCandidates:[candidate(extra)]},c).status,'review');

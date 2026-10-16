@@ -3,7 +3,7 @@ import {brandIcon,brandIconCss} from './brand-icons.mjs';
 import {permissionMarkup,outcomeReason,resultItems} from './result-sections.mjs';
 import {evidenceMarkup} from './document-text.mjs';
 import {verificationMarkup} from './source-search.mjs';
-import {projectSummary,summaryReason,selectionOf,selectionLabels} from './workflow.mjs';
+import {conditionsConfirmed,conditionsPrompt,projectSummary,summaryReason,selectionOf,selectionLabels} from './workflow.mjs';
 import {evaluate,commercialVerdict,statuses,projectTasks,RULE_DATE} from './core.mjs';
 import {assetSources,sourceTypes,sourceGroup} from './evidence-sources.mjs';
 import {reviewAssignment} from './assignment.mjs';
@@ -48,6 +48,7 @@ export function reportHtml(markdown){
 }
 
 export function buildProjectReport(p){
+ if(!conditionsConfirmed(p))return reportHtml('# '+p.name+'\n\n'+conditionsPrompt+'\n\n2단계에서 사용 조건을 확인하고 적용하세요.');
  const summary=projectSummary(p),c=p.context;
  const paragraph=text=>`<p>${esc(text)}</p>`;
  const sourceLink=source=>`<a href="${esc(source.url)}" target="_blank" rel="noopener noreferrer">${esc(source.label)}</a>`;

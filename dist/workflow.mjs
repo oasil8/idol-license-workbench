@@ -1,3 +1,5 @@
+export const conditionsConfirmed=p=>p.contextConfirmed===true;
+export const conditionsPrompt='사용 조건을 먼저 정하세요';
 import {evaluate} from './core.mjs';
 export const selectionLabels={pending:'선택 전',used:'실제 사용',alternative:'대안 보관',excluded:'사용 안 함'};
 export function selectionOf(a){

@@ -37,7 +37,7 @@ test('app and standalone download use the same complete print pipeline',()=>{
  const source=fs.readFileSync(new URL('../dist/app.mjs',import.meta.url),'utf8');
  assert.match(source,/installReportPrint\(\$\('reportView'\)\)/);
  assert.match(source,/저장된 약관 원문<\/summary><pre>\$\{esc\(t.originalText\)\}/);
- const html=buildProjectReport({name:'Print',context:{platform:'research'},assets:[]});
+ const html=buildProjectReport({contextConfirmed:true,name:'Print',context:{platform:'research'},assets:[]});
  assert.ok(html.includes(installReportPrint.toString()));assert.ok(html.includes(reportPrintCss));
  assert.match(reportPrintCss,/white-space:pre-wrap!important/);assert.match(reportPrintCss,/break-before:page/);
  assert.match(reportPrintCss,/\.assessment-evidence,\.verification-record,\.assignment-source/);

@@ -80,8 +80,8 @@ test('saved facts, per-document originals and evidence survive validation and re
  const a=make(),p={id:'p',name:'contract test',context,assets:[a]},saved=validateProject(p,{local:true});
  assert.deepEqual(saved.assets[0].contractChoices,a.contractChoices);
  const rows=assetSources(a,context),general=rows.find(s=>s.url==='https://elevenlabs.io/terms-of-use');assert.ok(general.verification.text.length>10000);assert.ok(rows.some(s=>s.url.endsWith('/creative-terms')&&s.clause));
- const report=buildProjectReport(p);assert.ok(JSON.stringify(report).includes('creative-terms'));assert.ok(JSON.stringify(report).includes('최소 5년'));
- const pdf=pdfReportData(p);assert.equal(pdf.originals.length,0);assert.ok(pdf.items[0].sources.some(s=>s.url.endsWith('/creative-terms')&&s.quote));assert.deepEqual(pdf.items[0].conditions,result(a).tasks);assert.ok(pdf.items[0].sources.find(s=>s.url.endsWith('/creative-terms')).quote.includes('consents'));assert.equal(result(make({scope:'service',apiAccessConfirmed:true},{audience:'endusers',oem:'small'})).sources[0][1],'https://elevenlabs.io/oem-terms');
+ const report=buildProjectReport({...p,contextConfirmed:true});assert.ok(JSON.stringify(report).includes('creative-terms'));assert.ok(JSON.stringify(report).includes('최소 5년'));
+ const pdf=pdfReportData({...p,contextConfirmed:true});assert.equal(pdf.originals.length,0);assert.ok(pdf.items[0].sources.some(s=>s.url.endsWith('/creative-terms')&&s.quote));assert.deepEqual(pdf.items[0].conditions,result(a).tasks);assert.ok(pdf.items[0].sources.find(s=>s.url.endsWith('/creative-terms')).quote.includes('consents'));assert.equal(result(make({scope:'service',apiAccessConfirmed:true},{audience:'endusers',oem:'small'})).sources[0][1],'https://elevenlabs.io/oem-terms');
  assert.equal(a.sourceCandidates[0].verification.text,'Preserved original');
 });
 

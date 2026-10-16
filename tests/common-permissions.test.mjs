@@ -19,7 +19,7 @@ test('reviewed public grants distinguish output ownership, paid entitlement and 
  const runway={...base,name:'Runway',serviceName:'Runway',provider:'other'};
  assert.equal(evaluate(runway,context).status,'conditions');
  assert.ok(assetSources(runway,context).some(s=>s.type==='reference'&&s.clause.includes('non-commercial')));
- assert.equal(pdfReportData({name:'Evidence',context,assets:[runway]}).items[0].status,'사용 가능 (조건부)');
+ assert.equal(pdfReportData({contextConfirmed:true,name:'Evidence',context,assets:[runway]}).items[0].status,'사용 가능 (조건부)');
  assert.equal(aiResult({...base,provider:'tripo',planType:'paid'},now).status,'conditions');
  assert.equal(evaluate({...base,provider:'tripo',planType:'free'},context).status,'conflict');
  assert.equal(aiResult({...base,provider:'tripo'},now).status,'review');

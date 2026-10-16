@@ -11,7 +11,7 @@ test('service icons use bundled images and unknown names retain a neutral fallba
  assert.match(brandIcon({name:'Unknown',kind:'audio'}),/♪/);
 });
 test('exported service icons remain embedded and do not require external image requests',()=>{
- const html=buildProjectReport({name:'Icon test',context:{},assets:[{name:'Meshy',kind:'ai',selection:'used'}]});
+ const html=buildProjectReport({contextConfirmed:true,name:'Icon test',context:{},assets:[{name:'Meshy',kind:'ai',selection:'used'}]});
  assert.match(html,/<img class="brand-icon" src="data:image/);
  assert.doesNotMatch(html,/<img[^>]*src="https?:/);
 });

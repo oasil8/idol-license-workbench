@@ -52,6 +52,6 @@ test('real distribution records preserve media attribution, source exceptions an
  assert.match(fs.readFileSync(new URL('fixtures/real-terms/lodash-license.txt',import.meta.url),'utf8'),/permission notice shall be/);
  assert.match(fs.readFileSync(new URL('fixtures/real-terms/minilm-card.txt',import.meta.url),'utf8'),/license: apache-2.0/);
  for(const a of assets){const r=evaluate(a,context);assert.equal(r.status,'conditions');assert.ok(r.humanChecks.length);assert.ok(r.tasks.some(x=>x.includes('저작자')));}
- const report=buildProjectReport({name:'실제 배포 기록 비교',context,assets});
+ const report=buildProjectReport({contextConfirmed:true,name:'실제 배포 기록 비교',context,assets});
  for(const phrase of ['ESO/A. Cikota et al.','zero-project.gr','Music Archive','허용 근거','지켜야 할 조건','확인 필요'])assert.ok(report.includes(phrase),phrase);
 });

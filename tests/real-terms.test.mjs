@@ -45,7 +45,7 @@ test('reviewed service rules retain restrictions and reject unrelated output use
 test('export keeps page or paragraph labels and unique links to manual original evidence',()=>{
  const terms=reviewManual(a,input,now);terms.locations=[{label:'Word 추출 문단 56',start:0,end:text.length}];
  const asset={...a,name:'Actual terms',selection:'used',terms};
- const report=buildProjectReport({name:'Review',assets:[asset,asset],context:{commercial:true,distribute:true},scan:''});
+ const report=buildProjectReport({contextConfirmed:true,name:'Review',assets:[asset,asset],context:{commercial:true,distribute:true},scan:''});
  assert.match(report,/Word 추출 문단 56/);assert.match(report,/href="#terms-0-0"/);assert.match(report,/id="terms-0-0"/);assert.match(report,/id="terms-1-0"/);
  assert.equal((report.match(/id="terms-0-0"/g)||[]).length,1);
 });

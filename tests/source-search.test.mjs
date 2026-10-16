@@ -19,5 +19,5 @@ test('search candidates survive save/backup/report without granting permission',
  assert.deepEqual(restored.assets[0].sourceCandidates,local.assets[0].sourceCandidates);
  const a=restored.assets[0],r=commercialVerdict(a,restored.context);assert.equal(r.status,'review');
  const rows=assetSources(a,restored.context);assert.equal(rows[0].type,'candidate');assert.equal(sourceGroup(rows[0]),'검색 후보 · 확인 전');
- const html=buildProjectReport(restored);assert.match(html,/검색 후보 · 확인 전/);assert.match(html,/검색일:/);assert.ok(html.includes(candidate.url));
+ const html=buildProjectReport({...restored,contextConfirmed:true});assert.match(html,/검색 후보 · 확인 전/);assert.match(html,/검색일:/);assert.ok(html.includes(candidate.url));
 });

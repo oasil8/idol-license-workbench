@@ -18,7 +18,7 @@ test('purpose defaults, actual checkboxes and overall/export results agree acros
   const asset={name:'Test',kind,license:'CC-BY-ND-4.0',confirmed:true,evidence:'registered original license',rights:'unknown'};
   const privateUse={...purposeDefaults('research'),modified:true},shared={...privateUse,distribute:true};
   assert.equal(evaluate(asset,privateUse).status,'conditions');assert.equal(evaluate(asset,shared).status,'conflict');
-  for(const context of [privateUse,shared]){const p={name:'Purpose',context,assets:[asset]};assert.equal(projectSummary(p).status,evaluate(asset,context).status);assert.match(buildProjectReport(p),/현재 사용 목적의 결론/);}
+  for(const context of [privateUse,shared]){const p={name:'Purpose',context,assets:[asset]};assert.equal(projectSummary(p).status,evaluate(asset,context).status);assert.match(buildProjectReport({...p,contextConfirmed:true}),/현재 사용 목적의 결론/);}
   const nc={...asset,license:'CC-BY-NC-4.0'};assert.equal(evaluate(nc,purposeDefaults('enterprise')).status,'conflict');assert.equal(projectSummary({context:purposeDefaults('research'),assets:[nc]}).status,'conditions');
  }
  const code={name:'Library',kind:'code',license:'GPL-3.0-only',confirmed:true,evidence:'LICENSE'};

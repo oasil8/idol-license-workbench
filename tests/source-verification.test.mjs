@@ -17,7 +17,7 @@ test('known official exact address preserves actual text and extracts literal ev
  assert.equal(verificationLabel(local.assets[0].sourceCandidates[0],'Suno',now()),'공식 주소 대조 · 원문 확보');
  assert.match(verificationLabel(imported.assets[0].sourceCandidates[0],'Suno',now()),/재확인/);
  assert.equal(commercialVerdict(local.assets[0],local.context).status,'review');assert.equal(assetSources(local.assets[0],local.context,now()).find(s=>s.url===v.url).type,'verified');
- assert.match(buildProjectReport(local),/원문에서 찾은 문구/);assert.match(buildProjectReport(local),/확보한 원문 텍스트/);
+ assert.match(buildProjectReport({...local,contextConfirmed:true}),/원문에서 찾은 문구/);assert.match(buildProjectReport({...local,contextConfirmed:true}),/확보한 원문 텍스트/);
 });
 test('public registry match plus homepage link obtains text but remains a candidate',async()=>{
  const fetchPage=async url=>{

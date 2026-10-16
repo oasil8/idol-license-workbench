@@ -18,7 +18,7 @@ test('package and SBOM explicit URLs survive validation and appear as clickable 
   const assets=parseFile(file,JSON.stringify(data)).map(a=>({...a,selection:'used'}));
   const p=validateProject({name:'test',context,assets},{local:true});
   assert.ok(assetSources(p.assets[0],context).some(s=>s.url==='https://example.com/pkg'));
-  const html=buildProjectReport(p);assert.match(html,/href="https:\/\/example.com\/pkg"/);assert.ok(html.includes('https://example.com/pkg'));
+  const html=buildProjectReport({...p,contextConfirmed:true});assert.match(html,/href="https:\/\/example.com\/pkg"/);assert.ok(html.includes('https://example.com/pkg'));
  }
 });
 test('all material kinds and custom AI retain user evidence and notes across save validation',()=>{

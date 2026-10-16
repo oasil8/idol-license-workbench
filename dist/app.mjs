@@ -5,7 +5,7 @@ import {brandIcon} from './brand-icons.mjs';
 import {createCatalogSearch} from './catalog-search.mjs';
 import {permissionMarkup,reviewReason,outcomeReason,resultItems} from './result-sections.mjs';
 import {cleanCandidates,sourceSearchName,verificationLabel,verificationMarkup} from './source-search.mjs';
-import {selectionOf,selectionLabels,selectedAssets,projectSummary,summaryReason,commitChange} from './workflow.mjs';
+import {conditionsConfirmed,conditionsPrompt,selectionOf,selectionLabels,selectedAssets,projectSummary,summaryReason,commitChange} from './workflow.mjs';
 import {assetSources,sourceTypes,sourceGroup,sourceSearchUrl,officialSuggestions} from './evidence-sources.mjs';
 import {reviewSourceConditions,supplementCodeLicense} from './official-sources.mjs';
 import {reviewAssignment} from './assignment.mjs';
@@ -22,7 +22,7 @@ import {deduplicate,projectFingerprint} from './projects.mjs';
 const $=id=>document.getElementById(id), esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const key='license-workbench-v1';let projects=[],trash=[],current,editing=null,view='intake',busy=false,workingContractChoices={},workingTerms,termsBusy=false,migrated=false,manualDirty=false,documentLocations=[],extractionBusy=false,dialogGeneration=0,storageFailed=false,workingCandidates=[],searchGeneration=0,verifyBusy=false;
 let contextDraftProject='',contextDraft;
-const fresh=name=>({id:crypto.randomUUID(),name,context:{platform:'general',commercial:false,distribute:false,modified:false,network:false},assets:[],scan:''});
+const fresh=name=>({id:crypto.randomUUID(),name,contextConfirmed:false,context:{platform:'general',commercial:true,distribute:true,modified:false,network:false},assets:[],scan:''});
 function message(text,error=false){if(storageFailed&&!error){text='최근 저장에 실패했습니다. 저장 상태를 확인하세요. '+text;error=true;}$('notice').textContent=text;$('notice').className=error?'error':'success';}
 try{const saved=JSON.parse(localStorage.getItem(key)||'null');if(saved){if(!Array.isArray(saved.projects)||saved.projects.length>50)throw Error('저장 형식 오류');const loaded=saved.projects.map(p=>validateProject(p,{local:true})),selected=loaded[Math.min(saved.index||0,loaded.length-1)];const unique=deduplicate(loaded);projects=unique.projects;trash=Array.isArray(saved.trash)?saved.trash.map(p=>({...validateProject(p,{local:true}),deletedAt:p.deletedAt||new Date().toISOString()})):[];trash.push(...unique.removed.map(p=>({...p,deletedAt:new Date().toISOString()})));current=projects.find(p=>selected&&projectFingerprint(p)===projectFingerprint(selected))?.id||projects[0]?.id;if(unique.removed.length){migrated=true;message(`동일 내용의 중복 프로젝트 ${unique.removed.length}개를 휴지통으로 이동했습니다. 필요하면 복원할 수 있습니다.`);}}}
 catch{message('저장 데이터를 읽을 수 없습니다. 원본 저장값은 자동 덮어쓰지 않았습니다. 백업을 가져오거나 새 기록을 저장하세요.',true);}
@@ -83,8 +83,9 @@ function render(){const p=project();
  $('overall').className='overall '+overall;
  renderProjects();
  renderAssignment(p);
+ if(!conditionsConfirmed(p)){$('overall').innerHTML=`<h2>${conditionsPrompt}</h2><p>2단계에서 실제 사용 조건을 확인하고 적용하세요.</p><button id="setConditions">사용 조건 정하기</button>`;$('setConditions').onclick=()=>setView('inventory');$('stats').hidden=true;$('documentReviewSection').hidden=true;}else $('stats').hidden=false;
 }
-function renderReport(){const p=project(),assets=selectedAssets(p),tasks=projectTasks(p);
+function renderReport(){const p=project();if(!conditionsConfirmed(p)){$('reportContent').innerHTML='';return;}const assets=selectedAssets(p),tasks=projectTasks(p);
  $('reportContent').innerHTML=(tasks.length?`<details class="project-task-summary"><summary>공통 확인사항 ${tasks.length}개</summary><ul>${tasks.map(t=>`<li>${esc(t.task)} · ${t.count}개 자료</li>`).join('')}</ul></details>`:'')+assets.map(a=>`<details class="report-item result-card"><summary><strong class="brand-name">${brandIcon(a)}${esc(a.name)}</strong>${badge(evaluate(a,p.context))}<small class="review-reason ${evaluate(a,p.context).status}">${esc(outcomeReason(a,evaluate(a,p.context)))}</small><span>이유·할 일 보기</span></summary><div class="result-detail">${assessment(a,false)}<button class="outline" data-edit="${a.id}">정보 보완</button></div></details>`).join('');
 }
 function setView(next){if(next==='report'&&contextDraftProject===current)message('사용 조건에 미적용 변경이 있습니다. 결과는 마지막으로 적용한 조건 기준입니다.');view=next;window.scrollTo({top:0,behavior:'instant'});for(const v of ['intake','inventory','report','guide'])$(v+'View').hidden=v!==view;document.querySelectorAll('[data-view]').forEach(b=>{b.classList.toggle('active',b.dataset.view===view);if(b.dataset.view===view)b.setAttribute('aria-current','step');else b.removeAttribute('aria-current');});$('viewSubtitle').textContent={intake:'파일을 가져오거나 이름으로 검색해서 자료를 등록하세요.',inventory:'각 자료를 실제 사용, 대안 보관, 사용 안 함으로 분류하세요.',report:'실제 사용하는 자료의 결론과 근거를 확인하세요.',guide:'사용 순서와 결과를 읽는 방법을 확인하세요.'}[view];$('pageLabel').textContent={intake:'1. 자료 넣기',inventory:'2. 실제 사용할 것 선택',report:'3. 결과 확인',guide:'사용법·결과 안내'}[view];}
@@ -99,7 +100,7 @@ $('platform').onchange=()=>{const defaults=purposeDefaults($('platform').value);
 for(const k of ['commercial','distribute','modified','network'])$(k).onchange=markContextDraft;
 $('applyContext').onclick=()=>{
  const context=readContextDraft();
- const ok=transact(state=>{const p=state.projects.find(x=>x.id===state.current);p.context=context;});
+ const ok=transact(state=>{const p=state.projects.find(x=>x.id===state.current);p.context=context;p.contextConfirmed=true;});
  if(ok){contextDraft=undefined;contextDraftProject='';$('contextPending').textContent='사용 조건을 적용했습니다.';render();message('사용 조건을 적용하고 결과를 갱신했습니다.');}
 };
 $('homeLink').onclick=e=>{e.preventDefault();setView('intake');};

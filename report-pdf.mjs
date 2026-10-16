@@ -2,7 +2,7 @@ import PDFDocument from 'pdfkit';
 import {existsSync} from 'node:fs';
 import {join} from 'node:path';
 import {evaluate,statuses,validateProject} from './dist/core.mjs';
-import {projectSummary,summaryReason} from './dist/workflow.mjs';
+import {conditionsConfirmed,conditionsPrompt,projectSummary,summaryReason} from './dist/workflow.mjs';
 import {resultItems,outcomeReason} from './dist/result-sections.mjs';
 import {assetSources,sourceGroup} from './dist/evidence-sources.mjs';
 
@@ -11,7 +11,9 @@ export function originalKey(text) {
  return String(text).normalize('NFC').replace(/\s+/g,' ').trim();
 }
 export function pdfReportData(input, includeOriginals=false) {
- const p=validateProject(input,{local:true}), summary=projectSummary(p), originals=[];
+ const p=validateProject(input,{local:true});
+ if(!conditionsConfirmed(p))return {name:p.name,context:p.context,status:conditionsPrompt,reason:'2단계에서 실제 사용 조건을 확인하고 적용하세요.',pending:0,items:[],originals:[],contextConfirmed:false};
+ const summary=projectSummary(p), originals=[];
  const add=(label,text)=>{if(!text?.trim())return;const key=originalKey(text);const existing=originals.find(x=>x.key===key);if(existing){if(!existing.labels.includes(label))existing.labels.push(label);}else originals.push({key,labels:[label],text});};
  const items=summary.assets.map(a=>{
   const r=evaluate(a,p.context), parts=resultItems(r), sources=assetSources(a,p.context);

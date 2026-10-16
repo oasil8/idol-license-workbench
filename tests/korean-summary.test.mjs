@@ -21,6 +21,6 @@ test('Korean evidence disclosures escape text and are included in exported repor
  const esc=s=>String(s??'').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;');
  const html=verificationMarkup({...v,text:v.text+' Commercial use <script>alert(1)</script> is forbidden.'},esc,a);
  assert.match(html,/원문 근거 보기/);assert.ok(!html.includes('<script>'));assert.match(html,/원문 웹사이트 열기/);
- const report=buildProjectReport({name:'Test',context:{},assets:[{...a,selection:'used',sourceCandidates:[{query:v.query,url:v.url,searchedAt:v.checkedAt,verification:v}]}]});
+ const report=buildProjectReport({contextConfirmed:true,name:'Test',context:{},assets:[{...a,selection:'used',sourceCandidates:[{query:v.query,url:v.url,searchedAt:v.checkedAt,verification:v}]}]});
  assert.match(report,/한국어 요약/);assert.match(report,/원문 근거 보기/);
 });

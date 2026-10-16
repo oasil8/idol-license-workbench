@@ -45,7 +45,7 @@ test('PDF and Word licenses use document extraction and keep text, dates and loc
 });
 test('report has one material section with conclusion, conditions, evidence and sources',()=>{
  const a={...mit,selection:'used',name:'UNIQUE_MATERIAL',terms:undefined};
- const html=buildProjectReport({name:'Test',context,assets:[a,{...mit,name:'UNUSED',selection:'excluded'}]});
+ const html=buildProjectReport({contextConfirmed:true,name:'Test',context,assets:[a,{...mit,name:'UNUSED',selection:'excluded'}]});
  assert.equal((html.match(/<h2[^>]*>(?:<[^>]+>[^<]*<\/[^>]+>)?UNIQUE_MATERIAL<\/h2>/g)||[]).length,1);
  assert.equal((html.match(/<h2[^>]*>[^]*?UNUSED<\/h2>/g)||[]).length,0);
  assert.match(html,/https:\/\/example.com\/license/);assert.match(html,/지켜야 할 조건/);
