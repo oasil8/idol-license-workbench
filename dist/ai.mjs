@@ -1,7 +1,7 @@
 import {officialDomains,isOfficialCandidate} from './source-policy.mjs';
 import {officialRecord} from './official-sources.mjs';
 import {contractProfile} from './contract-review.mjs';
-import {analyzeTerms} from './terms-analysis.mjs';
+import {analyzeTerms,pastOutputCheck,thirdPartyCheck} from './terms-analysis.mjs';
 export const providerNames={openai:'OpenAI / ChatGPT · 개인용',anthropic:'Anthropic / Claude · 개인용',meshy:'Meshy',tripo:'Tripo',huggingface:'Hugging Face 모델',other:'다른 서비스 · 수동 검토'};
 export function queryKey(a){return JSON.stringify([a.provider||'',a.planType||'unknown',a.scope||'output',a.repository||'',...(a.contractRoute?['contract:'+a.contractRoute]:[]),...(a.apiAccessConfirmed===true?['api-access-confirmed']:[]),...(a.serviceName||a.outputType||a.useDescription?[a.serviceName||'',a.outputType||'',a.useDescription||'']:[])]);}
 const officialTermsUrls={
@@ -28,7 +28,7 @@ function publicOutputTerms(a,now){
  const provider=officialTermsUrls[a.provider]?a.provider:a.provider==='other'?({'runway':'runway','runway ml':'runway','런웨이':'runway','midjourney':'midjourney','미드저니':'midjourney','github copilot':'copilot','깃허브 코파일럿':'copilot'})[String(a.serviceName||a.name||'').trim().toLowerCase()]:undefined;
  const checkedAt=(officialRecord(provider)?.observedOn||'')+'T00:00:00+09:00';
  if(!provider||a.scope!=='output'||a.selection==='pending'||a.sourceCandidates?.length||a.terms||a.repository||a.version||(a.planType==='business'&&provider!=='copilot')||/community|커뮤니티|타인|다른 사람|evaluation|preview|평가판|미리보기|경쟁.*(?:모델|서비스)|competing/i.test(a.useDescription||'')||now<Date.parse(checkedAt))return;
- const common=['금지 콘텐츠·입력 자료의 권리·서비스 이용 정책을 준수하세요.','현재 공개 안내의 생성물 범위입니다. 과거 생성물·별도 계약·외부 콘텐츠의 적용 여부는 따로 확인하세요.'];
+ const common=['금지 콘텐츠·서비스 이용 정책을 준수하세요.'];
  let analysis;
  if(provider==='meshy')analysis=analyzeTerms(a,'if you are a paid customer, you own the assets created through our platform. If you are on a free plan, we grant you a CC BY 4.0 license instead.');
  else if(provider==='copilot'){
@@ -45,12 +45,12 @@ function publicOutputTerms(a,now){
   const grant=grants[provider];if(!grant)return;
   analysis={status:'conditions',summary:grant[0],excerpts:[grant[1]],conditions:provider==='anthropic'?['Claude 서비스·출력물을 경쟁 제품·서비스 제작이나 AI 모델 학습에 이용하지 마세요.']:provider==='openai'?['출력물을 OpenAI와 경쟁하는 모델 개발에 이용하지 말고, 정확성과 적합성을 확인하세요.']:[]};
  }
- return {...analysis,summary:analysis.summary.replace('조회한 공식 문서','검토된 공식 문서 기록'),conditions:[...analysis.conditions,...common],checkedAt,queryKey:queryKey(a),sourceUrl:officialTermsUrls[provider][provider==='meshy'||provider==='copilot'&&a.contractRoute==='github-business'?1:0],sourceName:'공식 공개 안내',builtIn:true,verifiedProvider:provider,method:'public-review'};
+ return {...analysis,summary:analysis.summary.replace('조회한 공식 문서','검토된 공식 문서 기록'),conditions:[...analysis.conditions,...common],checks:[...new Set([...(analysis.checks||[]),pastOutputCheck])],checkedAt,queryKey:queryKey(a),sourceUrl:officialTermsUrls[provider][provider==='meshy'||provider==='copilot'&&a.contractRoute==='github-business'?1:0],sourceName:'공식 공개 안내',builtIn:true,verifiedProvider:provider,method:'public-review'};
 }
 export function aiResult(a,now=Date.now()){
- let t=a.terms?.method==='manual'?a.terms:(!a.terms||a.terms.error||a.terms.queryKey!==queryKey(a)||(a.terms.status==='review'&&a.terms.method!=='manual'&&!a.terms.imported))?(verifiedTerms(a,now)||a.terms):a.terms;t ||= publicOutputTerms(a,now);let status='review',notes=[],tasks=[],sources=[],humanChecks=[];
+ let t=a.terms?.method==='manual'?a.terms:(!a.terms||a.terms.error||a.terms.queryKey!==queryKey(a)||(a.terms.status==='review'&&a.terms.method!=='manual'&&!a.terms.imported))?(verifiedTerms(a,now)||a.terms):a.terms;t ||= publicOutputTerms(a,now);let status='review',notes=[],tasks=[],sources=[],humanChecks=a.rights!=='cleared'?[thirdPartyCheck]:[];
  if(t?.method==='manual'){const original=String(t.originalText||'');const analysis=analyzeTerms({...a,manual:true,sourceUrl:t.sourceUrl},original.replace(/\s+/g,' ').trim());t={...t,...analysis,summary:analysis.summary.replace('조회한 공식 문서','직접 입력한 약관')};if(original.trim().length<40)t.status='review';}
- if(!t){const captured=(a.sourceCandidates||[]).some(s=>s.verification?.text);notes.push(captured?'후보 원문은 확보했지만 이 이용 방식의 허용 범위·적용 조건이 아직 확정되지 않았습니다.':'최신 약관을 아직 조회하지 않았습니다.');tasks.push(captured?'확보한 원문의 허용 조항·적용 범위를 확인하고 필요한 계약 정보를 보완':a.provider==='other'?'공식 참고 링크에서 약관을 확인하고 원문·적용 플랜을 기록':'서비스·플랜을 지정하고 최신 약관 조회 실행');if(a.rights!=='cleared')humanChecks.push('입력 자료·상표·초상·음성 등 실제 자료의 추가 권리는 별도 확인이 필요합니다.');return {status,notes,tasks,sources,humanChecks};}
+ if(!t){const captured=(a.sourceCandidates||[]).some(s=>s.verification?.text);notes.push(captured?'후보 원문은 확보했지만 이 이용 방식의 허용 범위·적용 조건이 아직 확정되지 않았습니다.':'최신 약관을 아직 조회하지 않았습니다.');humanChecks.push(captured?'확보한 원문의 허용 조항·적용 범위를 확인하고 필요한 계약 정보를 보완':a.provider==='other'?'공식 참고 링크에서 약관을 확인하고 원문·적용 플랜을 기록':'서비스·플랜을 지정하고 최신 약관 조회 실행');return {status,notes,tasks,sources,humanChecks};}
  const sourceName=a.serviceName||a.name;if(t.sourceUrl&&officialDomains(sourceName).length&&!isOfficialCandidate(sourceName,t.sourceUrl))return {status:'review',notes:['비공식 해설은 허용 근거로 사용할 수 없습니다.'],tasks:['공식 도메인의 원문을 확인하세요.'],sources:[],humanChecks:[]};
  if(/^https:\/\//.test(t.sourceUrl||''))sources.push([t.sourceName||'공식 문서',t.sourceUrl]);
  const stale=!t.checkedAt||!Number.isFinite(Date.parse(t.checkedAt))||(!t.builtIn&&now-Date.parse(t.checkedAt)>7*86400000)||Date.parse(t.checkedAt)>now+60000;
@@ -62,7 +62,7 @@ export function aiResult(a,now=Date.now()){
  else {status=['conditions','conflict'].includes(t.status)?t.status:'review';notes.push(t.summary||'허가 조항 확인 필요');}
  tasks.push(...(t.conditions||[]));humanChecks.push(...(t.checks||[]));
  const contractConfirmed=status==='conditions'&&['output','service'].includes(a.scope)&&t.excerpts?.length>0&&(t.method==='manual'?t.attested===true&&!!t.originalText:(t.verifiedSource===true||(officialTermsUrls[t.verifiedProvider||a.provider]||[]).includes(t.sourceUrl)));
- if(status==='conditions'&&a.rights!=='cleared'){if(contractConfirmed)humanChecks.push('입력 자료·상표·초상·음성 등 제3자 권리: 실제 자료를 기준으로 별도 확인해야 합니다. 약관상 허용만으로 이 권리가 확보되지는 않습니다.');else{status='review';notes.push('입력·제3자 권리 또는 원문 출처의 확인이 필요합니다.');tasks.push('입력 자료와 제3자 권리 확인을 기록');}}
+ if(status==='conditions'&&a.rights!=='cleared'){if(!contractConfirmed){status='review';notes.push('입력·제3자 권리 또는 원문 출처의 확인이 필요합니다.');}}
  if(contractConfirmed&&t.method==='manual'){humanChecks.push('직접 입력한 원문의 공식 출처·최신성·전체 내용 여부를 확인하세요. 사이트에서 자동 확보한 문서가 아닙니다.');notes.push('사용자가 제공하고 적용 여부를 확인한 원문에 근거한 결과입니다. 공식 출처의 자동 검증과는 구분됩니다.');}
  if(contractConfirmed){humanChecks.push('선택한 플랜·계약과 실제 자료의 취득·이용 조건이 일치하는지 확인하고, 표시 의무와 서비스 이용 정책을 이행하세요.');notes.push('서비스 약관상 허용 범위에 대한 결과입니다. 실제 자료의 제3자 권리 확인은 아래에 별도로 표시합니다.');}
  if(status==='conditions'&&a.provider==='huggingface'&&(!a.confirmed||!a.evidence?.trim())){status='review';notes.push('모델 게시자의 권한과 원본 LICENSE 적용 범위를 직접 확인하세요.');}

@@ -1,4 +1,6 @@
 import {analyzeUsageTerms} from './usage-terms.mjs';
+export const pastOutputCheck='과거 생성물·별도 계약·외부 콘텐츠에는 당시 계약과 적용 범위를 확인하세요.';
+export const thirdPartyCheck='입력 자료·상표·초상·음성 등 제3자 권리는 실제 자료를 기준으로 별도 확인하세요. 약관상 허용만으로 확보되는 권리가 아닙니다.';
 export function analyzeTerms(input,text){
  text=String(text||'').replace(/\s+/g,' ').trim();
  const usage=analyzeUsageTerms(input,text);if(usage)return usage;
@@ -7,7 +9,7 @@ export function analyzeTerms(input,text){
   try{const u=new URL(input.sourceUrl);if(u.protocol==='https:'&&['www.meshy.ai','meshy.ai'].includes(u.hostname)&&u.pathname==='/terms-of-use')input={...input,provider:'meshy'};}catch{}
  }
 
- const result={status:'review',summary:'핵심 허가 조항을 확인하지 못했습니다. 원문 검토가 필요합니다.',conditions:[],excerpts:[],license:''};
+ const result={status:'review',summary:'핵심 허가 조항을 확인하지 못했습니다. 원문 검토가 필요합니다.',conditions:[],checks:[],excerpts:[],license:''};
  if(input.scope!=='output'){result.summary='생성 결과물 약관은 모델 가중치·서비스 자체의 재배포 허가가 아닙니다.';return result;}
  if(input.provider==='other'&&input.manual===true)return analyzeCustomTerms(input,text,result);
  // Both plan branches must grant permission before an unknown plan can share it.
@@ -33,7 +35,7 @@ export function analyzeTerms(input,text){
   }else match=text.match(/Paid Users have full rights to use, modify, distribute, and commercially exploit all 3D models/i);
  }else if(input.provider==='openai')match=text.match(/you \(a\) retain your ownership rights in Input and \(b\) own the Output/i);
  else if(input.provider==='anthropic')match=text.match(/we assign to you all of our right, title, and interest.{0,25}in Outputs/i)||text.match(/귀하에게 산출물에 대한 당사의 모든 권리, 소유권 및 이권.{0,30}양도합니다/);
- if(match){result.status='conditions';result.summary='조회한 공식 문서의 출력물 권리 조항상 상용 사용 가능 (조건부).';result.excerpts=[match[0].split(/\s+/).slice(0,24).join(' ')];result.conditions.push('입력 자료·브랜드·디자인·코드 출처 등 제3자 권리를 별도로 확보하세요.','콘텐츠 정책·경쟁 모델 학습 제한 등 나머지 약관을 준수하세요.','현재 공개 문서 기준입니다. 과거 생성물은 당시 계약과 적용 시점을 별도 확인하세요.');}
+ if(match){result.status='conditions';result.summary='조회한 공식 문서의 출력물 권리 조항상 상용 사용 가능 (조건부).';result.excerpts=[match[0].split(/\s+/).slice(0,24).join(' ')];result.conditions.push('콘텐츠 정책·경쟁 모델 학습 제한 등 나머지 약관을 준수하세요.');result.checks.push(pastOutputCheck);}
  return result;
 }
 

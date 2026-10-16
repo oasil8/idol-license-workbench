@@ -5,7 +5,7 @@ const records=[
  ['elevenlabs',['ElevenLabs'],'ElevenLabs 일반 약관 (non-EEA)','https://elevenlabs.io/terms-of-use','Free User / Paid User; Output / Models','무료 서비스는 비상업 용도, 유료 구독은 상업 용도를 허용하는 조항이 있습니다. 금지 이용 정책·서비스별 추가 약관과 실제 계약 적용 범위는 별도입니다.','일반 서비스 계약 · 지역·구독·제품별 조건 구분'],
  ['copilot',['GitHub Copilot','깃허브 코파일럿'],'GitHub Copilot 적용 계약 안내','https://docs.github.com/en/site-policy/github-terms/github-terms-for-additional-products-and-features','GitHub Copilot — purchasing route','개인용은 GitHub ToS J, GitHub 직접 기업 구매는 Generative AI Services Terms, Microsoft 구매는 Microsoft Product Terms. 출력물의 제3자 라이선스 확인 필요.','구매 경로별 계약 · 코드 출력물과 API 제공 구분'],
  ['runway',['Runway','Runway ML','런웨이'],'Runway 생성물 상업 이용 안내','https://help.runwayml.com/hc/en-us/articles/21668707517587-Can-I-use-the-content-I-made-in-Runway-for-commercial-purposes','Commercial use of generated content','직접 생성한 콘텐츠는 상업 이용이 허용됩니다. 출력물 표시와 별개로 API 통합에는 별도 표시·접근 조건이 적용됩니다.','직접 생성한 출력물 · API·가중치 제외'],
- ['tripo',['Tripo'],'Tripo 상업 이용 안내','https://www.tripo3d.ai/help/privacy-policy/how-to-use-tripo-models-commercially','Free vs Paid Plans; What About Input Images?','유료 플랜 생성물의 상업 이용과 무료 플랜의 권리 차이를 명시합니다. 입력 자료에 포함된 저작권·상표 등 제3자 권리는 별개입니다.','서비스 출력물 · 생성 당시 플랜 기준'],
+ ['tripo',['Tripo'],'Tripo 상업 이용 안내','https://www.tripo3d.ai/help/privacy-policy/how-to-use-tripo-models-commercially','Free vs Paid Plans; What About Input Images?','유료 플랜 생성물의 상업 이용과 무료 플랜의 권리 차이를 명시합니다.','서비스 출력물 · 생성 당시 플랜 기준'],
  ['meshy',['Meshy'],'Meshy 생성물 이용 허가','https://help.meshy.ai/en/articles/9992001-can-i-use-meshy-assets-commercially-license-copyright-explained','Can I use my generated assets for commercial projects? — If you are on a free plan, we grant you a CC BY 4.0 license instead.','무료 플랜은 CC BY 4.0 및 출처 표시, 유료 플랜은 비침해 입력 자료를 전제로 생성물 소유를 설명합니다.','서비스 출력물 · 모델 가중치 허가와 구분'],
  ['openai',['OpenAI / ChatGPT','OpenAI','ChatGPT','Codex'],'OpenAI 개인용 이용약관','https://openai.com/policies/row-terms-of-use/','Content — Your content; Ownership of content','개인용 서비스의 출력 권리 이전과 입력 권리 확보 의무를 명시합니다. API·기업용은 별도 계약입니다.','개인용 서비스 · 기업/API 계약에 적용 확정 불가'],
  ['anthropic',['Claude','Anthropic'],'Anthropic 개인용 이용약관','https://www.anthropic.com/legal/consumer-terms','4. Inputs, Outputs, Actions, and Materials','약관 준수를 전제로 출력 권리를 양도하며 입력 권리와 정확성 확인은 사용자에게 요구합니다. API는 별도 상업 약관입니다.','Claude 개인용 · API 계약과 구분'],
@@ -38,7 +38,7 @@ export function reviewSourceConditions(a,c,now=Date.now(),{contractConfirmed=fal
  if(['hunyuan','cosmos','isaac','chrono','unity','unreal','usd'].includes(source.id)&&!a.version&&!fixedLicense)missing.push('실제 배포판·모델·엔진 버전이 미정입니다.');
  if(['hunyuan','unity','unreal'].includes(source.id)&&!reviewedRecently)missing.push('사용 지역·조직/고객 조건·배포 방식 중 적용 조건을 근거에 기록하세요.');
  if(!contractConfirmed&&['openai','anthropic'].includes(source.id)&&(!a.planType||['unknown','business'].includes(a.planType)))missing.push('개인용 또는 기업/API 계약 중 어떤 문서가 적용되는지 확정해야 합니다.');
- if(!contractConfirmed&&(a.kind==='ai'||a.kind==='model')&&a.rights!=='cleared')missing.push('입력 자료·상표·초상 등 제3자 권리가 미확인입니다.');
+ if(!contractConfirmed&&a.kind==='model'&&a.rights!=='cleared')missing.push('입력 자료·상표·초상 등 제3자 권리가 미확인입니다.');
  if(!contractConfirmed&&!a.confirmed)missing.push('이 자료에 대한 원문 적용 범위를 아직 직접 확인하지 않았습니다.');
  if(a.kind==='ai'&&a.provider==='tripo'&&source.id==='tripo'&&a.scope==='output'&&a.planType==='free'&&c.commercial){status='conflict';conflicts.push('공식 안내에서 무료 플랜 결과물의 상업 이용 권리는 부여되지 않습니다.');}
  return {source,status,missing,conflicts,blockers:[...missing],stale,summary:source.note};

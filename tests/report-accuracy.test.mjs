@@ -26,3 +26,13 @@ test('built-in and live evidence use accurate reason wording in web and PDF',asy
  assert.ok(norm(textOf(await pages({...sample,assets:[a]}))).includes(norm('검토된 공식 문서 기록')));
  assert.ok(norm(textOf(await pages({...sample,assets:[live]}))).includes(norm('조회한 공식 문서')));
 });
+
+test('obligations exclude unresolved checks and shared checks occur once per item',async()=>{
+ const data=pdfReportData(sample);
+ for(const [i,item] of data.items.entries()){
+ assert.doesNotMatch(item.conditions.join(' '),/미확인|확인하지 않았습니다|조회 실행/);
+ const html=markup(sample.assets[i]);for(const phrase of ['과거 생성물','제3자 권리'])assert.ok(html.split(phrase).length-1<=1,item.name+phrase);
+ const text=norm(textOf(await pages({...sample,assets:[sample.assets[i]]})));
+ for(const phrase of ['과거 생성물','제3자 권리'])assert.ok(text.split(norm(phrase)).length-1<=1,item.name+phrase);
+ }
+});

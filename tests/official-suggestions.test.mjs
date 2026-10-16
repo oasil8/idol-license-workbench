@@ -10,7 +10,7 @@ test('known services receive reference links without changing license clearance'
   const s=assetSources(a,context).find(s=>s.type==='suggested');
   assert.ok(s,name);assert.equal(sourceGroup(s),'참고 링크 · 적용 미확인');
   assert.equal(s.date,'2026-10-15');assert.deepEqual(commercialVerdict(a,context),before);
-  assert.equal(before.status,'review');assert.ok(before.tasks.some(x=>x.includes('원문·적용 플랜')));
+  assert.equal(before.status,'review');assert.ok(before.humanChecks.some(x=>x.includes('원문·적용 플랜')));
   const report=buildProjectReport({contextConfirmed:true,name:'Test',context,assets:[a]});
   assert.ok(report.includes(s.url));assert.match(report,/참고 링크 · 적용 미확인/);assert.match(report,/주소 확인일:/);
  }

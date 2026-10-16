@@ -48,7 +48,7 @@ export function evaluate(a,c,now=Date.now()){
   else if(review.blockers.length&&result.status==='conditions')result.status='review';
   result.notes.push(`공식 원문 검토 기록 (${review.source.observedOn})이 있습니다. 확인한 조건과 실제 사용 범위의 대조 결과를 확인하세요.`);
   if(a.provider==='other'){result.notes=result.notes.filter(n=>n!=='최신 약관을 아직 조회하지 않았습니다.');result.tasks=result.tasks.filter(t=>t!=='서비스·플랜을 지정하고 최신 약관 조회 실행');}
-  result.tasks=[...new Set([...result.tasks,...review.missing])];result.blockers=[...new Set([...result.blockers,...review.blockers])];
+  result.humanChecks=[...new Set([...(result.humanChecks||[]),...review.missing])];result.blockers=[...new Set([...result.blockers,...review.blockers])];
   if(!result.sources.some(([,url])=>url===review.source.url))result.sources.push([review.source.title,review.source.url]);
  }
  result.reviewDates=[...new Set([review?.source.observedOn,result.reviewedEvidence?.builtIn?result.reviewedEvidence.checkedAt.slice(0,10):undefined,appliedOfficialLicense(a)?.date].filter(Boolean))];
@@ -132,7 +132,7 @@ function evaluateBase(a,c,now){
  }else if(license)review('사용자 계약 또는 지원하지 않는 라이선스입니다. 원문 조건을 직접 검토하세요.');
  const official=appliedOfficialLicense(a);
  if(official){notes.push('공식 원문 자동 보완 · '+official.date+' · '+official.scope);humanChecks.push('공식 원문에 표시된 코드·모델 범위 기준입니다. 별도 배포판·포크·동봉 라이브러리·모델·데이터는 각 라이선스를 확인하세요.');}
- if((!a.confirmed||!a.evidence?.trim())&&!official){review('라이선스 적용 범위와 근거가 아직 확인되지 않았습니다. 자동 탐지는 후보 정보입니다.');tasks.push('원문·구매 증빙·적용 버전을 확인하고 확인 여부 기록');if(a.licenseOrigin)blockers.push('자동 보완 원문과 등록된 이름·종류·버전의 적용 범위를 대조해야 합니다.');}
+ if((!a.confirmed||!a.evidence?.trim())&&!official){review('라이선스 적용 범위와 근거가 아직 확인되지 않았습니다. 자동 탐지는 후보 정보입니다.');humanChecks.push('원문·구매 증빙·적용 버전을 확인하고 확인 여부 기록');if(a.licenseOrigin)blockers.push('자동 보완 원문과 등록된 이름·종류·버전의 적용 범위를 대조해야 합니다.');}
  if(['model','image','audio','data'].includes(a.kind)&&a.rights!=='cleared'){
   humanChecks.push('브랜드·디자인·초상·음성·개인정보 등 제3자 권리는 별도 확인이 필요합니다. 라이선스상 허용만으로 확보되는 권리가 아닙니다.');
  }
