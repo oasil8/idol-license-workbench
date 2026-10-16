@@ -38,6 +38,14 @@ export function outcomeReason(a,r){
  return '사용 가능 이유: '+(specific||(a.kind==='ai'?'해당 약관에서 선택한 이용 범위의 허용을 확인했습니다.':`${a.license==='LicenseRef-OpenSees'?'OpenSees 라이선스':a.license||'확인한 라이선스'}에 따라 현재 이용이 허용됩니다.`))+' 남은 일은 아래 사용 조건의 이행입니다.';
 }
 
+export function summaryReasonText(reason,limit=56){
+ const core=reason.replace(/ 남은 일은 아래 사용 조건의 이행입니다\.$/,'').trim();
+ if(core.length<=limit)return core;
+ const prefix=core.slice(0,limit-1),sentence=prefix.match(/^.*[.!?](?=\s)/)?.[0];
+ const cut=sentence||prefix.replace(/\s+\S*$/,'');
+ return cut.replace(/[.!?…\s]+$/,'')+'…';
+}
+
 export function resultItems(r,reason=''){
  const seen=new Set(),unique=items=>items.filter(t=>{const key=String(t).replace(/\s+/g,' ').trim();if(!key||seen.has(key)||reason.includes(key))return false;seen.add(key);return true;});
  return {conditions:unique((r.tasks||[]).filter(t=>!r.conflicts?.includes(t))),checks:unique([...(r.status==='review'?r.blockers||[]:[]),...(r.humanChecks||[])])};

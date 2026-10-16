@@ -3,7 +3,7 @@ import {existsSync} from 'node:fs';
 import {join} from 'node:path';
 import {evaluate,statuses,validateProject} from './dist/core.mjs';
 import {conditionsConfirmed,conditionsPrompt,selectedAssets,selectionOf,projectSummary,summaryReason} from './dist/workflow.mjs';
-import {displaySources,resultItems,outcomeReason} from './dist/result-sections.mjs';
+import {summaryReasonText,displaySources,resultItems,outcomeReason} from './dist/result-sections.mjs';
 import {assetSources,sourceGroup} from './dist/evidence-sources.mjs';
 
 export const verdictColor=status=>({[statuses.conflict]:'#9e3025',[statuses.review]:'#775310',[statuses.conditions]:'#16613c'}[status]||'#263e38');
@@ -76,7 +76,7 @@ export async function createReportPdf(project,{includeOriginals=false}={}) {
   };
   row(['항목','판정','한 줄 이유'],true);
   const order=[statuses.conflict,statuses.review,statuses.conditions];
-  for(const item of [...data.items].sort((a,b)=>order.indexOf(a.status)-order.indexOf(b.status))){const reason=item.reason.length>56?item.reason.slice(0,53).replace(/\s+\S*$/,'')+'…':item.reason;row([item.name,item.status,reason]);}
+  for(const item of [...data.items].sort((a,b)=>order.indexOf(a.status)-order.indexOf(b.status))){const reason=summaryReasonText(item.reason);row([item.name,item.status,reason]);}
   doc.moveDown();
  }
  const c=data.context;
