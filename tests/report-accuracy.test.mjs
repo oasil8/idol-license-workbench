@@ -98,9 +98,9 @@ test('copyleft scope review is one check, never an obligation, in web and actual
 });
 
 test('PDF summary and detailed reasons omit boilerplate while web reasons stay intact',async()=>{
- const {summaryReasonText}=await import('../dist/result-sections.mjs');const original=outcomeReason(sample.assets[1],evaluate(sample.assets[1],sample.context));assert.match(original,/남은 일은/);assert.doesNotMatch(summaryReasonText(original),/남은|…\./);
+ const {summaryReasonText}=await import('../dist/result-sections.mjs');const original=outcomeReason(sample.assets[1],evaluate(sample.assets[1],sample.context));assert.doesNotMatch(original,/이유:|남은 일은/);assert.doesNotMatch(summaryReasonText(original),/남은|…\./);
  const rendered=await pages(),first=textOf([rendered[0]]);assert.doesNotMatch(first,/남은|…\./);
- const expected=original.replace(/^사용 가능 이유: /,'').replace(/ 남은 일은 아래 사용 조건의 이행입니다\.$/,'');
+ const expected=original;
  assert.ok(norm(textOf(rendered.slice(1))).includes(norm(expected)));assert.doesNotMatch(norm(textOf(rendered)),/이유:|남은일은/);assert.ok(markup(sample.assets[1]).includes(original));
  assert.equal(summaryReasonText('첫 문장입니다. 두 번째 문장이 깁니다.',17),'첫 문장입니다…');
 });

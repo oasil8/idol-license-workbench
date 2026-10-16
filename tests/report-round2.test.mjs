@@ -25,7 +25,7 @@ test('PDF evidence titles show their hostnames and retain link annotations',asyn
  }
 });
 test('PDF cards and summary remove reason prefixes and common tail, keeping web reasons',async()=>{
- for(const name of ['mixed','sample']){const p=fixture(name),out=await pdf(p);assert.doesNotMatch(out.text,/이유:|남은일은/);for(const item of pdfReportData(p).items)assert.ok(out.text.includes(norm(item.status+' — '+item.reason.replace(/^(사용 가능|보류|사용 불가) 이유: /,'').replace(/ 남은 일은 아래 사용 조건의 이행입니다\.$/,''))));assert.match(screen(p),/이유:/);}
+ for(const name of ['mixed','sample']){const p=fixture(name),out=await pdf(p);assert.doesNotMatch(out.text,/이유:|남은일은/);for(const item of pdfReportData(p).items)assert.ok(out.text.includes(norm(item.status+' — '+item.reason.replace(/^(사용 가능|보류|사용 불가) 이유: /,'').replace(/ 남은 일은 아래 사용 조건의 이행입니다\.$/,''))));assert.doesNotMatch(screen(p),/이유:|남은 일은/);assert.doesNotMatch(buildProjectReport(p),/이유:|남은 일은/);}
 });
 test('screen, exported HTML and PDFs use actions instead of unchecked-state sentences',async()=>{
  for(const name of ['mixed','sample']){const p=fixture(name);for(const text of [screen(p),buildProjectReport(p),(await pdf(p)).text])assert.doesNotMatch(norm(text),/확인하지않았습니다|조회하지않았습니다/);}

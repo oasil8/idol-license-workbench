@@ -8,7 +8,6 @@ import {conditionsConfirmed,conditionsPrompt,selectedAssets,selectionOf,projectS
 import {summaryReasonText,displaySources,resultItems,outcomeReason,conflictNextAction} from './dist/result-sections.mjs';
 import {candidateNotice,assetSources,sourceGroup} from './dist/evidence-sources.mjs';
 
-export const pdfReason=reason=>reason.replace(/^(사용 가능|보류|사용 불가) 이유: /,'').replace(/ 남은 일은 아래 사용 조건의 이행입니다\.$/,'');
 export const verdictColor=status=>({[statuses.conflict]:'#9e3025',[statuses.review]:'#775310',[statuses.conditions]:'#16613c'}[status]||'#263e38');
 
 // PDFKit permits CJK breaks anywhere; pre-wrap at whitespace using the actual font metrics.
@@ -62,7 +61,7 @@ export function pdfReportData(input, includeOriginals=false) {
    if(!a.terms?.originalText)add(a.name+' · 저장된 발췌',a.terms?.excerpts?.join('\n'));
   }
   const quotes=[...new Set([...(a.terms?.excerpts||[]),...sources.filter(s=>!s.contractDocument).flatMap(s=>(s.verification?.excerpts||[]).map(x=>x.text))].filter(Boolean))];
-  return {candidateNotice:candidateNotice(a),ruleDate:r.ruleDate,reviewDates:r.reviewDates,reviewWarnings:r.reviewWarnings,name:a.name,status:statuses[r.status],reason:pdfReason(outcomeReason(a,r)),...parts,
+  return {candidateNotice:candidateNotice(a),ruleDate:r.ruleDate,reviewDates:r.reviewDates,reviewWarnings:r.reviewWarnings,name:a.name,status:statuses[r.status],reason:outcomeReason(a,r),...parts,
    sources:displaySources(r,sources).map(s=>({type:s.type,recordLabel:s.recordLabel,label:s.label,url:s.url,group:sourceGroup(s),date:s.date,dateLabel:s.dateLabel,warning:s.warning,scope:s.scope,note:outcomeReason(a,r).includes(s.note)?'':s.note,clause:outcomeReason(a,r).includes(s.clause)?'':s.clause,quote:s.contractDocument?s.verification?.excerpts?.[0]?.text:''})),
    quotes:quotes.slice(0,3),extraQuotes:Math.max(0,quotes.length-3),evidence:a.evidence,
    scope:assetScope(a)};

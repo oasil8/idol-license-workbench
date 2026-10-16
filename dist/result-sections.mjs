@@ -63,15 +63,16 @@ export function reviewReason(r){
  return [...new Set(concise.length?concise:reasons)].slice(0,2).join(' · ')||'필수 근거 확인 필요';
 }
 
+// The verdict badge sits beside the reason everywhere, so the reason carries no verdict prefix.
 export function outcomeReason(a,r){
- if(r.status==='review')return '보류 이유: '+reviewReason(r);
- if(r.status==='conflict')return '사용 불가 이유: '+(r.conflicts?.join(' ')||'현재 이용 조건이 확인한 허가 범위와 충돌합니다.');
+ if(r.status==='review')return reviewReason(r);
+ if(r.status==='conflict')return (r.conflicts?.join(' ')||'현재 이용 조건이 확인한 허가 범위와 충돌합니다.');
  const specific=(r.notes||[]).find(note=>/허용|가능|금지되지|조건은 간소/.test(note)&&!note.startsWith('공식 원문'));
- return '사용 가능 이유: '+(specific||(a.kind==='ai'?'해당 약관에서 선택한 이용 범위의 허용을 확인했습니다.':`${a.license==='LicenseRef-OpenSees'?'OpenSees 라이선스':a.license||'확인한 라이선스'}에 따라 현재 이용이 허용됩니다.`))+' 남은 일은 아래 사용 조건의 이행입니다.';
+ return specific||(a.kind==='ai'?'해당 약관에서 선택한 이용 범위의 허용을 확인했습니다.':`${a.license==='LicenseRef-OpenSees'?'OpenSees 라이선스':a.license||'확인한 라이선스'}에 따라 현재 이용이 허용됩니다.`);
 }
 
 export function summaryReasonText(reason,limit=56){
- const core=reason.replace(/ 남은 일은 아래 사용 조건의 이행입니다\.$/,'').trim();
+ const core=reason.trim();
  if(core.length<=limit)return core;
  const prefix=core.slice(0,limit-1),sentence=prefix.match(/^.*[.!?](?=\s)/)?.[0];
  const cut=sentence||prefix.replace(/\s+\S*$/,'');

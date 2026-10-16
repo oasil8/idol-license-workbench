@@ -46,8 +46,9 @@ test('review reason is short and preserves the concrete missing information',()=
 
 import {outcomeReason} from '../dist/result-sections.mjs';
 test('all statuses explain outcome and blocked grants do not read as approved permission',()=>{
- const allowed=evaluate({...a,license:'MIT'},c);assert.match(outcomeReason({...a,license:'MIT'},allowed),/남은 일은.*이행/);
- assert.match(outcomeReason(a,{status:'conflict',notes:['상업 목적과 충돌합니다.']}),/사용 불가 이유/);
+ const allowed=evaluate({...a,license:'MIT'},c);assert.match(outcomeReason({...a,license:'MIT'},allowed),/MIT에 따라 현재 이용이 허용됩니다|허용|가능/);
+ assert.equal(outcomeReason(a,{status:'conflict',notes:['상업 목적과 충돌합니다.']}),'현재 이용 조건이 확인한 허가 범위와 충돌합니다.');
+ for(const r of [allowed,{status:'conflict',conflicts:['충돌']},{status:'review',blockers:['x']}])assert.doesNotMatch(outcomeReason({...a,license:'MIT'},r),/이유:|남은 일은/);
  assert.ok(!permissionMarkup(a,{status:'review',permissions:['승인된 이용']},String).includes('승인된 이용'));
 });
 
