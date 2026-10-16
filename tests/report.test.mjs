@@ -31,11 +31,14 @@ test('project report has a linked overview and preserves full evidence behind de
 
 import {evaluate,commercialVerdict} from '../dist/core.mjs';
 import {resultItems,outcomeReason} from '../dist/result-sections.mjs';
+// Shared third-party guidance replaces these equivalent task variants, without dropping the obligation.
+const displayedTask=value=>value.includes('제3자 권리')?'입력 자료·브랜드·디자인·상표·초상·음성·개인정보 등 제3자 권리는 실제 자료를 기준으로 별도 확인하세요. 라이선스·약관상 허용만으로 확보되는 권리가 아닙니다.':value;
 test('report preserves evaluated conditions, checks, scope and differing commercial reasons',()=>{
  const a={name:'Study image',kind:'image',license:'CC-BY-NC-4.0',confirmed:true,rights:'unknown',selection:'used',reviewScope:'bundle',notes:'Original note'};
  const p={name:'Parity',context:{platform:'research',commercial:false,distribute:true},assets:[a]};
  const html=buildProjectReport({...p,contextConfirmed:true}),r=evaluate(a,p.context),parts=resultItems(r);
- for(const value of [outcomeReason(a,r),...parts.conditions,...parts.checks,...commercialVerdict(a,p.context).notes,'패키지·번들 전체','Original note'])assert.ok(html.includes(value),value);
+ for(const value of [outcomeReason(a,r),...parts.conditions.map(displayedTask),...parts.checks.map(displayedTask),...commercialVerdict(a,p.context).notes,'패키지·번들 전체','Original note'])assert.ok(html.includes(value),value);
+ assert.match(html,/해당 항목: Study image/);
 });
 test('report preserves document checklist title, role and located candidate excerpts',()=>{
  const text='Blender is mentioned in this feedback.';
@@ -55,7 +58,7 @@ test('reports preserve all result sections across products, scopes and usage fla
   const context={platform:'research',commercial:!!(flags&1),distribute:!!(flags&2),modified:!!(flags&4),network:!!(flags&8)};
   const p={name:'Coverage',assets:[a],context},r=evaluate(a,context),items=resultItems(r),html=buildProjectReport({...p,contextConfirmed:true});
   seen.add(r.status);
-  for(const value of [outcomeReason(a,r),...items.conditions,...items.checks,...r.notes])assert.ok(html.includes(escape(value)),`${name}/${reviewScope}/${flags}: ${value}`);
+  for(const value of [outcomeReason(a,r),...items.conditions.map(displayedTask),...items.checks.map(displayedTask),...r.notes])assert.ok(html.includes(escape(value)),`${name}/${reviewScope}/${flags}: ${value}`);
   assert.ok(html.includes(escape(summaryReason(projectSummary(p)))));
  }
  assert.deepEqual([...seen].sort(),['conditions','conflict','review']);

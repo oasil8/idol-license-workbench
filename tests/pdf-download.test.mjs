@@ -7,7 +7,7 @@ import {resultItems,outcomeReason} from '../dist/result-sections.mjs';
 const project={name:'간단 리포트',context:{platform:'research',commercial:false,distribute:true},assets:[{name:'NumPy',kind:'code',license:'BSD-3-Clause',confirmed:true,selection:'used',reviewScope:'code',evidence:'https://numpy.org/doc/stable/license.html'}],assignment:{documents:[{name:'terms.pdf',text:'Allow commercial use.\nKeep notice.',role:'material'},{name:'terms.docx',text:'Allow commercial use. Keep notice.',role:'material'},{name:'different.txt',text:'Do not allow commercial use. Keep notice.',role:'material'}]}};
 test('default PDF omits original documents but preserves all result conditions and scope',()=>{
  const before=JSON.stringify(project),data=pdfReportData({...project,contextConfirmed:true}),r=evaluate(project.assets[0],project.context);
- assert.equal(data.originals.length,0);assert.equal(data.items[0].reason,outcomeReason(project.assets[0],r));
+ assert.equal(data.originals.length,0);assert.equal(data.items[0].reason,outcomeReason(project.assets[0],r).replace(/^사용 가능 이유: /,'').replace(/ 남은 일은 아래 사용 조건의 이행입니다\.$/,''));
  assert.deepEqual(data.items[0].conditions,resultItems(r).conditions);assert.deepEqual(data.items[0].checks,resultItems(r).checks);assert.equal(data.items[0].scope,'코드·오픈소스 자체');assert.equal(JSON.stringify(project),before);
 });
 test('optional originals merge whitespace duplicates preserving all source names and distinct conditions',()=>{

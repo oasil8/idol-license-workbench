@@ -1,14 +1,47 @@
+import {resultBodyLayout} from './result-layout.mjs';
+import {evaluate,statuses} from './core.mjs';
 import {reviewAge} from './official-sources.mjs';
 import {candidateNotice} from './evidence-sources.mjs';
 import {normalizeAsset,assetScope} from './asset-normalization.mjs';
 import {planImpact} from './ai.mjs';
+export const conflictNextAction='현재 사용 조건에서는 이 자료를 쓰지 마세요. 플랜·계약이나 사용 목적이 바뀌면 정보를 수정해 다시 판정하세요.';
+
+// Normalize display text only; the evaluator's evidence and blockers stay intact.
+export function actionText(text){
+ if(text==='이 자료에 대한 원문 적용 범위를 아직 직접 확인하지 않았습니다.')return '실제 사용한 버전·기능에 공식 원문이 적용되는지 확인하세요.';
+ if(['최신 약관을 아직 조회하지 않았습니다.','공식 참고 링크에서 약관을 확인하고 원문·적용 플랜을 기록'].includes(text))return '공식 사이트에서 최신 약관을 열어 원문과 적용 플랜을 기록하세요.';
+ return text;
+}
+
+export function resultLayout(assets,context){
+ return resultBodyLayout(assets.map(a=>{
+  const r=evaluate(a,context),parts=resultItems(r,outcomeReason(a,r));
+  return {a,r,name:a.name,status:statuses[r.status],allTasks:[...parts.conditions,...parts.checks],...parts};
+ }));
+}
+
+function taskButton(text,a,esc){
+ const action=inputForTask(text,a);
+ return action&&a.id?` <button type="button" class="text-button" data-edit="${esc(a.id)}" data-field="${action.field}">${action.label}</button>`:'';
+}
+export function commonChecksMarkup(layout,esc,{buttons=true}={}){
+ if(!layout.common.length)return '';
+ return `<section class="report-item common-checks"><h3>공통 확인사항</h3><ul>${layout.common.map(note=>{
+  const shortcuts=buttons?layout.items.filter(item=>note.sourceTexts.some(text=>item.allTasks.includes(text))).map(item=>{
+   const button=taskButton(note.text,item.a,esc);
+   return button?` <span>${esc(item.name)}:${button}</span>`:'';
+  }).join(''):'';
+  return `<li>${esc(note.text)} (해당 항목: ${esc(note.names.join(', '))})${shortcuts}</li>`;
+ }).join('')}</ul></section>`;
+}
+
 export function permissionMarkup(a,r,esc){
  let permission=r.status==='conditions'?(r.permissions||[]).join(' '):'';
  if(!permission&&r.status==='conditions')permission=a.kind==='ai'?'확보한 약관에서 선택한 이용 범위의 허용 조항을 확인했습니다.':`${a.license}의 이용 허가와 이 자료에 대한 적용 확인 기록에 근거합니다.`;
  const url=a.kind==='ai'?(a.terms?.sourceUrl||r.sources?.[0]?.[1]):r.sources?.[0]?.[1];
  const legal=r.status==='conflict'?`<details class="legal-reference"><summary>법적 참고 · 위반 확정 아님</summary><p>현재 선택한 조건과 허가 범위가 충돌한다는 뜻입니다. 별도 허가를 받거나 실제 이용 조건을 바꾸면 다시 검토할 수 있습니다. 처벌·벌금·손해배상은 관할과 구체적 사실에 따라 달라지므로 자동 산정하지 않습니다.</p><p><a href="https://www.cafc.uscourts.gov/opinions-orders/08-1001.pdf" target="_blank" rel="noopener noreferrer">미국 Jacobsen v. Katzer (2008) · 법원 원문 ↗</a>: Artistic License의 고지 등 조건이 저작권 허락 범위를 제한할 수 있다고 보고 환송한 사례입니다. 현재 자료와 동일한 사건이 아니며, 이 판결은 벌금이나 배상액을 확정한 판결이 아닙니다.</p></details>`:'';
  let link='';try{const u=new URL(url);if(u.protocol==='https:'&&!u.username&&!u.password)link=` <a href="${esc(u.href)}" target="_blank" rel="noopener noreferrer">${a.kind==='ai'?'약관 원문':'라이선스 규칙 원문'} ↗</a>`;}catch{}
- return `<section class="permission-section"><h3>${r.status==='conflict'?'이유·제한 근거':'이유·허용 근거'}</h3><p>${esc(outcomeReason(a,r))}</p><p>${esc(permission||(r.status==='conflict'?'현재 선택한 이용 방식은 확인한 허가 범위를 벗어납니다.':'현재 이용 조건의 허용 여부를 결정할 필수 근거가 아직 확인되지 않았습니다.'))}${link}</p>${legal}</section>`;
+ return `<section class="permission-section"><h3>${r.status==='conflict'?'이유·제한 근거':'이유·허용 근거'}</h3><p>${esc(outcomeReason(a,r))}</p><p>${esc(permission||(r.status==='conflict'?'현재 선택한 이용 방식은 확인한 허가 범위를 벗어납니다.':'현재 이용 조건의 허용 여부를 결정할 필수 근거가 아직 확인되지 않았습니다.'))}${link}</p>${r.status==='conflict'?`<p class="conflict-next-action">${esc(conflictNextAction)}</p>`:''}${legal}</section>`;
 }
 
 export function reviewReason(r){
@@ -31,7 +64,7 @@ export function reviewReason(r){
  t.includes('소스 제공·재링크')?'결합·배포 범위와 소스 제공 방법 미확인':
  t.includes('지원하지 않는 라이선스')?'지원하지 않는 라이선스·개별 계약':t);
  const specific=reasons.filter(t=>!t.includes('제3자 권리가 미확인')&&!t.includes('원문 적용 범위를 아직 직접'));
- return [...new Set(specific.length?specific:reasons)].slice(0,2).join(' · ')||'필수 근거 확인 필요';
+ return [...new Set(specific.length?specific:reasons)].map(actionText).slice(0,2).join(' · ')||'필수 근거 확인 필요';
 }
 
 export function outcomeReason(a,r){
@@ -50,7 +83,7 @@ export function summaryReasonText(reason,limit=56){
 }
 
 export function resultItems(r,reason=''){
- const seen=new Set(),unique=items=>items.filter(t=>{const key=String(t).replace(/\s+/g,' ').trim();if(!key||seen.has(key)||reason.includes(key))return false;seen.add(key);return true;});
+ const seen=new Set(),unique=items=>items.map(actionText).filter(t=>{const key=String(t).replace(/\s+/g,' ').trim();if(!key||seen.has(key)||reason.includes(key))return false;seen.add(key);return true;});
  const conditions=[],actions=[];
  for(const task of (r.tasks||[]).filter(t=>!r.conflicts?.includes(t))){
   // Keep the prohibition as an obligation when a sentence also requests a check.
@@ -71,11 +104,11 @@ export function displaySources(r,rows,now=Date.now()){
  });
 }
 
-export function compactResultMarkup(a,r,rows,esc){
+export function compactResultMarkup(a,r,rows,esc,parts){
  a=normalizeAsset(a);
- const reason=outcomeReason(a,r),{conditions,checks}=resultItems(r,reason),todo=[...conditions,...checks];
+ const reason=outcomeReason(a,r),{conditions,checks}=parts||resultItems(r,reason),todo=[...conditions,...checks];
  const excerpts=[...new Set([...(r.reviewedEvidence?.excerpts||a.terms?.excerpts||[]),...rows.flatMap(s=>(s.verification?.excerpts||[]).map(e=>e.text))])].filter(t=>!reason.includes(t)&&!todo.includes(t));
- return `<p class="review-scope">검토 범위: ${esc(assetScope(a))}</p><p class="review-reason">${esc(reason)}</p>${reviewStampMarkup(r,esc)}<h4>해야 할 일</h4><ul>${todo.map(t=>{const action=inputForTask(t,a);return `<li>${esc(t)}${action&&a.id?` <button type="button" class="text-button" data-edit="${esc(a.id)}" data-field="${action.field}">${action.label}</button>`:''}</li>`;}).join('')||'<li>추가 항목 없음</li>'}</ul><section class="report-citations"><h4>근거 링크</h4>${candidateNotice(a)?`<p>${esc(candidateNotice(a))}</p>`:''}${displaySources(r,rows).map(s=>`<p><a href="${esc(s.url)}" target="_blank" rel="noopener noreferrer">${esc(s.label)} ↗</a>${s.recordLabel?` · ${esc(s.recordLabel)}`:''}${s.date?` · ${esc(s.dateLabel)}: ${esc(s.date)}`:''}${s.warning?` · ${esc(s.warning)}`:''}</p>`).join('')||'<p>확인한 근거 없음</p>'}</section>${excerpts.length?`<details class="material-evidence"><summary>원문 발췌</summary>${excerpts.map(t=>`<blockquote>${esc(t)}</blockquote>`).join('')}</details>`:''}`;
+ return `<p class="review-scope">검토 범위: ${esc(assetScope(a))}</p><p class="review-reason">${esc(reason)}</p>${r.status==='conflict'?`<p class="conflict-next-action">${esc(conflictNextAction)}</p>`:''}${reviewStampMarkup(r,esc)}<h4>해야 할 일</h4><ul>${todo.map(t=>`<li>${esc(t)}${taskButton(t,a,esc)}</li>`).join('')||'<li>추가 항목 없음</li>'}</ul><section class="report-citations"><h4>근거 링크</h4>${candidateNotice(a)?`<p>${esc(candidateNotice(a))}</p>`:''}${displaySources(r,rows).map(s=>`<p><a href="${esc(s.url)}" target="_blank" rel="noopener noreferrer">${esc(s.label)} ↗</a>${s.recordLabel?` · ${esc(s.recordLabel)}`:''}${s.date?` · ${esc(s.dateLabel)}: ${esc(s.date)}`:''}${s.warning?` · ${esc(s.warning)}`:''}</p>`).join('')||'<p>확인한 근거 없음</p>'}</section>${excerpts.length?`<details class="material-evidence"><summary>원문 발췌</summary>${excerpts.map(t=>`<blockquote>${esc(t)}</blockquote>`).join('')}</details>`:''}`;
 }
 
 export function inputForTask(text,a){
