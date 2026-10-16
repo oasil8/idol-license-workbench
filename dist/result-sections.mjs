@@ -33,14 +33,14 @@ export function reviewReason(r){
 
 export function outcomeReason(a,r){
  if(r.status==='review')return '보류 이유: '+reviewReason(r);
- if(r.status==='conflict')return '사용 불가 이유: '+(r.notes?.find(n=>/충돌|별도 허가|허용하지|권리는 부여/.test(n))||r.notes?.[0]||'현재 이용 조건이 명시된 제한과 충돌합니다.');
+ if(r.status==='conflict')return '사용 불가 이유: '+(r.conflicts?.join(' ')||'현재 이용 조건이 확인한 허가 범위와 충돌합니다.');
  const specific=(r.notes||[]).find(note=>/허용|가능|금지되지|조건은 간소/.test(note)&&!note.startsWith('공식 원문'));
  return '사용 가능 이유: '+(specific||(a.kind==='ai'?'해당 약관에서 선택한 이용 범위의 허용을 확인했습니다.':`${a.license==='LicenseRef-OpenSees'?'OpenSees 라이선스':a.license||'확인한 라이선스'}에 따라 현재 이용이 허용됩니다.`))+' 남은 일은 아래 사용 조건의 이행입니다.';
 }
 
 export function resultItems(r,reason=''){
  const seen=new Set(),unique=items=>items.filter(t=>{const key=String(t).replace(/\s+/g,' ').trim();if(!key||seen.has(key)||reason.includes(key))return false;seen.add(key);return true;});
- return {conditions:unique(r.tasks||[]),checks:unique([...(r.status==='review'?r.blockers||[]:[]),...(r.humanChecks||[])])};
+ return {conditions:unique((r.tasks||[]).filter(t=>!r.conflicts?.includes(t))),checks:unique([...(r.status==='review'?r.blockers||[]:[]),...(r.humanChecks||[])])};
 }
 
 export function reviewStampMarkup(r,esc){return (r.reviewDates||[]).map(d=>'<small>검토일: '+esc(d)+'</small>').join('')+(r.reviewWarnings||[]).map(w=>'<p class="warning">'+esc(w)+'</p>').join('');}

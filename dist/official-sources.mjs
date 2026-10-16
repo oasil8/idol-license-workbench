@@ -32,7 +32,7 @@ export function reviewSourceConditions(a,c,now=Date.now(),{contractConfirmed=fal
  const stale=now-Date.parse(source.observedOn+'T00:00:00+09:00')>90*86400000;
  const checked=Date.parse((a.sourceConditionsDate||'')+'T00:00:00+09:00');
  const reviewedRecently=a.sourceConditionsConfirmed&&a.confirmed&&!!a.evidence?.trim()&&Number.isFinite(checked)&&checked<=now&&now-checked<=7*86400000;
- const missing=[];let status='review';
+ const missing=[],conflicts=[];let status='review';
  const fixedLicense=['chrono','blender'].includes(source.id)&&a.confirmed&&!!a.evidence?.trim()&&['BSD-3-Clause','GPL-3.0-only','GPL-2.0-or-later'].includes(a.license);
  if((['tripo','rodin','unity'].includes(source.id)||source.id==='meshy'&&!contractConfirmed)&&(!a.planType||a.planType==='unknown')&&!a.plan)missing.push('사용하거나 생성할 당시의 요금제·구매 유형이 미정입니다.');
  if(['hunyuan','cosmos','isaac','chrono','unity','unreal','usd'].includes(source.id)&&!a.version&&!fixedLicense)missing.push('실제 배포판·모델·엔진 버전이 미정입니다.');
@@ -40,8 +40,8 @@ export function reviewSourceConditions(a,c,now=Date.now(),{contractConfirmed=fal
  if(!contractConfirmed&&['openai','anthropic'].includes(source.id)&&(!a.planType||['unknown','business'].includes(a.planType)))missing.push('개인용 또는 기업/API 계약 중 어떤 문서가 적용되는지 확정해야 합니다.');
  if(!contractConfirmed&&(a.kind==='ai'||a.kind==='model')&&a.rights!=='cleared')missing.push('입력 자료·상표·초상 등 제3자 권리가 미확인입니다.');
  if(!contractConfirmed&&!a.confirmed)missing.push('이 자료에 대한 원문 적용 범위를 아직 직접 확인하지 않았습니다.');
- if(a.kind==='ai'&&a.provider==='tripo'&&source.id==='tripo'&&a.scope==='output'&&a.planType==='free'&&c.commercial){status='conflict';missing.unshift('공식 안내에서 무료 플랜 결과물의 상업 이용 권리는 부여되지 않습니다.');}
- return {source,status,missing,blockers:[...missing],stale,summary:source.note};
+ if(a.kind==='ai'&&a.provider==='tripo'&&source.id==='tripo'&&a.scope==='output'&&a.planType==='free'&&c.commercial){status='conflict';conflicts.push('공식 안내에서 무료 플랜 결과물의 상업 이용 권리는 부여되지 않습니다.');}
+ return {source,status,missing,conflicts,blockers:[...missing],stale,summary:source.note};
 }
 
 // Official code-license observations, not a live fetch or user attestation.

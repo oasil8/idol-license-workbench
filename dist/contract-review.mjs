@@ -23,6 +23,7 @@ export function evaluateContractBundle(a,c={},now=Date.now()){
  const unresolved=contractQuestions(a,c).filter(q=>!q.options.some(([v])=>v===facts[q.key])).map(q=>q.label+' 선택 필요');
  const rules=p.rules.filter(r=>matches(r.when,facts)),conflicts=rules.filter(r=>r.status==='conflict'),reviews=rules.filter(r=>r.status==='review');
  const priority=new Set((conflicts.length?conflicts:reviews).flatMap(r=>r.docs));result.sources=[...accepted].sort((x,y)=>Number(priority.has(y.id))-Number(priority.has(x.id))).map(d=>[d.label,d.url]);
+ result.conflicts=conflicts.map(r=>r.reason);
  result.status=conflicts.length?'conflict':unresolved.length||reviews.length?'review':'conditions';
  result.blockers=result.status==='review'?[...unresolved,...reviews.map(r=>r.reason)]:[];
  result.notes=conflicts.length?conflicts.map(r=>r.reason):result.status==='review'?result.blockers:['일반 약관과 해당 기능의 추가 약관을 함께 확인했습니다. 선택한 범위의 이용이 허용되며 표시된 의무를 지켜야 합니다.'];

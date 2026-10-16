@@ -66,7 +66,7 @@ export function aiResult(a,now=Date.now()){
  if(contractConfirmed&&t.method==='manual'){humanChecks.push('직접 입력한 원문의 공식 출처·최신성·전체 내용 여부를 확인하세요. 사이트에서 자동 확보한 문서가 아닙니다.');notes.push('사용자가 제공하고 적용 여부를 확인한 원문에 근거한 결과입니다. 공식 출처의 자동 검증과는 구분됩니다.');}
  if(contractConfirmed){humanChecks.push('선택한 플랜·계약과 실제 자료의 취득·이용 조건이 일치하는지 확인하고, 표시 의무와 서비스 이용 정책을 이행하세요.');notes.push('서비스 약관상 허용 범위에 대한 결과입니다. 실제 자료의 제3자 권리 확인은 아래에 별도로 표시합니다.');}
  if(status==='conditions'&&a.provider==='huggingface'&&(!a.confirmed||!a.evidence?.trim())){status='review';notes.push('모델 게시자의 권한과 원본 LICENSE 적용 범위를 직접 확인하세요.');}
- return {status,notes,tasks,sources,humanChecks,reviewedEvidence:t.method==='public-review'||t.verifiedSource?t:undefined,permissions:!t.error&&!t.imported&&!stale&&t.queryKey===queryKey(a)?t.permissions||[]:[],contractConfirmed,evidenceMethod:t.method==='manual'?'manual':t.method==='public-review'?'public-review':'automatic'};
+ return {status,conflicts:status==='conflict'?[t.summary]:[],notes,tasks,sources,humanChecks,reviewedEvidence:t.method==='public-review'||t.verifiedSource?t:undefined,permissions:!t.error&&!t.imported&&!stale&&t.queryKey===queryKey(a)?t.permissions||[]:[],contractConfirmed,evidenceMethod:t.method==='manual'?'manual':t.method==='public-review'?'public-review':'automatic'};
 }
 export function cleanTerms(t,{imported=false}={}){
  if(!t||typeof t!=='object')return undefined;

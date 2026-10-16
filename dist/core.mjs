@@ -44,7 +44,7 @@ export function projectTasks(p){
 export function evaluate(a,c,now=Date.now()){
  const result=evaluateBase(a,c,now),review=reviewSourceConditions(appliedOfficialLicense(a)?{...a,confirmed:true}:a,c,now,{contractConfirmed:result.contractConfirmed});result.blockers ||= result.status==='review'?[...result.notes]:[];
  if(review&&!result.scopeUnresolved&&!(appliedOfficialLicense(a)?.id==='isaac-code-20261016'&&a.reviewScope==='code')){
-  if(review.status==='conflict')result.status='conflict';
+  if(review.status==='conflict'){result.status='conflict';result.conflicts=[...(result.conflicts||[]),...review.conflicts];}
   else if(review.blockers.length&&result.status==='conditions')result.status='review';
   result.notes.push(`공식 원문 검토 기록 (${review.source.observedOn})이 있습니다. 확인한 조건과 실제 사용 범위의 대조 결과를 확인하세요.`);
   if(a.provider==='other'){result.notes=result.notes.filter(n=>n!=='최신 약관을 아직 조회하지 않았습니다.');result.tasks=result.tasks.filter(t=>t!=='서비스·플랜을 지정하고 최신 약관 조회 실행');}
@@ -75,9 +75,9 @@ function evaluateBase(a,c,now){
  }
  const recommendation=categoryRecommendation(a);
  if(recommendation){const reason=`범주 추천: ${recommendation.name} → ${kinds[recommendation.kind]}. 실제 이용 방식을 선택하세요.`;return {status:'review',notes:[reason],blockers:[reason],tasks:['정보 보완에서 추천 범주를 확인하고 생성물·API·가중치 등 실제 이용 방식 선택'],humanChecks:[],sources:[]};}
- const license=(a.license||'').trim(), notes=[], tasks=[], humanChecks=[], blockers=[], refs=new Set(); let status='conditions';
+ const license=(a.license||'').trim(), notes=[], tasks=[], humanChecks=[], blockers=[], conflicts=[], refs=new Set(); let status='conditions';
  const review=t=>{if(status!=='conflict')status='review';notes.push(t);blockers.push(t);};
- const conflict=t=>{status='conflict';notes.push(t);};
+ const conflict=t=>{status='conflict';notes.push(t);conflicts.push(t);};
  if(!license||['UNKNOWN','NOASSERTION','NONE','UNLICENSED'].includes(license.toUpperCase())) review('사용 허가를 확인할 수 없습니다. 공개된 파일이라는 사실만으로 이용이 허용되지는 않습니다.');
  else if(/\b(AND|OR|WITH)\b|[()]/.test(license)){refs.add(16);review('복수 라이선스 또는 예외 조항입니다. AND의 모든 조건, OR의 선택한 조건, WITH의 예외 범위를 직접 확인하세요.');tasks.push('적용할 라이선스와 선택·예외 근거를 기록');}
  else if(license==='MIT'||/^BSD-[23]-Clause$/.test(license)){
@@ -145,7 +145,7 @@ function evaluateBase(a,c,now){
  if(a.kind==='tool'){humanChecks.push('호스팅 서비스·유료 배포판·플러그인·동봉 에셋을 함께 쓰는 경우 해당 계약을 별도로 확인하세요. 이 결과는 확인한 도구 라이선스 범위입니다.');}
  if(c.platform==='conference')humanChecks.push('학회·출판사의 AI 공개 및 자료 재사용 정책 확인');
  if(c.platform==='enterprise')humanChecks.push('납품 계약의 재배포·보증·소스 공개 조건 확인');
- return {status,permissions:official?['확인한 범위: '+official.scope+'. 이 범위의 공식 라이선스에서 이용 허가를 확인했습니다. 개별 설치 파일 전체를 검사한 결과는 아닙니다.']:[],humanChecks,blockers:[...new Set(blockers)],notes:[...new Set(notes)],tasks:[...new Set(tasks)],sources:[...(official?[[official.scope,official.url]]:[]),...[...refs].map(i=>sources[i])]};
+ return {status,conflicts,permissions:official?['확인한 범위: '+official.scope+'. 이 범위의 공식 라이선스에서 이용 허가를 확인했습니다. 개별 설치 파일 전체를 검사한 결과는 아닙니다.']:[],humanChecks,blockers:[...new Set(blockers)],notes:[...new Set(notes)],tasks:[...new Set(tasks)],sources:[...(official?[[official.scope,official.url]]:[]),...[...refs].map(i=>sources[i])]};
 }
 const cleanLicense=x=> typeof x==='string'&&!['NOASSERTION','NONE'].includes(x)?x:typeof x?.type==='string'?x.type:'';
 export function isReadable(path){
