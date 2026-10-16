@@ -170,3 +170,11 @@ section.context-panel{padding:24px}section.context-panel .context-title{padding:
 .result-card .text-button,.catalog-choice button:not(.candidate-title){background:#fff;border:1px solid #8ca89f;border-radius:6px;color:#24594d;padding:8px 12px;font:inherit;font-size:13px;font-weight:600;cursor:pointer;line-height:1.5}
 .result-card .text-button:hover,.catalog-choice button:not(.candidate-title):hover{background:#e8f1ea;border-color:#3b7053}
 .result-card .text-button:focus-visible,.catalog-choice button:not(.candidate-title):focus-visible{outline:3px solid #087f73;outline-offset:3px;background:#e8f1ea}
+
+/* Compact result cards are articles, so they need their own inner spacing. */
+@media screen {
+ main:has(#reportView:not([hidden])) { max-width:none; }
+ #reportView { max-width:1360px; margin-inline:auto; }
+ #reportContent>.result-card { padding:clamp(18px,2.2vw,28px); }
+ #reportContent>.result-card>h3 { margin-top:0; }
+}
