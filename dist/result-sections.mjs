@@ -37,8 +37,15 @@ export function outcomeReason(a,r){
  return '사용 가능 이유: '+(specific||(a.kind==='ai'?'해당 약관에서 선택한 이용 범위의 허용을 확인했습니다.':`${a.license==='LicenseRef-OpenSees'?'OpenSees 라이선스':a.license||'확인한 라이선스'}에 따라 현재 이용이 허용됩니다.`))+' 남은 일은 아래 사용 조건의 이행입니다.';
 }
 
-export function resultItems(r){
- return {conditions:[...new Set(r.tasks||[])],checks:[...new Set([...(r.status==='review'?r.blockers||[]:[]),...(r.humanChecks||[])])]};
+export function resultItems(r,reason=''){
+ const seen=new Set(),unique=items=>items.filter(t=>{const key=String(t).replace(/\s+/g,' ').trim();if(!key||seen.has(key)||reason.includes(key))return false;seen.add(key);return true;});
+ return {conditions:unique(r.tasks||[]),checks:unique([...(r.status==='review'?r.blockers||[]:[]),...(r.humanChecks||[])])};
 }
 
 export function reviewStampMarkup(r,esc){return (r.reviewDates||[]).map(d=>'<small>검토일: '+esc(d)+'</small>').join('')+(r.reviewWarnings||[]).map(w=>'<p class="warning">'+esc(w)+'</p>').join('');}
+
+export function compactResultMarkup(a,r,rows,esc){
+ const reason=outcomeReason(a,r),{conditions,checks}=resultItems(r,reason),todo=[...conditions,...checks];
+ const excerpts=[...new Set([...(r.reviewedEvidence?.excerpts||a.terms?.excerpts||[]),...rows.flatMap(s=>(s.verification?.excerpts||[]).map(e=>e.text))])].filter(t=>!reason.includes(t)&&!todo.includes(t));
+ return `<p class="review-reason">${esc(reason)}</p>${reviewStampMarkup(r,esc)}<h4>해야 할 일</h4><ul>${todo.map(t=>`<li>${esc(t)}</li>`).join('')||'<li>추가 항목 없음</li>'}</ul><section class="report-citations"><h4>근거 링크</h4>${rows.map(s=>`<p><a href="${esc(s.url)}" target="_blank" rel="noopener noreferrer">${esc(s.label)} ↗</a>${s.date?` · 검토일: ${esc(s.date.slice(0,10))}`:''}</p>`).join('')||'<p>확인한 근거 없음</p>'}</section>${excerpts.length?`<details class="material-evidence"><summary>원문 발췌</summary>${excerpts.map(t=>`<blockquote>${esc(t)}</blockquote>`).join('')}</details>`:''}`;
+}

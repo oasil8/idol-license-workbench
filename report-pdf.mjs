@@ -16,7 +16,7 @@ export function pdfReportData(input, includeOriginals=false) {
  const summary=projectSummary(p), originals=[];
  const add=(label,text)=>{if(!text?.trim())return;const key=originalKey(text);const existing=originals.find(x=>x.key===key);if(existing){if(!existing.labels.includes(label))existing.labels.push(label);}else originals.push({key,labels:[label],text});};
  const items=summary.assets.map(a=>{
-  const r=evaluate(a,p.context), parts=resultItems(r), sources=assetSources(a,p.context);
+  const r=evaluate(a,p.context), parts=resultItems(r,outcomeReason(a,r)), sources=assetSources(a,p.context);
   if(includeOriginals){
    add(a.name+' · 저장된 약관 · '+(a.terms?.fileName||a.terms?.sourceUrl||''),a.terms?.originalText);
    add(a.name+' · '+a.licenseDocument?.name,a.licenseDocument?.text);
@@ -25,7 +25,7 @@ export function pdfReportData(input, includeOriginals=false) {
   }
   const quotes=[...new Set([...(a.terms?.excerpts||[]),...sources.filter(s=>!s.contractDocument).flatMap(s=>(s.verification?.excerpts||[]).map(x=>x.text))].filter(Boolean))];
   return {reviewDates:r.reviewDates,reviewWarnings:r.reviewWarnings,name:a.name,status:statuses[r.status],reason:outcomeReason(a,r),...parts,
-   sources:sources.map(s=>({label:s.label,url:s.url,group:sourceGroup(s),date:s.date,scope:s.scope,note:s.note,clause:s.clause,quote:s.contractDocument?s.verification?.excerpts?.[0]?.text:''})),
+   sources:sources.map(s=>({label:s.label,url:s.url,group:sourceGroup(s),date:s.date,scope:s.scope,note:outcomeReason(a,r).includes(s.note)?'':s.note,clause:outcomeReason(a,r).includes(s.clause)?'':s.clause,quote:s.contractDocument?s.verification?.excerpts?.[0]?.text:''})),
    quotes:quotes.slice(0,3),extraQuotes:Math.max(0,quotes.length-3),evidence:a.evidence,
    scope:({code:'코드·오픈소스 자체',model:'모델·가중치',service:'서비스·API 계약',bundle:'패키지·번들 전체'}[a.reviewScope]||({output:'AI 생성 결과물',weights:'모델 가중치',service:'API·서비스 계약',training:'학습·미세조정',other:'기타 이용'}[a.scope])||'등록한 자료 범위')};
  });
