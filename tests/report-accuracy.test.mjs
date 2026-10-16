@@ -48,3 +48,9 @@ test('unconfirmed PDF retains actual counts without any verdict',async()=>{
  const p={...sample,contextConfirmed:false},data=pdfReportData(p);assert.equal(data.usedCount,6);assert.equal(data.pending,1);assert.equal(data.items.length,0);
  const text=textOf(await pages(p));assert.ok(norm(text).includes(norm('실제 사용 6개 · 선택 전 1개')));assert.doesNotMatch(text,/사용 가능|판단 보류|사용 불가/);
 });
+
+test('first PDF page summarizes all used items, conflicts first, and long tables paginate',async()=>{
+ const first=textOf([(await pages())[0]]);assert.ok(first.includes('한 줄 이유'));for(const a of sample.assets.filter(a=>a.selection==='used'))assert.ok(first.includes(a.name),a.name);
+ assert.ok(first.indexOf('Tripo')<first.indexOf('Midjourney'));assert.ok(first.indexOf('Midjourney')<first.indexOf('Meshy'));
+ const many={...sample,assets:Array.from({length:45},(_,i)=>({...sample.assets[3],name:'Library '+i}))};const rendered=await pages(many);assert.ok(textOf([rendered[1]]).includes('한 줄 이유'));assert.ok(textOf(rendered).includes('Library 44'));
+});

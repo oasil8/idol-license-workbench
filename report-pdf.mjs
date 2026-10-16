@@ -46,9 +46,25 @@ export async function createReportPdf(project,{includeOriginals=false}={}) {
  const list=(title,values)=>{heading(title,10);if(values.length)for(const value of values)text('• '+value);else text('추가 항목 없음',9,'#65766e');};
  text(data.name,18);text('IDOL License WORKBENCH · '+new Date().toLocaleDateString('ko-KR',{timeZone:'Asia/Seoul'}),8);
  heading('전체 결과: '+data.status);text(data.reason);
+ if(data.items.length){
+  const columns=[42,124,229],widths=[82,105,width-187];
+  const row=(values,header=false)=>{
+   doc.fontSize(header?9:8);
+   const height=Math.max(26,...values.map((v,i)=>doc.heightOfString(v,{width:widths[i]-12})+14));
+   if(doc.y+height>doc.page.height-44){doc.addPage();row(['항목','판정','한 줄 이유'],true);}
+   const y=doc.y;doc.save().rect(42,y,width,height).fill(header?'#e8efec':'#ffffff').restore();
+   for(let i=0;i<values.length;i++){doc.fontSize(header?9:8).fillColor('#263e38').text(values[i],columns[i]+6,y+6,{width:widths[i]-12});}
+   doc.save().strokeColor('#c7d4cf').moveTo(42,y+height).lineTo(42+width,y+height).stroke().restore();doc.y=y+height;
+  };
+  row(['항목','판정','한 줄 이유'],true);
+  const order=[statuses.conflict,statuses.review,statuses.conditions];
+  for(const item of [...data.items].sort((a,b)=>order.indexOf(a.status)-order.indexOf(b.status))){const reason=item.reason.length>56?item.reason.slice(0,53)+'…':item.reason;row([item.name,item.status,reason]);}
+  doc.moveDown();
+ }
  const c=data.context;
  text(`사용 목적: ${ {general:'일반 이용',research:'연구',conference:'학회·논문',enterprise:'기업·납품',steam:'Steam 출시'}[c.platform]} · 상업 ${c.commercial?'예':'아니요'} · 배포 ${c.distribute?'예':'아니요'} · 수정 ${c.modified?'예':'아니요'} · 네트워크 ${c.network?'예':'아니요'}`,8);
  text(`실제 사용 ${data.usedCount}개 · 선택 전 ${data.pending}개 · 전체 원문 부록 ${includeOriginals?'포함':'제외'}`,8);
+ if(data.items.length)doc.addPage();
  for(const [i,item] of data.items.entries()) {
   heading(`${i+1}. ${item.name} — ${item.status}`,12);text(item.reason);
   if(item.ruleDate)text('판정 규칙 기준일: '+item.ruleDate,8);
