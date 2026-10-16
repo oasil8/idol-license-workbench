@@ -8,6 +8,21 @@ import {assetSources,sourceGroup} from './dist/evidence-sources.mjs';
 
 export const verdictColor=status=>({[statuses.conflict]:'#9e3025',[statuses.review]:'#775310',[statuses.conditions]:'#16613c'}[status]||'#263e38');
 
+// PDFKit permits CJK breaks anywhere; pre-wrap at whitespace using the actual font metrics.
+export function wrapPdfText(value,measure,width){
+ return String(value??'').split('\n').map(paragraph=>{
+  const lines=[];let line='';
+  for(const word of paragraph.split(/\s+/).filter(Boolean)){
+   if(measure(word)>width){
+    if(line){lines.push(line);line='';}
+    for(const char of word){if(line&&measure(line+char)>width){lines.push(line);line='';}line+=char;}
+   }else if(line&&measure(line+' '+word)>width){lines.push(line);line=word;}
+   else line+=(line?' ':'')+word;
+  }
+  lines.push(line);return lines.join('\n');
+ }).join('\n');
+}
+
 // Ignore extraction whitespace only; changed words/conditions stay separate.
 export function originalKey(text) {
  return String(text).normalize('NFC').replace(/\s+/g,' ').trim();
@@ -43,7 +58,8 @@ export async function createReportPdf(project,{includeOriginals=false}={}) {
  const chunks=[];const complete=new Promise((resolve,reject)=>{doc.on('data',x=>chunks.push(x));doc.on('end',()=>resolve(Buffer.concat(chunks)));doc.on('error',reject);});
  const width=doc.page.width-84;
  const room=(height=40)=>{if(doc.y+height>doc.page.height-44)doc.addPage();};
- const text=(value,size=9,color='#263e38')=>{doc.fontSize(size).fillColor(color).text(String(value??''),42,doc.y,{width,lineGap:2,paragraphGap:3});};
+ const wrapped=(value,w=width)=>wrapPdfText(value,t=>doc.widthOfString(t),w-1);
+ const text=(value,size=9,color='#263e38')=>{doc.fontSize(size).fillColor(color).text(wrapped(value),42,doc.y,{width,lineGap:2,paragraphGap:3});};
  const heading=(value,size=12,color='#086f64')=>{room(55);doc.moveDown(.4);text(value,size,color);doc.moveDown(.2);};
  const list=(title,values)=>{heading(title,10);if(values.length)for(const value of values)text('• '+value);else text('추가 항목 없음',9,'#65766e');};
  text(data.name,18);text('IDOL License WORKBENCH · '+new Date().toLocaleDateString('ko-KR',{timeZone:'Asia/Seoul'}),8);
@@ -51,7 +67,7 @@ export async function createReportPdf(project,{includeOriginals=false}={}) {
  if(data.items.length){
   const columns=[42,124,229],widths=[82,105,width-187];
   const row=(values,header=false)=>{
-   doc.fontSize(header?9:8);
+   doc.fontSize(header?9:8);values=values.map((v,i)=>wrapped(v,widths[i]-12));
    const height=Math.max(26,...values.map((v,i)=>doc.heightOfString(v,{width:widths[i]-12})+14));
    if(doc.y+height>doc.page.height-44){doc.addPage();row(['항목','판정','한 줄 이유'],true);}
    const y=doc.y;doc.save().rect(42,y,width,height).fill(header?'#e8efec':'#ffffff').restore();
@@ -60,7 +76,7 @@ export async function createReportPdf(project,{includeOriginals=false}={}) {
   };
   row(['항목','판정','한 줄 이유'],true);
   const order=[statuses.conflict,statuses.review,statuses.conditions];
-  for(const item of [...data.items].sort((a,b)=>order.indexOf(a.status)-order.indexOf(b.status))){const reason=item.reason.length>56?item.reason.slice(0,53)+'…':item.reason;row([item.name,item.status,reason]);}
+  for(const item of [...data.items].sort((a,b)=>order.indexOf(a.status)-order.indexOf(b.status))){const reason=item.reason.length>56?item.reason.slice(0,53).replace(/\s+\S*$/,'')+'…':item.reason;row([item.name,item.status,reason]);}
   doc.moveDown();
  }
  const c=data.context;
@@ -79,7 +95,7 @@ export async function createReportPdf(project,{includeOriginals=false}={}) {
    if(s.note)text(s.note,8);
    if(s.clause)text('근거: '+s.clause,8);
    if(s.quote)text('원문 발췌: '+s.quote,8);
-   if(/^https?:\/\//i.test(s.url)){doc.fontSize(8).fillColor('#086f64').text(s.url,42,doc.y,{width,link:s.url,lineGap:2});}
+   if(/^https?:\/\//i.test(s.url)){doc.fontSize(8).fillColor('#086f64').text(wrapped(s.url),42,doc.y,{width,link:s.url,lineGap:2});}
   }
   if(!item.sources.length)text('공식 출처 미등록. 입력 근거를 확인하세요.',8);
   for(const quote of item.quotes)text('원문 발췌: '+quote,8);

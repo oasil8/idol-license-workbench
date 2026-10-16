@@ -61,3 +61,11 @@ test('PDF uses three distinct verdict colors and retains text labels',async()=>{
  for(const hex of ['#9e3025','#775310','#16613c'])assert.ok(colors.some(c=>c===hex||c===hex.slice(1).match(/../g).map(x=>parseInt(x,16)).join(',')),hex+JSON.stringify(colors));
  const first=textOf([(await pages())[0]]);for(const label of ['사용 불가','판단 보류','사용 가능'])assert.ok(first.includes(label));
 });
+
+test('PDF wraps Korean words at spaces and long URLs stay inside page margins',async()=>{
+ const {wrapPdfText}=await import('../report-pdf.mjs');assert.equal(wrapPdfText('권리입니다 확보되지는 않습니다',s=>s.length,10),'권리입니다\n확보되지는 않습니다');assert.equal(wrapPdfText('abcdefghijk',s=>s.length,4),'abcd\nefgh\nijk');
+ const rendered=await pages();const lines=[];for(const page of rendered){let line='';for(const item of page){line+=item.str;if(item.hasEOL){lines.push(line);line='';}}if(line)lines.push(line);}
+ for(const item of pdfReportData(sample).items)for(const sentence of [item.reason,...item.conditions,...item.checks])for(const word of sentence.split(/\s+/).filter(w=>/^[가-힣]+[.,:]?$/.test(w)))assert.ok(lines.some(l=>l.includes(word)),word);
+ const long={...sample.assets[3],evidence:'https://github.com/mrdoob/three.js/blob/dev/'+ 'a'.repeat(300)+'/LICENSE'};
+ for(const page of await pages({...sample,assets:[long]}))for(const item of page)if(item.str.trim())assert.ok(item.transform[4]>=41&&item.transform[4]+item.width<=554,item.str);
+});
