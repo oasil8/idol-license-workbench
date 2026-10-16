@@ -8,6 +8,8 @@ export const sourceTypes={supplement:'공식 원문 자동 보완 · 표시된 �
 
 // These addresses were researched once, not fetched on every render. They never change a verdict.
 const suggestions=[
+ [['Meshy','Meshy AI','메시','메쉬'],'Meshy 공식 이용약관','https://www.meshy.ai/terms-of-use','생성물·플랜·서비스 범위를 구분하세요.'],
+ [['GitHub Copilot','깃허브 코파일럿'],'GitHub 생성형 AI 기업 계약','https://github.com/customer-terms/github-generative-ai-services-terms','GitHub 직접 기업 구매에 적용되는 계약입니다.'],
  [['Runway','Runway ML','런웨이'],'Runway 이용약관 · API 및 출력물','https://runway.com/terms-ofuse','출력물 허가와 API 구매·표시 의무를 구분하세요.'],
  [['Nano Banana (Gemini 이미지 생성)','Nano Banana','nanobanana','나노바나나','나노 바나나'],'Google Nano Banana 공식 제품 안내','https://deepmind.google/models/gemini-image/','Google 이미지 생성 제품 안내입니다. 비슷한 이름의 제3자 서비스와 구분하고 Gemini Apps·API·Vertex 계약은 실제 사용 경로에 맞게 확인하세요.'],
  [['Gemini','Google Gemini','제미나이'],'Gemini 적용 약관 안내','https://support.google.com/gemini/answer/13594961?hl=en','Gemini Apps 안내입니다. API·Workspace 계약과 구분하세요.'],

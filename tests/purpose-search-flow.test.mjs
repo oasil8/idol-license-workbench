@@ -1,3 +1,4 @@
+import {isOfficialCandidate} from '../dist/source-policy.mjs';
 import {cleanContractChoices} from '../dist/contract-review.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
@@ -41,12 +42,12 @@ test('candidate selection starts the same original verification for AI/API, code
  const code=fs.readFileSync(new URL('../dist/app.mjs',import.meta.url),'utf8');
  for(const kind of ['ai','code','image','audio']){
   const f=Object.fromEntries(['name','kind','provider','serviceName','evidence'].map(k=>[k,{value:''}]));
-  const ids={catalogWebResults:{},catalogSearch:{value:'Example'},assetForm:{elements:f},providerSearch:{value:''},sourceSearchResults:{closest:()=>({open:false})},dialogTitle:{}};
+  const ids={catalogWebResults:{},catalogSearch:{value:'Midjourney'},assetForm:{elements:f},providerSearch:{value:''},sourceSearchResults:{closest:()=>({open:false})},dialogTitle:{}};
   let verified=-1;
-  const box={cleanContractChoices,workingContractChoices:{},$:id=>ids[id],catalogRemote:{name:'Example',candidates:[{query:'Example',url:'https://vendor.example/terms'}]},catalogCategory:kind,openAsset:()=>{},cleanCandidates:x=>x,workingCandidates:[],updateForm:()=>{},verifySource:i=>verified=i};
+  const box={isOfficialCandidate,cleanContractChoices,workingContractChoices:{},$:id=>ids[id],catalogRemote:{name:'Midjourney',candidates:[{query:'Midjourney',url:'https://docs.midjourney.com/terms'}]},catalogCategory:kind,openAsset:()=>{},cleanCandidates:x=>x,workingCandidates:[],updateForm:()=>{},verifySource:i=>verified=i};
   vm.createContext(box);const start=code.indexOf("$('catalogWebResults').onclick=");vm.runInContext(code.slice(start,code.indexOf('\nrenderCatalog();',start)),box);
   ids.catalogWebResults.onclick({target:{closest:()=>({dataset:{webCandidate:'0'}})}});
-  assert.equal(verified,0,kind);assert.equal(f.kind.value,kind);assert.equal(f.evidence.value,'https://vendor.example/terms');assert.equal(f.name.value,'Example');
+  assert.equal(verified,0,kind);assert.equal(f.kind.value,kind);assert.equal(f.evidence.value,'https://docs.midjourney.com/terms');assert.equal(f.name.value,'Midjourney');
  }
 });
 

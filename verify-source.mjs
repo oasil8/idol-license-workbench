@@ -1,3 +1,4 @@
+import {officialDomains,isOfficialCandidate} from './dist/source-policy.mjs';
 import {profileForQuery,collectContractDocuments} from './contract-fetch.mjs';
 import {createHash} from 'node:crypto';
 import {officialSource} from './dist/official-sources.mjs';
@@ -33,6 +34,7 @@ export async function verifyCandidate(input,{fetchPage=fetchPublic,now=Date.now}
  if(!input||typeof input.name!=='string'||!input.name.trim()||input.name.length>200||!candidateUrl(input.url)||input.url.length>2000)throw Error('이름과 유효한 후보 URL이 필요합니다.');
  const query=input.name.trim(),url=candidateUrl(input.url),attemptedAt=new Date(now()).toISOString();
  const base={status:'candidate',query,url,attemptedAt,reason:'공식성을 확인하지 못해 후보로 유지합니다.'};
+ if(officialDomains(query).length&&!isOfficialCandidate(query,url))return {...base,reason:'비공식 해설 · 근거로 사용 불가'};
  const deadline=Date.now()+45000;
  const get=target=>fetchPage(target,{deadline,allowedHost:new URL(target).hostname});
  try{
