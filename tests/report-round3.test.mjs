@@ -52,3 +52,12 @@ test('empty task sections are omitted on screen and in exported HTML',()=>{
   assert.doesNotMatch(html,/<h[34]>(해야 할 일|지켜야 할 조건|확인 필요한 부분|결과 설명)<\/h[34]>(?!<ul>)/);
  }
 });
+
+test('PDF lines are not re-broken by PDFKit after our own wrapping',async()=>{
+ const doc=await getDocument({data:new Uint8Array(await createReportPdf(json('./fixtures/report-mixed.json'))),useSystemFonts:true}).promise;
+ for(let i=1;i<=doc.numPages;i++){
+  const rows=new Map();
+  for(const item of (await (await doc.getPage(i)).getTextContent()).items){const y=Math.round(item.transform[5]);rows.set(y,(rows.get(y)||'')+item.str);}
+  for(const row of rows.values())assert.notEqual(row.trim(),'Mega');
+ }
+});

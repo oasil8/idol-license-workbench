@@ -12,6 +12,7 @@ export function brandIcon(asset={}){
  const icon=icons[brandOf(asset)];
  if(icon)return `<img class="brand-icon" src="${icon.src}" width="22" height="22" alt="" aria-hidden="true">`;
  const label={ai:'AI',api:'API',code:'&lt;/&gt;',model:'3D',image:'▧',audio:'♪',data:'▦',tool:'⚙'}[asset.kind]||'◇';
- return `<span class="brand-icon brand-fallback" aria-hidden="true">${label}</span>`;
+ // The label is CSS-generated so it never joins the title in copied or extracted text.
+ return `<span class="brand-icon brand-fallback" aria-hidden="true" data-label="${label}"></span>`;
 }
-export const brandIconCss='.brand-name{display:inline-flex;align-items:center;gap:8px;min-width:0}.brand-icon{display:inline-block;vertical-align:middle;flex:0 0 22px;width:22px;height:22px;object-fit:contain;box-sizing:border-box;border-radius:5px;background:#fff;border:1px solid #dce5e1;padding:2px;margin-right:7px}.brand-name .brand-icon{margin-right:0}.brand-fallback{white-space:nowrap;overflow:hidden;font:700 9px/16px "Segoe UI",sans-serif;text-align:center;color:#42675e;background:#edf4f1}';
+export const brandIconCss='.brand-name{display:inline-flex;align-items:center;gap:8px;min-width:0}.brand-icon{display:inline-block;vertical-align:middle;flex:0 0 22px;width:22px;height:22px;object-fit:contain;box-sizing:border-box;border-radius:5px;background:#fff;border:1px solid #dce5e1;padding:2px;margin-right:7px}.brand-name .brand-icon{margin-right:0}.brand-fallback{white-space:nowrap;overflow:hidden;font:700 9px/16px "Segoe UI",sans-serif;text-align:center;color:#42675e;background:#edf4f1}.brand-fallback::before{content:attr(data-label)}';

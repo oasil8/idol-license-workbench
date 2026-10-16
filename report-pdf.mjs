@@ -81,7 +81,8 @@ export async function createReportPdf(project,{includeOriginals=false}={}) {
  const chunks=[];const complete=new Promise((resolve,reject)=>{doc.on('data',x=>chunks.push(x));doc.on('end',()=>resolve(Buffer.concat(chunks)));doc.on('error',reject);});
  const width=doc.page.width-84;
  const room=(height=40)=>{if(doc.y+height>doc.page.height-44)doc.addPage();};
- const wrapped=(value,w=width)=>wrapPdfText(value,t=>doc.widthOfString(t),w-1);
+ // PDFKit's own wrapper needs about a space more room than widthOfString reports, or it re-breaks after '/'.
+ const wrapped=(value,w=width)=>wrapPdfText(value,t=>doc.widthOfString(t),w-1-doc.widthOfString('  '));
  const text=(value,size=9,color='#263e38')=>{doc.fontSize(size).fillColor(color).text(wrapped(value),42,doc.y,{width,lineGap:2,paragraphGap:3});};
  const heading=(value,size=12,color='#086f64')=>{room(55);doc.moveDown(.4);text(value,size,color);doc.moveDown(.2);};
  text(data.name,18);text('IDOL License WORKBENCH · '+new Date().toLocaleDateString('ko-KR',{timeZone:'Asia/Seoul'}),8);
