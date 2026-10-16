@@ -45,7 +45,7 @@ function publicOutputTerms(a,now){
   const grant=grants[provider];if(!grant)return;
   analysis={status:'conditions',summary:grant[0],excerpts:[grant[1]],conditions:provider==='anthropic'?['Claude 서비스·출력물을 경쟁 제품·서비스 제작이나 AI 모델 학습에 이용하지 마세요.']:provider==='openai'?['출력물을 OpenAI와 경쟁하는 모델 개발에 이용하지 말고, 정확성과 적합성을 확인하세요.']:[]};
  }
- return {...analysis,conditions:[...analysis.conditions,...common],checkedAt,queryKey:queryKey(a),sourceUrl:officialTermsUrls[provider][provider==='meshy'||provider==='copilot'&&a.contractRoute==='github-business'?1:0],sourceName:'공식 공개 안내 · '+checkedAt.slice(0,10)+' 검토 기록',builtIn:true,verifiedProvider:provider,method:'public-review'};
+ return {...analysis,conditions:[...analysis.conditions,...common],checkedAt,queryKey:queryKey(a),sourceUrl:officialTermsUrls[provider][provider==='meshy'||provider==='copilot'&&a.contractRoute==='github-business'?1:0],sourceName:'공식 공개 안내',builtIn:true,verifiedProvider:provider,method:'public-review'};
 }
 export function aiResult(a,now=Date.now()){
  let t=a.terms?.method==='manual'?a.terms:(!a.terms||a.terms.error||a.terms.queryKey!==queryKey(a)||(a.terms.status==='review'&&a.terms.method!=='manual'&&!a.terms.imported))?(verifiedTerms(a,now)||a.terms):a.terms;t ||= publicOutputTerms(a,now);let status='review',notes=[],tasks=[],sources=[],humanChecks=[];
@@ -64,7 +64,6 @@ export function aiResult(a,now=Date.now()){
  const contractConfirmed=status==='conditions'&&['output','service'].includes(a.scope)&&t.excerpts?.length>0&&(t.method==='manual'?t.attested===true&&!!t.originalText:(t.verifiedSource===true||(officialTermsUrls[t.verifiedProvider||a.provider]||[]).includes(t.sourceUrl)));
  if(status==='conditions'&&a.rights!=='cleared'){if(contractConfirmed)humanChecks.push('입력 자료·상표·초상·음성 등 제3자 권리: 실제 자료를 기준으로 별도 확인해야 합니다. 약관상 허용만으로 이 권리가 확보되지는 않습니다.');else{status='review';notes.push('입력·제3자 권리 또는 원문 출처의 확인이 필요합니다.');tasks.push('입력 자료와 제3자 권리 확인을 기록');}}
  if(contractConfirmed&&t.method==='manual'){humanChecks.push('직접 입력한 원문의 공식 출처·최신성·전체 내용 여부를 확인하세요. 사이트에서 자동 확보한 문서가 아닙니다.');notes.push('사용자가 제공하고 적용 여부를 확인한 원문에 근거한 결과입니다. 공식 출처의 자동 검증과는 구분됩니다.');}
- if(t.method==='public-review')notes.push(t.checkedAt.slice(0,10)+'에 검토한 공식 공개 안내를 적용했습니다. 이 항목에서 실시간 조회한 기록은 아닙니다.');
  if(contractConfirmed){humanChecks.push('선택한 플랜·계약과 실제 자료의 취득·이용 조건이 일치하는지 확인하고, 표시 의무와 서비스 이용 정책을 이행하세요.');notes.push('서비스 약관상 허용 범위에 대한 결과입니다. 실제 자료의 제3자 권리 확인은 아래에 별도로 표시합니다.');}
  if(status==='conditions'&&a.provider==='huggingface'&&(!a.confirmed||!a.evidence?.trim())){status='review';notes.push('모델 게시자의 권한과 원본 LICENSE 적용 범위를 직접 확인하세요.');}
  return {status,notes,tasks,sources,humanChecks,reviewedEvidence:t.method==='public-review'||t.verifiedSource?t:undefined,permissions:!t.error&&!t.imported&&!stale&&t.queryKey===queryKey(a)?t.permissions||[]:[],contractConfirmed,evidenceMethod:t.method==='manual'?'manual':t.method==='public-review'?'public-review':'automatic'};

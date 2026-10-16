@@ -3,7 +3,7 @@ import {existsSync} from 'node:fs';
 import {join} from 'node:path';
 import {evaluate,statuses,validateProject} from './dist/core.mjs';
 import {conditionsConfirmed,conditionsPrompt,projectSummary,summaryReason} from './dist/workflow.mjs';
-import {resultItems,outcomeReason} from './dist/result-sections.mjs';
+import {displaySources,resultItems,outcomeReason} from './dist/result-sections.mjs';
 import {assetSources,sourceGroup} from './dist/evidence-sources.mjs';
 
 // Ignore extraction whitespace only; changed words/conditions stay separate.
@@ -25,7 +25,7 @@ export function pdfReportData(input, includeOriginals=false) {
   }
   const quotes=[...new Set([...(a.terms?.excerpts||[]),...sources.filter(s=>!s.contractDocument).flatMap(s=>(s.verification?.excerpts||[]).map(x=>x.text))].filter(Boolean))];
   return {reviewDates:r.reviewDates,reviewWarnings:r.reviewWarnings,name:a.name,status:statuses[r.status],reason:outcomeReason(a,r),...parts,
-   sources:sources.map(s=>({label:s.label,url:s.url,group:sourceGroup(s),date:s.date,scope:s.scope,note:outcomeReason(a,r).includes(s.note)?'':s.note,clause:outcomeReason(a,r).includes(s.clause)?'':s.clause,quote:s.contractDocument?s.verification?.excerpts?.[0]?.text:''})),
+   sources:displaySources(r,sources).map(s=>({recordLabel:s.recordLabel,label:s.label,url:s.url,group:sourceGroup(s),date:s.date,scope:s.scope,note:outcomeReason(a,r).includes(s.note)?'':s.note,clause:outcomeReason(a,r).includes(s.clause)?'':s.clause,quote:s.contractDocument?s.verification?.excerpts?.[0]?.text:''})),
    quotes:quotes.slice(0,3),extraQuotes:Math.max(0,quotes.length-3),evidence:a.evidence,
    scope:({code:'코드·오픈소스 자체',model:'모델·가중치',service:'서비스·API 계약',bundle:'패키지·번들 전체'}[a.reviewScope]||({output:'AI 생성 결과물',weights:'모델 가중치',service:'API·서비스 계약',training:'학습·미세조정',other:'기타 이용'}[a.scope])||'등록한 자료 범위')};
  });
@@ -55,7 +55,7 @@ export async function createReportPdf(project,{includeOriginals=false}={}) {
   list('지켜야 할 조건',item.conditions);list('확인 필요한 부분',item.checks);
   heading('적용 범위·핵심 근거',10);text('검토 범위: '+item.scope);
   for(const s of item.sources){
-   room(45);text(`${s.group} · ${s.label}${s.date?' · '+s.date:''}`,9);
+   room(45);text(`${s.group} · ${s.label}${s.recordLabel?' · '+s.recordLabel:''}${s.date?' · '+s.date:''}`,9);
    if(s.scope)text('적용 범위: '+s.scope,8);
    if(s.note)text(s.note,8);
    if(s.clause)text('근거: '+s.clause,8);

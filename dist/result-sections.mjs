@@ -45,10 +45,15 @@ export function resultItems(r,reason=''){
 
 export function reviewStampMarkup(r,esc){return (r.reviewDates||[]).map(d=>'<small>검토일: '+esc(d)+'</small>').join('')+(r.reviewWarnings||[]).map(w=>'<p class="warning">'+esc(w)+'</p>').join('');}
 
+export function displaySources(r,rows){
+ const dates=new Set(r.reviewDates||[]);let marked=false;
+ return rows.map(s=>{const date=s.date?.slice(0,10),builtIn=!marked&&r.evidenceMethod==='public-review'&&s.url===r.reviewedEvidence?.sourceUrl;if(builtIn)marked=true;const shown=date&&!dates.has(date)?date:'';if(date)dates.add(date);return {...s,date:shown,recordLabel:builtIn?'내장 검토 기록 · 실시간 조회 아님':''};});
+}
+
 export function compactResultMarkup(a,r,rows,esc){
  const reason=outcomeReason(a,r),{conditions,checks}=resultItems(r,reason),todo=[...conditions,...checks];
  const excerpts=[...new Set([...(r.reviewedEvidence?.excerpts||a.terms?.excerpts||[]),...rows.flatMap(s=>(s.verification?.excerpts||[]).map(e=>e.text))])].filter(t=>!reason.includes(t)&&!todo.includes(t));
- return `<p class="review-reason">${esc(reason)}</p>${reviewStampMarkup(r,esc)}<h4>해야 할 일</h4><ul>${todo.map(t=>{const action=inputForTask(t,a);return `<li>${esc(t)}${action&&a.id?` <button type="button" class="text-button" data-edit="${esc(a.id)}" data-field="${action.field}">${action.label}</button>`:''}</li>`;}).join('')||'<li>추가 항목 없음</li>'}</ul><section class="report-citations"><h4>근거 링크</h4>${rows.map(s=>`<p><a href="${esc(s.url)}" target="_blank" rel="noopener noreferrer">${esc(s.label)} ↗</a>${s.date?` · 검토일: ${esc(s.date.slice(0,10))}`:''}</p>`).join('')||'<p>확인한 근거 없음</p>'}</section>${excerpts.length?`<details class="material-evidence"><summary>원문 발췌</summary>${excerpts.map(t=>`<blockquote>${esc(t)}</blockquote>`).join('')}</details>`:''}`;
+ return `<p class="review-reason">${esc(reason)}</p>${reviewStampMarkup(r,esc)}<h4>해야 할 일</h4><ul>${todo.map(t=>{const action=inputForTask(t,a);return `<li>${esc(t)}${action&&a.id?` <button type="button" class="text-button" data-edit="${esc(a.id)}" data-field="${action.field}">${action.label}</button>`:''}</li>`;}).join('')||'<li>추가 항목 없음</li>'}</ul><section class="report-citations"><h4>근거 링크</h4>${displaySources(r,rows).map(s=>`<p><a href="${esc(s.url)}" target="_blank" rel="noopener noreferrer">${esc(s.label)} ↗</a>${s.recordLabel?` · ${esc(s.recordLabel)}`:''}${s.date?` · 검토일: ${esc(s.date.slice(0,10))}`:''}</p>`).join('')||'<p>확인한 근거 없음</p>'}</section>${excerpts.length?`<details class="material-evidence"><summary>원문 발췌</summary>${excerpts.map(t=>`<blockquote>${esc(t)}</blockquote>`).join('')}</details>`:''}`;
 }
 
 export function inputForTask(text,a){

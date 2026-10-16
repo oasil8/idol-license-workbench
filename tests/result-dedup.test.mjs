@@ -18,3 +18,16 @@ test('rendered PDF contains the Midjourney hold sentence only once',async()=>{
  const normalize=s=>s.replace(/\s+/g,'');assert.equal(normalize(text).split(normalize(evaluate(a,context).reviewedEvidence.summary)).length-1,1);
 });
 
+
+test('built-in notice is not a task and review date appears once in card and actual PDF',async()=>{
+ const r=evaluate(a,context),html=compactResultMarkup(a,r,assetSources(a,context),esc);
+ const tasks=[...resultItems(r).conditions,...resultItems(r).checks];
+ assert.ok(tasks.every(t=>!t.includes('적용했습니다')&&!t.includes('실시간 조회')));
+ assert.equal(html.split('2026-10-16').length-1,1);
+ assert.equal(html.split('내장 검토 기록 · 실시간 조회 아님').length-1,1);
+ const {getDocument}=await import('pdfjs-dist/legacy/build/pdf.mjs');
+ const doc=await getDocument({data:new Uint8Array(await createReportPdf(p)),useSystemFonts:true}).promise;
+ let text='';for(let n=1;n<=doc.numPages;n++)text+=(await (await doc.getPage(n)).getTextContent()).items.map(x=>x.str).join('');
+ assert.equal(text.split('2026-10-16').length-1,1);
+ assert.equal(text.replace(/\s/g,'').split('내장검토기록·실시간조회아님').length-1,1);
+});
