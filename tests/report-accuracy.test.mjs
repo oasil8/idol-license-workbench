@@ -18,3 +18,11 @@ test('conflict reasons identify the restriction in web and actual PDF',async()=>
  assert.ok(norm(textOf(await pages({...sample,assets:[a]}))).includes(norm(phrase)));
  }
 });
+
+test('built-in and live evidence use accurate reason wording in web and PDF',async()=>{
+ const a=sample.assets[1],r=evaluate(a,sample.context);assert.match(outcomeReason(a,r),/검토된 공식 문서 기록/);assert.doesNotMatch(outcomeReason(a,r),/조회한/);
+ const {queryKey}=await import('../dist/ai.mjs');const live={...a,terms:{status:'conditions',summary:'조회한 공식 문서의 출력물 권리 조항상 상용 사용 가능 (조건부).',checkedAt:new Date().toISOString(),queryKey:queryKey(a),sourceUrl:'https://www.meshy.ai/terms-of-use',excerpts:['grant'],conditions:[]}};
+ assert.match(outcomeReason(live,evaluate(live,sample.context)),/조회한 공식 문서/);
+ assert.ok(norm(textOf(await pages({...sample,assets:[a]}))).includes(norm('검토된 공식 문서 기록')));
+ assert.ok(norm(textOf(await pages({...sample,assets:[live]}))).includes(norm('조회한 공식 문서')));
+});

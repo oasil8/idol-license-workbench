@@ -45,7 +45,7 @@ function publicOutputTerms(a,now){
   const grant=grants[provider];if(!grant)return;
   analysis={status:'conditions',summary:grant[0],excerpts:[grant[1]],conditions:provider==='anthropic'?['Claude 서비스·출력물을 경쟁 제품·서비스 제작이나 AI 모델 학습에 이용하지 마세요.']:provider==='openai'?['출력물을 OpenAI와 경쟁하는 모델 개발에 이용하지 말고, 정확성과 적합성을 확인하세요.']:[]};
  }
- return {...analysis,conditions:[...analysis.conditions,...common],checkedAt,queryKey:queryKey(a),sourceUrl:officialTermsUrls[provider][provider==='meshy'||provider==='copilot'&&a.contractRoute==='github-business'?1:0],sourceName:'공식 공개 안내',builtIn:true,verifiedProvider:provider,method:'public-review'};
+ return {...analysis,summary:analysis.summary.replace('조회한 공식 문서','검토된 공식 문서 기록'),conditions:[...analysis.conditions,...common],checkedAt,queryKey:queryKey(a),sourceUrl:officialTermsUrls[provider][provider==='meshy'||provider==='copilot'&&a.contractRoute==='github-business'?1:0],sourceName:'공식 공개 안내',builtIn:true,verifiedProvider:provider,method:'public-review'};
 }
 export function aiResult(a,now=Date.now()){
  let t=a.terms?.method==='manual'?a.terms:(!a.terms||a.terms.error||a.terms.queryKey!==queryKey(a)||(a.terms.status==='review'&&a.terms.method!=='manual'&&!a.terms.imported))?(verifiedTerms(a,now)||a.terms):a.terms;t ||= publicOutputTerms(a,now);let status='review',notes=[],tasks=[],sources=[],humanChecks=[];
