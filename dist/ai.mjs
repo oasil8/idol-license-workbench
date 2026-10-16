@@ -79,6 +79,7 @@ export function cleanTerms(t,{imported=false}={}){
 }
 // Public terms checked 2026-10-15. This classifies the need for a plan, not permission.
 const planEvidence={
+ midjourney:{reviewedOn:officialRecord('midjourney').observedOn,names:['midjourney','미드저니'],reason:'회사·직원의 연 매출이 100만 달러를 초과하면 Pro/Mega 플랜 조건을 확인해야 합니다.',url:officialRecord('midjourney').url,section:'Your Rights',quote:'You own all Assets You create with the Services'},
  recraft:{reviewedOn:'2026-10-15',names:['recraft','리크래프트','레크래프트'],reason:'직접 생성한 무료 자료의 상업 이용 제한과 유료 자료의 권리 조건이 다릅니다. 공유 자료·API에는 별도 범위가 적용됩니다.',url:'https://www.recraft.ai/legal/terms',section:'7.1 Free Tier / 7.2 Paid Subscription / 7.3 Programmatic Access',quote:'no commercial use of Free Tier Assets is permitted'},
  tripo:{reviewedOn:'2026-10-15',names:['tripo','트리포'],reason:'무료·유료에 따라 결과물의 상업 이용 권한이 달라집니다.',url:'https://www.tripo3d.ai/help/privacy-policy/how-to-use-tripo-models-commercially',section:'Free vs Paid Plans',quote:'If you need commercial use rights, upgrade to a paid plan.'},
  meshy:{reviewedOn:'2026-10-15',names:['meshy','meshy ai','메시','메쉬'],reason:'무료 결과물의 출처 표시 의무와 유료 결과물의 소유권 조건이 다릅니다.',url:'https://www.meshy.ai/terms-of-use',section:'3.2 Ownership of User Content',quote:'such customers on a paid Meshy plan own their Customer Output.'},

@@ -84,14 +84,19 @@ function render(){const p=project();
  $('overall').className='overall '+overall;
  renderProjects();
  renderAssignment(p);
- if(!conditionsConfirmed(p)){$('overall').innerHTML=`<h2>${conditionsPrompt}</h2><p>2단계에서 실제 사용 조건을 확인하고 적용하세요.</p><button id="setConditions">사용 조건 정하기</button>`;$('setConditions').onclick=()=>setView('inventory');$('stats').hidden=true;$('documentReviewSection').hidden=true;}else $('stats').hidden=false;
+ if(!conditionsConfirmed(p)){$('overall').innerHTML=`<h2>${conditionsPrompt}</h2><p>2단계에서 실제 사용 조건을 확인하고 적용하세요.</p><button data-set-conditions>사용 조건 정하기</button>`;$('overall').querySelector('[data-set-conditions]').onclick=()=>setView('inventory');$('stats').hidden=true;$('documentReviewSection').hidden=true;}else $('stats').hidden=false;
 }
 function renderReport(){const p=project();if(!conditionsConfirmed(p)){$('reportContent').innerHTML='';return;}
  $('reportContent').innerHTML=selectedAssets(p).map(a=>{const r=evaluate(a,p.context);return `<article class="report-item result-card"><h3 class="brand-name">${brandIcon(a)}${esc(a.name)} ${badge(r)}</h3>${compactResultMarkup(a,r,assetSources(a,p.context),esc)}<button class="outline" data-edit="${a.id}">정보 보완</button></article>`;}).join('');
 }
 function setView(next){if(next==='report'&&contextDraftProject===current)message('사용 조건에 미적용 변경이 있습니다. 결과는 마지막으로 적용한 조건 기준입니다.');view=next;window.scrollTo({top:0,behavior:'instant'});for(const v of ['intake','inventory','report','guide'])$(v+'View').hidden=v!==view;document.querySelectorAll('[data-view]').forEach(b=>{b.classList.toggle('active',b.dataset.view===view);if(b.dataset.view===view)b.setAttribute('aria-current','step');else b.removeAttribute('aria-current');});$('viewSubtitle').textContent={intake:'파일을 가져오거나 이름으로 검색해서 자료를 등록하세요.',inventory:'각 자료를 실제 사용, 대안 보관, 사용 안 함으로 분류하세요.',report:'실제 사용하는 자료의 결론과 근거를 확인하세요.',guide:'사용 순서와 결과를 읽는 방법을 확인하세요.'}[view];$('pageLabel').textContent={intake:'1. 자료 넣기',inventory:'2. 실제 사용할 것 선택',report:'3. 결과 확인',guide:'사용법·결과 안내'}[view];}
 $('assetRows').addEventListener('change',e=>{const id=e.target.dataset.selection;if(!id)return;const value=e.target.value;if(!Object.hasOwn(selectionLabels,value))return;transact(state=>{state.projects.find(p=>p.id===state.current).assets.find(a=>a.id===id).selection=value;});render();});
-$('reportContent').onclick=e=>{const b=e.target.closest('[data-edit]');if(b)openAsset(b.dataset.edit);};
+function focusAssetInput(name){
+ const field=$('assetForm').elements.namedItem(name);if(!field)return;
+ for(let parent=field.parentElement;parent;parent=parent.parentElement)if(parent.tagName==='DETAILS')parent.open=true;
+ field.scrollIntoView({block:'center'});field.focus();
+}
+$('reportContent').onclick=e=>{const b=e.target.closest('[data-edit]');if(b){openAsset(b.dataset.edit);if(b.dataset.field)focusAssetInput(b.dataset.field);}};
 
 document.querySelectorAll('[data-view]').forEach(b=>b.onclick=()=>setView(b.dataset.view));
 

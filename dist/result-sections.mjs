@@ -1,3 +1,4 @@
+import {planImpact} from './ai.mjs';
 export function permissionMarkup(a,r,esc){
  let permission=r.status==='conditions'?(r.permissions||[]).join(' '):'';
  if(!permission&&r.status==='conditions')permission=a.kind==='ai'?'확보한 약관에서 선택한 이용 범위의 허용 조항을 확인했습니다.':`${a.license}의 이용 허가와 이 자료에 대한 적용 확인 기록에 근거합니다.`;
@@ -47,5 +48,14 @@ export function reviewStampMarkup(r,esc){return (r.reviewDates||[]).map(d=>'<sma
 export function compactResultMarkup(a,r,rows,esc){
  const reason=outcomeReason(a,r),{conditions,checks}=resultItems(r,reason),todo=[...conditions,...checks];
  const excerpts=[...new Set([...(r.reviewedEvidence?.excerpts||a.terms?.excerpts||[]),...rows.flatMap(s=>(s.verification?.excerpts||[]).map(e=>e.text))])].filter(t=>!reason.includes(t)&&!todo.includes(t));
- return `<p class="review-reason">${esc(reason)}</p>${reviewStampMarkup(r,esc)}<h4>해야 할 일</h4><ul>${todo.map(t=>`<li>${esc(t)}</li>`).join('')||'<li>추가 항목 없음</li>'}</ul><section class="report-citations"><h4>근거 링크</h4>${rows.map(s=>`<p><a href="${esc(s.url)}" target="_blank" rel="noopener noreferrer">${esc(s.label)} ↗</a>${s.date?` · 검토일: ${esc(s.date.slice(0,10))}`:''}</p>`).join('')||'<p>확인한 근거 없음</p>'}</section>${excerpts.length?`<details class="material-evidence"><summary>원문 발췌</summary>${excerpts.map(t=>`<blockquote>${esc(t)}</blockquote>`).join('')}</details>`:''}`;
+ return `<p class="review-reason">${esc(reason)}</p>${reviewStampMarkup(r,esc)}<h4>해야 할 일</h4><ul>${todo.map(t=>{const action=inputForTask(t,a);return `<li>${esc(t)}${action&&a.id?` <button type="button" class="text-button" data-edit="${esc(a.id)}" data-field="${action.field}">${action.label}</button>`:''}</li>`;}).join('')||'<li>추가 항목 없음</li>'}</ul><section class="report-citations"><h4>근거 링크</h4>${rows.map(s=>`<p><a href="${esc(s.url)}" target="_blank" rel="noopener noreferrer">${esc(s.label)} ↗</a>${s.date?` · 검토일: ${esc(s.date.slice(0,10))}`:''}</p>`).join('')||'<p>확인한 근거 없음</p>'}</section>${excerpts.length?`<details class="material-evidence"><summary>원문 발췌</summary>${excerpts.map(t=>`<blockquote>${esc(t)}</blockquote>`).join('')}</details>`:''}`;
+}
+
+export function inputForTask(text,a){
+ if(/API.*접근 권한/.test(text)&&a.scope==='service')return {field:'apiAccessConfirmed',label:'API 권한 확인하기'};
+ if(/계약 경로/.test(text)&&/copilot/i.test(a.serviceName||a.name))return {field:'contractRoute',label:'계약 경로 선택하기'};
+ if(/플랜|요금제|Pro\/Mega/.test(text)&&a.kind==='ai'&&planImpact(a).status==='affected')return {field:'planType',label:'플랜 입력하기'};
+ if(/owner\/model|모델 ID/.test(text)&&a.provider==='huggingface')return {field:'repository',label:'모델 주소 입력하기'};
+ if(/버전|배포판/.test(text))return {field:'version',label:'버전 입력하기'};
+ if(/라이선스 미기록/.test(text))return {field:'license',label:'라이선스 입력하기'};
 }
