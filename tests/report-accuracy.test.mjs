@@ -78,7 +78,7 @@ test('original appendix explains stored originals and built-in excerpts, even wh
 });
 
 test('resolved Tripo plan removes obsolete plan task while unknown retains it in web and PDF',async()=>{
- const task='서비스·플랜을 지정하고 최신 약관 조회 실행';
+ const task='서비스·플랜을 지정하고 최신 약관 조회를 실행하세요.';
  for(const planType of ['free','unknown']){
  const a={...sample.assets[2],planType};assert.equal(markup(a).includes(task),planType==='unknown');
  const data=pdfReportData({...sample,assets:[a]}),layout=pdfBodyLayout(data.items),pdf=norm(textOf(await pages({...sample,assets:[a]})));

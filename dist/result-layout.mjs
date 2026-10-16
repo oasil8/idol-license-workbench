@@ -1,6 +1,6 @@
 import {statuses} from './core.mjs';
 
-const thirdParty='입력 자료·브랜드·디자인·상표·초상·음성·개인정보 등 제3자 권리는 실제 자료를 기준으로 별도 확인하세요. 라이선스·약관상 허용만으로 확보되는 권리가 아닙니다.';
+const thirdParty='입력 자료·브랜드·디자인·상표·초상·음성·개인정보 등 제3자 권리는 라이선스·약관상 허용만으로 확보되지 않으므로 실제 자료를 기준으로 별도 확인하세요.';
 
 // Common notes keep the bucket they came from: an obligation never becomes a check.
 export function resultBodyLayout(items){

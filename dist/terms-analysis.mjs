@@ -1,6 +1,6 @@
 import {analyzeUsageTerms} from './usage-terms.mjs';
 export const pastOutputCheck='과거 생성물·별도 계약·외부 콘텐츠에는 당시 계약과 적용 범위를 확인하세요.';
-export const thirdPartyCheck='입력 자료·상표·초상·음성 등 제3자 권리는 실제 자료를 기준으로 별도 확인하세요. 약관상 허용만으로 확보되는 권리가 아닙니다.';
+export const thirdPartyCheck='약관상 허용만으로 확보되지 않는 입력 자료·상표·초상·음성 등 제3자 권리를 실제 자료를 기준으로 별도 확인하세요.';
 export function analyzeTerms(input,text){
  text=String(text||'').replace(/\s+/g,' ').trim();
  const usage=analyzeUsageTerms(input,text);if(usage)return usage;
@@ -26,7 +26,7 @@ export function analyzeTerms(input,text){
   if(/community|커뮤니티/i.test(input.useDescription||'')&&/image|이미지|upload|업로드/i.test(input.useDescription||'')){result.summary='커뮤니티의 업로드 이미지 등은 생성 결과물과 라이선스가 다릅니다. 해당 자료의 적용 조항 확인이 필요합니다.';return result;}
 
   match=input.planType==='free'?(text.match(/If you are on a free plan, we grant you a CC BY 4\.0 license instead/i)||text.match(/makes such rights available to free plan customers under the Creative Commons Attribution 4\.0 International License/i)):(text.match(/if you are a paid customer, you own the assets created through our platform/i)||text.match(/such customers on a paid Meshy plan own their Customer Output/i));
-  if(match){if(/You agree not to remove, alter, disable, or otherwise tamper with such identifiers/i.test(text))result.conditions.push('결과물의 AI 생성 표시·디지털 워터마크·식별 메타데이터를 제거하거나 변경하지 마세요.');result.conditions.push('생성 결과물에 대한 결과입니다. 커뮤니티 업로드 이미지 등 다른 자료의 라이선스에 확대 적용하지 마세요.');result.license=input.planType==='free'?'CC-BY-4.0':'Service-Output';result.conditions.push(input.planType==='free'?'Meshy 출처·CC BY 4.0 링크·변경 사실을 표시하세요.':'생성 당시 유료 플랜과 소유권 조건의 적용을 확인하세요.');}
+  if(match){if(/You agree not to remove, alter, disable, or otherwise tamper with such identifiers/i.test(text))result.conditions.push('결과물의 AI 생성 표시·디지털 워터마크·식별 메타데이터를 제거하거나 변경하지 마세요.');result.conditions.push('이 결과는 생성 결과물에만 해당하므로, 커뮤니티 업로드 이미지 등 다른 자료의 라이선스에 확대 적용하지 마세요.');result.license=input.planType==='free'?'CC-BY-4.0':'Service-Output';result.conditions.push(input.planType==='free'?'Meshy 출처·CC BY 4.0 링크·변경 사실을 표시하세요.':'생성 당시 유료 플랜과 소유권 조건의 적용을 확인하세요.');}
  }else if(input.provider==='tripo'){
   if(input.planType==='free'){
    match=text.match(/If you need commercial use rights, upgrade to a paid plan/i);

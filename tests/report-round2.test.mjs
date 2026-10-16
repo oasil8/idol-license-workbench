@@ -29,7 +29,7 @@ test('PDF cards and summary remove reason prefixes and common tail, keeping web 
 });
 test('screen, exported HTML and PDFs use actions instead of unchecked-state sentences',async()=>{
  for(const name of ['mixed','sample']){const p=fixture(name);for(const text of [screen(p),buildProjectReport(p),(await pdf(p)).text])assert.doesNotMatch(norm(text),/확인하지않았습니다|조회하지않았습니다/);}
- const parts=sections.resultItems({status:'review',blockers:['최신 약관을 아직 조회하지 않았습니다.'],humanChecks:['공식 참고 링크에서 약관을 확인하고 원문·적용 플랜을 기록']});assert.equal(parts.checks.length,1);assert.match(parts.checks[0],/기록하세요/);
+ const parts=sections.resultItems({status:'review',blockers:['공식 사이트에서 최신 약관을 열어 원문과 적용 플랜을 기록하세요.'],humanChecks:['공식 사이트에서 최신 약관을 열어 원문과 적용 플랜을 기록하세요.']});assert.equal(parts.checks.length,1);assert.match(parts.checks[0],/기록하세요/);
 });
 test('only conflict cards show the prescribed next action in web and PDF',async()=>{
  const p=fixture('mixed');for(const a of p.assets.filter(a=>a.selection==='used')){const r=evaluate(a,p.context),html=sections.compactResultMarkup(a,r,assetSources(a,p.context),String);assert.equal(html.includes(action),r.status==='conflict');}
@@ -39,7 +39,7 @@ test('web groups common tasks once, sorts cards by verdict and keeps edit shortc
  const p=fixture('mixed');p.assets.forEach((a,i)=>a.id='asset-'+i);const html=screen(p),cards=[...html.matchAll(/<article class="report-item result-card">([\s\S]*?)<\/article>/g)].map(m=>m[1]);
  assert.match(html,/공통 확인사항/);assert.match(html,/해당 항목:/);assert.match(cards[0],/Tripo/);
  const order=[statuses.conflict,statuses.review,statuses.conditions];let prev=-1;for(const card of cards){const index=order.findIndex(s=>card.includes(s));assert.ok(index>=prev);prev=index;}
- for(const phrase of ['과거 생성물·별도 계약·외부 콘텐츠에는 당시 계약과 적용 범위를 확인하세요.','플레이어에게 제공되는 AI 콘텐츠 여부와 Steam 공개 범위 확인','금지 콘텐츠·서비스 이용 정책을 준수하세요.']){assert.equal(html.split(phrase).length-1,1,phrase);assert.ok(cards.every(c=>!c.includes(phrase)));}
+ for(const phrase of ['과거 생성물·별도 계약·외부 콘텐츠에는 당시 계약과 적용 범위를 확인하세요.','플레이어에게 제공되는 AI 콘텐츠인지와 Steam 공개 범위를 확인하세요.','금지 콘텐츠·서비스 이용 정책을 준수하세요.']){assert.equal(html.split(phrase).length-1,1,phrase);assert.ok(cards.every(c=>!c.includes(phrase)));}
  assert.match(html,/data-field="planType">플랜 입력하기/);
 });
 test('shared plan checks preserve a shortcut for each asset and do not mutate project judgments',()=>{

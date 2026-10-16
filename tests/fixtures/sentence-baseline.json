@@ -1,0 +1,1178 @@
+[
+  {
+    "id": "steam:0:lodash",
+    "status": "conditions",
+    "conditions": 1,
+    "checks": 0
+  },
+  {
+    "id": "steam:1:MiniLM 가중치",
+    "status": "conditions",
+    "conditions": 2,
+    "checks": 1
+  },
+  {
+    "id": "steam:2:Suno",
+    "status": "review",
+    "conditions": 0,
+    "checks": 3
+  },
+  {
+    "id": "steam:3:terms-sample.pdf",
+    "status": "review",
+    "conditions": 0,
+    "checks": 3
+  },
+  {
+    "id": "steam:4:Meshy",
+    "status": "conditions",
+    "conditions": 4,
+    "checks": 4
+  },
+  {
+    "id": "steam:5:Tripo",
+    "status": "conflict",
+    "conditions": 0,
+    "checks": 3
+  },
+  {
+    "id": "steam:6:Midjourney",
+    "status": "review",
+    "conditions": 1,
+    "checks": 5
+  },
+  {
+    "id": "steam:7:Midjourney",
+    "status": "review",
+    "conditions": 1,
+    "checks": 5
+  },
+  {
+    "id": "steam:8:Meshy",
+    "status": "conditions",
+    "conditions": 4,
+    "checks": 4
+  },
+  {
+    "id": "steam:9:Tripo",
+    "status": "conflict",
+    "conditions": 0,
+    "checks": 3
+  },
+  {
+    "id": "steam:10:three.js",
+    "status": "conditions",
+    "conditions": 1,
+    "checks": 0
+  },
+  {
+    "id": "steam:11:Blender",
+    "status": "review",
+    "conditions": 0,
+    "checks": 5
+  },
+  {
+    "id": "steam:12:ChatGPT",
+    "status": "conditions",
+    "conditions": 2,
+    "checks": 5
+  },
+  {
+    "id": "steam:13:후보 도구",
+    "status": "review",
+    "conditions": 0,
+    "checks": 3
+  },
+  {
+    "id": "steam:14:ESO potw2337b",
+    "status": "conditions",
+    "conditions": 1,
+    "checks": 1
+  },
+  {
+    "id": "steam:15:Winter princess · ESO Music Archive",
+    "status": "conditions",
+    "conditions": 1,
+    "checks": 1
+  },
+  {
+    "id": "steam:16:code:MIT",
+    "status": "review",
+    "conditions": 1,
+    "checks": 2
+  },
+  {
+    "id": "steam:17:code:GPL-3.0",
+    "status": "review",
+    "conditions": 0,
+    "checks": 3
+  },
+  {
+    "id": "steam:18:code:LGPL-3.0",
+    "status": "review",
+    "conditions": 0,
+    "checks": 3
+  },
+  {
+    "id": "steam:19:code:AGPL-3.0",
+    "status": "review",
+    "conditions": 0,
+    "checks": 3
+  },
+  {
+    "id": "steam:20:code:CC-BY-NC-4.0",
+    "status": "conflict",
+    "conditions": 1,
+    "checks": 1
+  },
+  {
+    "id": "steam:21:code:CC-BY-SA-4.0",
+    "status": "review",
+    "conditions": 3,
+    "checks": 3
+  },
+  {
+    "id": "steam:22:code:Apache-2.0",
+    "status": "review",
+    "conditions": 2,
+    "checks": 2
+  },
+  {
+    "id": "steam:23:code:Unity Asset Store EULA",
+    "status": "review",
+    "conditions": 0,
+    "checks": 3
+  },
+  {
+    "id": "steam:24:code:",
+    "status": "review",
+    "conditions": 0,
+    "checks": 3
+  },
+  {
+    "id": "steam:25:tool:MIT",
+    "status": "review",
+    "conditions": 1,
+    "checks": 3
+  },
+  {
+    "id": "steam:26:tool:GPL-3.0",
+    "status": "review",
+    "conditions": 0,
+    "checks": 4
+  },
+  {
+    "id": "steam:27:tool:LGPL-3.0",
+    "status": "review",
+    "conditions": 0,
+    "checks": 4
+  },
+  {
+    "id": "steam:28:tool:AGPL-3.0",
+    "status": "review",
+    "conditions": 0,
+    "checks": 4
+  },
+  {
+    "id": "steam:29:tool:CC-BY-NC-4.0",
+    "status": "conflict",
+    "conditions": 1,
+    "checks": 2
+  },
+  {
+    "id": "steam:30:tool:CC-BY-SA-4.0",
+    "status": "review",
+    "conditions": 3,
+    "checks": 4
+  },
+  {
+    "id": "steam:31:tool:Apache-2.0",
+    "status": "review",
+    "conditions": 2,
+    "checks": 3
+  },
+  {
+    "id": "steam:32:tool:Unity Asset Store EULA",
+    "status": "review",
+    "conditions": 0,
+    "checks": 4
+  },
+  {
+    "id": "steam:33:tool:",
+    "status": "review",
+    "conditions": 0,
+    "checks": 4
+  },
+  {
+    "id": "steam:34:model:MIT",
+    "status": "review",
+    "conditions": 1,
+    "checks": 3
+  },
+  {
+    "id": "steam:35:model:GPL-3.0",
+    "status": "review",
+    "conditions": 0,
+    "checks": 4
+  },
+  {
+    "id": "steam:36:model:LGPL-3.0",
+    "status": "review",
+    "conditions": 0,
+    "checks": 4
+  },
+  {
+    "id": "steam:37:model:AGPL-3.0",
+    "status": "review",
+    "conditions": 0,
+    "checks": 4
+  },
+  {
+    "id": "steam:38:model:CC-BY-NC-4.0",
+    "status": "conflict",
+    "conditions": 1,
+    "checks": 2
+  },
+  {
+    "id": "steam:39:model:CC-BY-SA-4.0",
+    "status": "review",
+    "conditions": 3,
+    "checks": 4
+  },
+  {
+    "id": "steam:40:model:Apache-2.0",
+    "status": "review",
+    "conditions": 2,
+    "checks": 3
+  },
+  {
+    "id": "steam:41:model:Unity Asset Store EULA",
+    "status": "review",
+    "conditions": 0,
+    "checks": 4
+  },
+  {
+    "id": "steam:42:model:",
+    "status": "review",
+    "conditions": 0,
+    "checks": 4
+  },
+  {
+    "id": "steam:43:image:MIT",
+    "status": "review",
+    "conditions": 1,
+    "checks": 3
+  },
+  {
+    "id": "steam:44:image:GPL-3.0",
+    "status": "review",
+    "conditions": 0,
+    "checks": 4
+  },
+  {
+    "id": "steam:45:image:LGPL-3.0",
+    "status": "review",
+    "conditions": 0,
+    "checks": 4
+  },
+  {
+    "id": "steam:46:image:AGPL-3.0",
+    "status": "review",
+    "conditions": 0,
+    "checks": 4
+  },
+  {
+    "id": "steam:47:image:CC-BY-NC-4.0",
+    "status": "conflict",
+    "conditions": 1,
+    "checks": 2
+  },
+  {
+    "id": "steam:48:image:CC-BY-SA-4.0",
+    "status": "review",
+    "conditions": 3,
+    "checks": 4
+  },
+  {
+    "id": "steam:49:image:Apache-2.0",
+    "status": "review",
+    "conditions": 2,
+    "checks": 3
+  },
+  {
+    "id": "steam:50:image:Unity Asset Store EULA",
+    "status": "review",
+    "conditions": 0,
+    "checks": 4
+  },
+  {
+    "id": "steam:51:image:",
+    "status": "review",
+    "conditions": 0,
+    "checks": 4
+  },
+  {
+    "id": "steam:52:audio:MIT",
+    "status": "review",
+    "conditions": 1,
+    "checks": 3
+  },
+  {
+    "id": "steam:53:audio:GPL-3.0",
+    "status": "review",
+    "conditions": 0,
+    "checks": 4
+  },
+  {
+    "id": "steam:54:audio:LGPL-3.0",
+    "status": "review",
+    "conditions": 0,
+    "checks": 4
+  },
+  {
+    "id": "steam:55:audio:AGPL-3.0",
+    "status": "review",
+    "conditions": 0,
+    "checks": 4
+  },
+  {
+    "id": "steam:56:audio:CC-BY-NC-4.0",
+    "status": "conflict",
+    "conditions": 1,
+    "checks": 2
+  },
+  {
+    "id": "steam:57:audio:CC-BY-SA-4.0",
+    "status": "review",
+    "conditions": 3,
+    "checks": 4
+  },
+  {
+    "id": "steam:58:audio:Apache-2.0",
+    "status": "review",
+    "conditions": 2,
+    "checks": 3
+  },
+  {
+    "id": "steam:59:audio:Unity Asset Store EULA",
+    "status": "review",
+    "conditions": 0,
+    "checks": 4
+  },
+  {
+    "id": "steam:60:audio:",
+    "status": "review",
+    "conditions": 0,
+    "checks": 4
+  },
+  {
+    "id": "steam:61:data:MIT",
+    "status": "review",
+    "conditions": 1,
+    "checks": 3
+  },
+  {
+    "id": "steam:62:data:GPL-3.0",
+    "status": "review",
+    "conditions": 0,
+    "checks": 4
+  },
+  {
+    "id": "steam:63:data:LGPL-3.0",
+    "status": "review",
+    "conditions": 0,
+    "checks": 4
+  },
+  {
+    "id": "steam:64:data:AGPL-3.0",
+    "status": "review",
+    "conditions": 0,
+    "checks": 4
+  },
+  {
+    "id": "steam:65:data:CC-BY-NC-4.0",
+    "status": "conflict",
+    "conditions": 1,
+    "checks": 2
+  },
+  {
+    "id": "steam:66:data:CC-BY-SA-4.0",
+    "status": "review",
+    "conditions": 3,
+    "checks": 4
+  },
+  {
+    "id": "steam:67:data:Apache-2.0",
+    "status": "review",
+    "conditions": 2,
+    "checks": 3
+  },
+  {
+    "id": "steam:68:data:Unity Asset Store EULA",
+    "status": "review",
+    "conditions": 0,
+    "checks": 4
+  },
+  {
+    "id": "steam:69:data:",
+    "status": "review",
+    "conditions": 0,
+    "checks": 4
+  },
+  {
+    "id": "steam:70:openai",
+    "status": "conditions",
+    "conditions": 2,
+    "checks": 5
+  },
+  {
+    "id": "steam:71:openai",
+    "status": "conditions",
+    "conditions": 2,
+    "checks": 5
+  },
+  {
+    "id": "steam:72:openai",
+    "status": "conditions",
+    "conditions": 2,
+    "checks": 5
+  },
+  {
+    "id": "steam:73:openai",
+    "status": "review",
+    "conditions": 0,
+    "checks": 6
+  },
+  {
+    "id": "steam:74:anthropic",
+    "status": "conditions",
+    "conditions": 2,
+    "checks": 4
+  },
+  {
+    "id": "steam:75:anthropic",
+    "status": "conditions",
+    "conditions": 2,
+    "checks": 4
+  },
+  {
+    "id": "steam:76:anthropic",
+    "status": "conditions",
+    "conditions": 2,
+    "checks": 4
+  },
+  {
+    "id": "steam:77:anthropic",
+    "status": "review",
+    "conditions": 0,
+    "checks": 6
+  },
+  {
+    "id": "steam:78:meshy",
+    "status": "conditions",
+    "conditions": 4,
+    "checks": 4
+  },
+  {
+    "id": "steam:79:meshy",
+    "status": "conditions",
+    "conditions": 3,
+    "checks": 5
+  },
+  {
+    "id": "steam:80:meshy",
+    "status": "conditions",
+    "conditions": 5,
+    "checks": 5
+  },
+  {
+    "id": "steam:81:meshy",
+    "status": "review",
+    "conditions": 0,
+    "checks": 5
+  },
+  {
+    "id": "steam:82:tripo",
+    "status": "conflict",
+    "conditions": 0,
+    "checks": 3
+  },
+  {
+    "id": "steam:83:tripo",
+    "status": "conditions",
+    "conditions": 3,
+    "checks": 4
+  },
+  {
+    "id": "steam:84:tripo",
+    "status": "review",
+    "conditions": 0,
+    "checks": 6
+  },
+  {
+    "id": "steam:85:tripo",
+    "status": "review",
+    "conditions": 0,
+    "checks": 5
+  },
+  {
+    "id": "steam:86:huggingface",
+    "status": "review",
+    "conditions": 0,
+    "checks": 4
+  },
+  {
+    "id": "steam:87:huggingface",
+    "status": "review",
+    "conditions": 0,
+    "checks": 4
+  },
+  {
+    "id": "steam:88:huggingface",
+    "status": "review",
+    "conditions": 0,
+    "checks": 4
+  },
+  {
+    "id": "steam:89:huggingface",
+    "status": "review",
+    "conditions": 0,
+    "checks": 4
+  },
+  {
+    "id": "steam:90:copilot",
+    "status": "conditions",
+    "conditions": 3,
+    "checks": 5
+  },
+  {
+    "id": "steam:91:copilot",
+    "status": "review",
+    "conditions": 3,
+    "checks": 5
+  },
+  {
+    "id": "steam:92:copilot",
+    "status": "review",
+    "conditions": 3,
+    "checks": 5
+  },
+  {
+    "id": "steam:93:copilot",
+    "status": "review",
+    "conditions": 3,
+    "checks": 5
+  },
+  {
+    "id": "steam:94:elevenlabs",
+    "status": "review",
+    "conditions": 0,
+    "checks": 5
+  },
+  {
+    "id": "steam:95:elevenlabs",
+    "status": "review",
+    "conditions": 0,
+    "checks": 5
+  },
+  {
+    "id": "steam:96:elevenlabs",
+    "status": "review",
+    "conditions": 0,
+    "checks": 5
+  },
+  {
+    "id": "steam:97:elevenlabs",
+    "status": "review",
+    "conditions": 0,
+    "checks": 5
+  },
+  {
+    "id": "research:0:lodash",
+    "status": "conditions",
+    "conditions": 1,
+    "checks": 0
+  },
+  {
+    "id": "research:1:MiniLM 가중치",
+    "status": "conditions",
+    "conditions": 2,
+    "checks": 1
+  },
+  {
+    "id": "research:2:Suno",
+    "status": "review",
+    "conditions": 0,
+    "checks": 2
+  },
+  {
+    "id": "research:3:terms-sample.pdf",
+    "status": "review",
+    "conditions": 0,
+    "checks": 3
+  },
+  {
+    "id": "research:4:Meshy",
+    "status": "conditions",
+    "conditions": 4,
+    "checks": 3
+  },
+  {
+    "id": "research:5:Tripo",
+    "status": "review",
+    "conditions": 0,
+    "checks": 4
+  },
+  {
+    "id": "research:6:Midjourney",
+    "status": "review",
+    "conditions": 1,
+    "checks": 4
+  },
+  {
+    "id": "research:7:Midjourney",
+    "status": "review",
+    "conditions": 1,
+    "checks": 4
+  },
+  {
+    "id": "research:8:Meshy",
+    "status": "conditions",
+    "conditions": 4,
+    "checks": 3
+  },
+  {
+    "id": "research:9:Tripo",
+    "status": "review",
+    "conditions": 0,
+    "checks": 4
+  },
+  {
+    "id": "research:10:three.js",
+    "status": "conditions",
+    "conditions": 1,
+    "checks": 0
+  },
+  {
+    "id": "research:11:Blender",
+    "status": "review",
+    "conditions": 0,
+    "checks": 5
+  },
+  {
+    "id": "research:12:ChatGPT",
+    "status": "conditions",
+    "conditions": 2,
+    "checks": 4
+  },
+  {
+    "id": "research:13:후보 도구",
+    "status": "review",
+    "conditions": 0,
+    "checks": 3
+  },
+  {
+    "id": "research:14:ESO potw2337b",
+    "status": "conditions",
+    "conditions": 1,
+    "checks": 1
+  },
+  {
+    "id": "research:15:Winter princess · ESO Music Archive",
+    "status": "conditions",
+    "conditions": 1,
+    "checks": 1
+  },
+  {
+    "id": "research:16:code:MIT",
+    "status": "review",
+    "conditions": 1,
+    "checks": 2
+  },
+  {
+    "id": "research:17:code:GPL-3.0",
+    "status": "review",
+    "conditions": 0,
+    "checks": 3
+  },
+  {
+    "id": "research:18:code:LGPL-3.0",
+    "status": "review",
+    "conditions": 0,
+    "checks": 3
+  },
+  {
+    "id": "research:19:code:AGPL-3.0",
+    "status": "review",
+    "conditions": 0,
+    "checks": 3
+  },
+  {
+    "id": "research:20:code:CC-BY-NC-4.0",
+    "status": "review",
+    "conditions": 2,
+    "checks": 3
+  },
+  {
+    "id": "research:21:code:CC-BY-SA-4.0",
+    "status": "review",
+    "conditions": 1,
+    "checks": 2
+  },
+  {
+    "id": "research:22:code:Apache-2.0",
+    "status": "review",
+    "conditions": 2,
+    "checks": 2
+  },
+  {
+    "id": "research:23:code:Unity Asset Store EULA",
+    "status": "review",
+    "conditions": 0,
+    "checks": 3
+  },
+  {
+    "id": "research:24:code:",
+    "status": "review",
+    "conditions": 0,
+    "checks": 3
+  },
+  {
+    "id": "research:25:tool:MIT",
+    "status": "review",
+    "conditions": 1,
+    "checks": 3
+  },
+  {
+    "id": "research:26:tool:GPL-3.0",
+    "status": "review",
+    "conditions": 0,
+    "checks": 4
+  },
+  {
+    "id": "research:27:tool:LGPL-3.0",
+    "status": "review",
+    "conditions": 0,
+    "checks": 4
+  },
+  {
+    "id": "research:28:tool:AGPL-3.0",
+    "status": "review",
+    "conditions": 0,
+    "checks": 4
+  },
+  {
+    "id": "research:29:tool:CC-BY-NC-4.0",
+    "status": "review",
+    "conditions": 2,
+    "checks": 4
+  },
+  {
+    "id": "research:30:tool:CC-BY-SA-4.0",
+    "status": "review",
+    "conditions": 1,
+    "checks": 3
+  },
+  {
+    "id": "research:31:tool:Apache-2.0",
+    "status": "review",
+    "conditions": 2,
+    "checks": 3
+  },
+  {
+    "id": "research:32:tool:Unity Asset Store EULA",
+    "status": "review",
+    "conditions": 0,
+    "checks": 4
+  },
+  {
+    "id": "research:33:tool:",
+    "status": "review",
+    "conditions": 0,
+    "checks": 4
+  },
+  {
+    "id": "research:34:model:MIT",
+    "status": "review",
+    "conditions": 1,
+    "checks": 3
+  },
+  {
+    "id": "research:35:model:GPL-3.0",
+    "status": "review",
+    "conditions": 0,
+    "checks": 4
+  },
+  {
+    "id": "research:36:model:LGPL-3.0",
+    "status": "review",
+    "conditions": 0,
+    "checks": 4
+  },
+  {
+    "id": "research:37:model:AGPL-3.0",
+    "status": "review",
+    "conditions": 0,
+    "checks": 4
+  },
+  {
+    "id": "research:38:model:CC-BY-NC-4.0",
+    "status": "review",
+    "conditions": 2,
+    "checks": 4
+  },
+  {
+    "id": "research:39:model:CC-BY-SA-4.0",
+    "status": "review",
+    "conditions": 1,
+    "checks": 3
+  },
+  {
+    "id": "research:40:model:Apache-2.0",
+    "status": "review",
+    "conditions": 2,
+    "checks": 3
+  },
+  {
+    "id": "research:41:model:Unity Asset Store EULA",
+    "status": "review",
+    "conditions": 0,
+    "checks": 4
+  },
+  {
+    "id": "research:42:model:",
+    "status": "review",
+    "conditions": 0,
+    "checks": 4
+  },
+  {
+    "id": "research:43:image:MIT",
+    "status": "review",
+    "conditions": 1,
+    "checks": 3
+  },
+  {
+    "id": "research:44:image:GPL-3.0",
+    "status": "review",
+    "conditions": 0,
+    "checks": 4
+  },
+  {
+    "id": "research:45:image:LGPL-3.0",
+    "status": "review",
+    "conditions": 0,
+    "checks": 4
+  },
+  {
+    "id": "research:46:image:AGPL-3.0",
+    "status": "review",
+    "conditions": 0,
+    "checks": 4
+  },
+  {
+    "id": "research:47:image:CC-BY-NC-4.0",
+    "status": "review",
+    "conditions": 2,
+    "checks": 4
+  },
+  {
+    "id": "research:48:image:CC-BY-SA-4.0",
+    "status": "review",
+    "conditions": 1,
+    "checks": 3
+  },
+  {
+    "id": "research:49:image:Apache-2.0",
+    "status": "review",
+    "conditions": 2,
+    "checks": 3
+  },
+  {
+    "id": "research:50:image:Unity Asset Store EULA",
+    "status": "review",
+    "conditions": 0,
+    "checks": 4
+  },
+  {
+    "id": "research:51:image:",
+    "status": "review",
+    "conditions": 0,
+    "checks": 4
+  },
+  {
+    "id": "research:52:audio:MIT",
+    "status": "review",
+    "conditions": 1,
+    "checks": 3
+  },
+  {
+    "id": "research:53:audio:GPL-3.0",
+    "status": "review",
+    "conditions": 0,
+    "checks": 4
+  },
+  {
+    "id": "research:54:audio:LGPL-3.0",
+    "status": "review",
+    "conditions": 0,
+    "checks": 4
+  },
+  {
+    "id": "research:55:audio:AGPL-3.0",
+    "status": "review",
+    "conditions": 0,
+    "checks": 4
+  },
+  {
+    "id": "research:56:audio:CC-BY-NC-4.0",
+    "status": "review",
+    "conditions": 2,
+    "checks": 4
+  },
+  {
+    "id": "research:57:audio:CC-BY-SA-4.0",
+    "status": "review",
+    "conditions": 1,
+    "checks": 3
+  },
+  {
+    "id": "research:58:audio:Apache-2.0",
+    "status": "review",
+    "conditions": 2,
+    "checks": 3
+  },
+  {
+    "id": "research:59:audio:Unity Asset Store EULA",
+    "status": "review",
+    "conditions": 0,
+    "checks": 4
+  },
+  {
+    "id": "research:60:audio:",
+    "status": "review",
+    "conditions": 0,
+    "checks": 4
+  },
+  {
+    "id": "research:61:data:MIT",
+    "status": "review",
+    "conditions": 1,
+    "checks": 3
+  },
+  {
+    "id": "research:62:data:GPL-3.0",
+    "status": "review",
+    "conditions": 0,
+    "checks": 4
+  },
+  {
+    "id": "research:63:data:LGPL-3.0",
+    "status": "review",
+    "conditions": 0,
+    "checks": 4
+  },
+  {
+    "id": "research:64:data:AGPL-3.0",
+    "status": "review",
+    "conditions": 0,
+    "checks": 4
+  },
+  {
+    "id": "research:65:data:CC-BY-NC-4.0",
+    "status": "review",
+    "conditions": 2,
+    "checks": 4
+  },
+  {
+    "id": "research:66:data:CC-BY-SA-4.0",
+    "status": "review",
+    "conditions": 1,
+    "checks": 3
+  },
+  {
+    "id": "research:67:data:Apache-2.0",
+    "status": "review",
+    "conditions": 2,
+    "checks": 3
+  },
+  {
+    "id": "research:68:data:Unity Asset Store EULA",
+    "status": "review",
+    "conditions": 0,
+    "checks": 4
+  },
+  {
+    "id": "research:69:data:",
+    "status": "review",
+    "conditions": 0,
+    "checks": 4
+  },
+  {
+    "id": "research:70:openai",
+    "status": "conditions",
+    "conditions": 2,
+    "checks": 4
+  },
+  {
+    "id": "research:71:openai",
+    "status": "conditions",
+    "conditions": 2,
+    "checks": 4
+  },
+  {
+    "id": "research:72:openai",
+    "status": "conditions",
+    "conditions": 2,
+    "checks": 4
+  },
+  {
+    "id": "research:73:openai",
+    "status": "review",
+    "conditions": 0,
+    "checks": 5
+  },
+  {
+    "id": "research:74:anthropic",
+    "status": "conditions",
+    "conditions": 2,
+    "checks": 3
+  },
+  {
+    "id": "research:75:anthropic",
+    "status": "conditions",
+    "conditions": 2,
+    "checks": 3
+  },
+  {
+    "id": "research:76:anthropic",
+    "status": "conditions",
+    "conditions": 2,
+    "checks": 3
+  },
+  {
+    "id": "research:77:anthropic",
+    "status": "review",
+    "conditions": 0,
+    "checks": 5
+  },
+  {
+    "id": "research:78:meshy",
+    "status": "conditions",
+    "conditions": 4,
+    "checks": 3
+  },
+  {
+    "id": "research:79:meshy",
+    "status": "conditions",
+    "conditions": 3,
+    "checks": 4
+  },
+  {
+    "id": "research:80:meshy",
+    "status": "conditions",
+    "conditions": 5,
+    "checks": 4
+  },
+  {
+    "id": "research:81:meshy",
+    "status": "review",
+    "conditions": 0,
+    "checks": 4
+  },
+  {
+    "id": "research:82:tripo",
+    "status": "review",
+    "conditions": 0,
+    "checks": 4
+  },
+  {
+    "id": "research:83:tripo",
+    "status": "conditions",
+    "conditions": 3,
+    "checks": 3
+  },
+  {
+    "id": "research:84:tripo",
+    "status": "review",
+    "conditions": 0,
+    "checks": 5
+  },
+  {
+    "id": "research:85:tripo",
+    "status": "review",
+    "conditions": 0,
+    "checks": 4
+  },
+  {
+    "id": "research:86:huggingface",
+    "status": "review",
+    "conditions": 0,
+    "checks": 3
+  },
+  {
+    "id": "research:87:huggingface",
+    "status": "review",
+    "conditions": 0,
+    "checks": 3
+  },
+  {
+    "id": "research:88:huggingface",
+    "status": "review",
+    "conditions": 0,
+    "checks": 3
+  },
+  {
+    "id": "research:89:huggingface",
+    "status": "review",
+    "conditions": 0,
+    "checks": 3
+  },
+  {
+    "id": "research:90:copilot",
+    "status": "conditions",
+    "conditions": 3,
+    "checks": 4
+  },
+  {
+    "id": "research:91:copilot",
+    "status": "review",
+    "conditions": 3,
+    "checks": 4
+  },
+  {
+    "id": "research:92:copilot",
+    "status": "review",
+    "conditions": 3,
+    "checks": 4
+  },
+  {
+    "id": "research:93:copilot",
+    "status": "review",
+    "conditions": 3,
+    "checks": 4
+  },
+  {
+    "id": "research:94:elevenlabs",
+    "status": "review",
+    "conditions": 0,
+    "checks": 4
+  },
+  {
+    "id": "research:95:elevenlabs",
+    "status": "review",
+    "conditions": 0,
+    "checks": 4
+  },
+  {
+    "id": "research:96:elevenlabs",
+    "status": "review",
+    "conditions": 0,
+    "checks": 4
+  },
+  {
+    "id": "research:97:elevenlabs",
+    "status": "review",
+    "conditions": 0,
+    "checks": 4
+  }
+]

@@ -6,13 +6,6 @@ import {normalizeAsset,assetScope} from './asset-normalization.mjs';
 import {planImpact} from './ai.mjs';
 export const conflictNextAction='현재 사용 조건에서는 이 자료를 쓰지 마세요. 플랜·계약이나 사용 목적이 바뀌면 정보를 수정해 다시 판정하세요.';
 
-// Normalize display text only; the evaluator's evidence and blockers stay intact.
-export function actionText(text){
- if(text==='이 자료에 대한 원문 적용 범위를 아직 직접 확인하지 않았습니다.')return '실제 사용한 버전·기능에 공식 원문이 적용되는지 확인하세요.';
- if(['최신 약관을 아직 조회하지 않았습니다.','공식 참고 링크에서 약관을 확인하고 원문·적용 플랜을 기록'].includes(text))return '공식 사이트에서 최신 약관을 열어 원문과 적용 플랜을 기록하세요.';
- return text;
-}
-
 export function resultLayout(assets,context){
  return resultBodyLayout(assets.map(a=>{
   const r=evaluate(a,context),parts=resultItems(r,outcomeReason(a,r));
@@ -51,22 +44,23 @@ export function reviewReason(r){
  const reasons=(r.blockers?.length?r.blockers:r.notes||[]).filter(t=>!t.includes('실시간 조회한 기록은 아닙니다')).map(t=>
  t.includes('출력물의 상업 이용을 명시적으로 허용하는 문구를 인식하지 못')?'원문 확보됨 · 자동 해석 지원 범위 밖, 허용·예외 조항 검토 필요':
  t.includes('허용 문구는 있지만 적용 플랜·예외')?'허용 근거 확보됨 · 플랜·예외 조항 해석 필요':
- t.includes('Copilot 계약 경로가 필요')?'Copilot 계약 경로 선택 필요':
+ t.includes('Copilot 계약 경로를')?'Copilot 계약 경로 선택 필요':
  t.includes('Microsoft 구매 경로')?'Microsoft 구매 약관·허용 범위 확인 필요':
  t.includes('모델 ID는 owner/model')?'사용할 모델의 owner/model 주소 필요':
  t.includes('실제 MinerU 배포 버전')?'MinerU 배포 버전 필요 · 현재/과거 라이선스가 다름':
  t.includes('합산 MAU')?'조직 규모 기준·별도 상업 허가 적용 여부 필요':
- t.includes('요금제·구매 유형이 미정')?'생성 당시 플랜·구매 유형 필요':
+ t.includes('요금제·구매 유형을 확인해')?'생성 당시 플랜·구매 유형 필요':
  t.includes('버전이 미정')?'실제 배포판·모델 버전 필요':
- t.includes('개인용 또는 기업/API')?'개인용 / 기업·API 중 적용 계약 필요':
+ t.includes('개인용과 기업/API')?'개인용 / 기업·API 중 적용 계약 필요':
  t.includes('조회 실패:')?'공식 원문 확보 실패 · 재조회 또는 직접 원문 필요':
- t.includes('최신 약관을 아직 조회')?'해당 이용 방식의 공식 허용 근거 필요':
- t.includes('사용 허가를 확인할 수 없습니다')?'적용 라이선스 미기록':
+ t.includes('공식 사이트에서 최신 약관을 열어')?'해당 이용 방식의 공식 허용 근거 필요':
+ t.includes('적용 라이선스의 사용 허가')?'적용 라이선스가 기록되지 않았습니다.':
  t.includes('라이선스 적용 범위와 근거')?'이 자료에 대한 라이선스 적용 미확인':
  t.includes('소스 제공·재링크')?'결합·배포 범위와 소스 제공 방법 미확인':
  t.includes('지원하지 않는 라이선스')?'지원하지 않는 라이선스·개별 계약':t);
- const specific=reasons.filter(t=>!t.includes('제3자 권리가 미확인')&&!t.includes('원문 적용 범위를 아직 직접'));
- return [...new Set(specific.length?specific:reasons)].map(actionText).slice(0,2).join(' · ')||'필수 근거 확인 필요';
+ const specific=reasons.filter(t=>!t.includes('제3자 권리가 미확인')&&!t.includes('실제 사용한 버전·기능에 공식 원문'));
+ const concise=specific.includes('적용 라이선스가 기록되지 않았습니다.')?specific.filter(t=>t!=='이 자료에 대한 라이선스 적용 미확인'):specific;
+ return [...new Set(concise.length?concise:reasons)].slice(0,2).join(' · ')||'필수 근거 확인 필요';
 }
 
 export function outcomeReason(a,r){
@@ -85,12 +79,11 @@ export function summaryReasonText(reason,limit=56){
 }
 
 export function resultItems(r,reason=''){
- const seen=new Set(),unique=items=>items.map(actionText).filter(t=>{const key=String(t).replace(/\s+/g,' ').trim();if(!key||seen.has(key)||reason.includes(key))return false;seen.add(key);return true;});
+ const seen=new Set(),unique=items=>items.filter(t=>{const key=String(t).replace(/\s+/g,' ').trim();if(!key||seen.has(key)||reason.includes(key))return false;seen.add(key);return true;});
  const conditions=[],actions=[];
  for(const task of (r.tasks||[]).filter(t=>!r.conflicts?.includes(t))){
-  // Keep the prohibition as an obligation when a sentence also requests a check.
-  const parts=task.includes('하지 말고,')?task.replace('하지 말고,','하지 마세요.\n').split('\n').map(t=>t.trim()):[task];
-  for(const part of parts)(/(?:확인하세요|검토(?:하세요)?|확인(?:해야 합니다|이 필요합니다)?)[.!?]?$/.test(part)?actions:conditions).push(part);
+  // Older saved terms may combine a prohibition and a check; keep the prohibition intact.
+  (!task.includes('하지 말고,')&&/(?:확인하세요|검토(?:하세요)?|확인(?:해야 합니다|이 필요합니다)?)[.!?]?$/.test(task)?actions:conditions).push(task);
  }
  return {conditions:unique(conditions),checks:unique([...actions,...(r.status==='review'?r.blockers||[]:[]),...(r.humanChecks||[])])};
 }
@@ -119,5 +112,5 @@ export function inputForTask(text,a){
  if(/플랜|요금제|Pro\/Mega/.test(text)&&a.kind==='ai'&&planImpact(a).status==='affected')return {field:'planType',label:'플랜 입력하기'};
  if(/owner\/model|모델 ID/.test(text)&&a.provider==='huggingface')return {field:'repository',label:'모델 주소 입력하기'};
  if(/버전|배포판/.test(text))return {field:'version',label:'버전 입력하기'};
- if(/라이선스 미기록/.test(text))return {field:'license',label:'라이선스 입력하기'};
+ if(/라이선스 미기록|적용 라이선스가 기록되지|적용 라이선스의 사용 허가/.test(text))return {field:'license',label:'라이선스 입력하기'};
 }

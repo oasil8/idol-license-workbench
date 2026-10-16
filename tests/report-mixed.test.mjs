@@ -21,7 +21,7 @@ test('non-AI stale fields never change verdict, sources or web/PDF scope; saved 
  assert.equal(JSON.stringify(mixed),before);
 });
 test('verification actions move to checks without losing mixed prohibition obligations',()=>{
- const r={tasks:['고지를 유지하세요.','공식 도메인의 원문을 확인하세요.','결합 범위 검토','출력물을 경쟁 모델 개발에 이용하지 말고, 정확성을 확인하세요.'],humanChecks:[]};
+ const r={tasks:['고지를 유지하세요.','공식 도메인의 원문을 확인하세요.','결합 범위 검토','출력물을 경쟁 모델 개발에 이용하지 마세요.'],humanChecks:['정확성을 확인하세요.']};
  const parts=resultItems(r);
  assert.deepEqual(parts.conditions,['고지를 유지하세요.','출력물을 경쟁 모델 개발에 이용하지 마세요.']);
  assert.deepEqual(parts.checks,['공식 도메인의 원문을 확인하세요.','결합 범위 검토','정확성을 확인하세요.']);

@@ -1,7 +1,7 @@
 import {normalizeAsset,assetScope} from './asset-normalization.mjs';
 import {installReportPrint,reportPrintCss} from './print-report.mjs';
 import {brandIcon,brandIconCss} from './brand-icons.mjs';
-import {displaySources,reviewStampMarkup,permissionMarkup,outcomeReason,resultItems,resultLayout,commonChecksMarkup,actionText} from './result-sections.mjs';
+import {displaySources,reviewStampMarkup,permissionMarkup,outcomeReason,resultItems,resultLayout,commonChecksMarkup} from './result-sections.mjs';
 import {evidenceMarkup} from './document-text.mjs';
 import {verificationMarkup} from './source-search.mjs';
 import {conditionsConfirmed,conditionsPrompt,projectSummary,summaryReason,selectionOf,selectionLabels} from './workflow.mjs';
@@ -79,7 +79,7 @@ export function buildProjectReport(p){
   const citations=displaySources(r,assetSources(a,c));
   body+='<section class="report-citations"><h3>근거·출처 요약</h3>'+paragraph(candidateNotice(a))+citations.map(source=>`<p><strong>${esc(sourceGroup(source))}</strong> · ${sourceLink(source)}${source.date?' · '+esc(source.dateLabel)+': '+esc(source.date):''}${source.warning?' · '+esc(source.warning):''}<span class="print-url">${esc(source.url)}</span>${source.scope?'<br>적용 범위: '+esc(source.scope):''}</p>`).join('')+(citations.length?'':'<p>등록된 출처 링크가 없습니다. 상세 근거에서 입력한 원문을 확인하세요.</p>')+'</section>';
   body+='<details class="material-evidence"><summary>상세 근거·출처·원문 보기</summary><div class="evidence-body">';
-  const explained=r.notes.map(actionText).filter(n=>!reason.includes(n)&&!allTasks.includes(n));
+  const explained=r.notes.filter(n=>!reason.includes(n)&&!allTasks.includes(n));
   if(explained.length)body+='<h3>결과 설명</h3>'+list(explained);
   const metadata=[['검토 범위',assetScope(a)],['비영리 기관 조건',a.license==='LicenseRef-OpenSees'?(a.nonprofitEntityConfirmed?'교육·연구·비영리 기관 해당 확인':'해당 여부 미확인'):''],['버전',a.version],['라이선스',t?.license||a.license],['플랜',a.plan||({free:'무료',paid:'일반 유료',business:'기업·별도 계약'}[a.planType])],['생성·구매일',a.date],['결과물 종류',({code:'코드',text:'텍스트·문서',image:'이미지·디자인',model:'3D 모델',audio:'음악·음성',video:'영상',data:'데이터',other:'기타'}[a.outputType]||a.outputType)],['이용 설명',a.useDescription]].filter(([,v])=>v);
   if(metadata.length)body+='<dl class="report-metadata">'+metadata.map(([k,v])=>`<dt>${esc(k)}</dt><dd>${esc(v)}</dd>`).join('')+'</dl>';

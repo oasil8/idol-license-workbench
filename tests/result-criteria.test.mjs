@@ -40,7 +40,7 @@ test('confirmed Chrono BSD code is not blocked by missing version-only metadata'
 
 import {reviewReason} from '../dist/result-sections.mjs';
 test('review reason is short and preserves the concrete missing information',()=>{
- assert.equal(reviewReason(evaluate({...a,license:'',confirmed:false},c)),'적용 라이선스 미기록 · 이 자료에 대한 라이선스 적용 미확인');
+ assert.equal(reviewReason(evaluate({...a,license:'',confirmed:false},c)),'적용 라이선스가 기록되지 않았습니다.');
  assert.equal(reviewReason(evaluate({...a,license:'MIT'},c)),'');
 });
 

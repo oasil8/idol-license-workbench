@@ -32,7 +32,7 @@ test('project report has a linked overview and preserves full evidence behind de
 import {evaluate,commercialVerdict} from '../dist/core.mjs';
 import {resultItems,outcomeReason} from '../dist/result-sections.mjs';
 // Shared third-party guidance replaces these equivalent task variants, without dropping the obligation.
-const displayedTask=value=>value.includes('제3자 권리')?'입력 자료·브랜드·디자인·상표·초상·음성·개인정보 등 제3자 권리는 실제 자료를 기준으로 별도 확인하세요. 라이선스·약관상 허용만으로 확보되는 권리가 아닙니다.':value;
+const displayedTask=value=>value.includes('제3자 권리')?'입력 자료·브랜드·디자인·상표·초상·음성·개인정보 등 제3자 권리는 라이선스·약관상 허용만으로 확보되지 않으므로 실제 자료를 기준으로 별도 확인하세요.':value;
 test('report preserves evaluated conditions, checks, scope and differing commercial reasons',()=>{
  const a={name:'Study image',kind:'image',license:'CC-BY-NC-4.0',confirmed:true,rights:'unknown',selection:'used',reviewScope:'bundle',notes:'Original note'};
  const p={name:'Parity',context:{platform:'research',commercial:false,distribute:true},assets:[a]};

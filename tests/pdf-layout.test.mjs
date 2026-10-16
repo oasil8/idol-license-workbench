@@ -10,7 +10,7 @@ test('mixed and sample PDFs fit three pages and preserve every verdict and full 
   const p=JSON.parse(readFileSync(new URL(`./fixtures/report-${name}.json`,import.meta.url))),data=pdfReportData(p),pages=await render(p),text=norm(pages.flat().map(x=>x.str).join(''));
   assert.ok(pages.length<=3,`${name}: ${pages.length}`);
   for(const item of data.items)for(const value of [item.name,item.status,item.reason])assert.ok(text.includes(norm(value)),value);
-  for(const phrase of ['과거 생성물·별도 계약·외부 콘텐츠에는 당시 계약과 적용 범위를 확인하세요.','플레이어에게 제공되는 AI 콘텐츠 여부와 Steam 공개 범위 확인','금지 콘텐츠·서비스 이용 정책을 준수하세요.'])assert.equal(text.split(norm(phrase)).length-1,1,phrase);
+  for(const phrase of ['과거 생성물·별도 계약·외부 콘텐츠에는 당시 계약과 적용 범위를 확인하세요.','플레이어에게 제공되는 AI 콘텐츠인지와 Steam 공개 범위를 확인하세요.','금지 콘텐츠·서비스 이용 정책을 준수하세요.'])assert.equal(text.split(norm(phrase)).length-1,1,phrase);
   assert.doesNotMatch(text,/추가항목없음|원문발췌:/);
   assert.ok(text.includes('해당항목:'));
   const layout=pdfBodyLayout(data.items);
