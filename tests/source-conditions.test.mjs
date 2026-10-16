@@ -7,7 +7,7 @@ test('source conditions compare known plan restrictions and preserve uncertainty
  assert.equal(reviewSourceConditions(a,{commercial:true},now).status,'review');
  assert.equal(reviewSourceConditions({...a,planType:'free'},{commercial:true},now).status,'conflict');
  assert.equal(reviewSourceConditions({...a,planType:'free'},{commercial:false},now).status,'review');
- assert.equal(reviewSourceConditions({...a,planType:'free'},{commercial:true},now+8*86400000).status,'review');
+ assert.equal(reviewSourceConditions({...a,planType:'free'},{commercial:true},now+8*86400000).status,'conflict');
 });
 test('version-specific observations do not assume a shared-site user location or license version',()=>{
  const r=reviewSourceConditions({name:'Hunyuan3D',kind:'ai',provider:'other'},{commercial:true},now);

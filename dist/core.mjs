@@ -2,7 +2,7 @@ import {evaluateContractBundle,cleanContractChoices} from './contract-review.mjs
 import {categoryRecommendation} from './catalog.mjs';
 import {cleanCandidates} from './source-search.mjs';
 import {selectionOf,selectedAssets} from './workflow.mjs';
-import {reviewSourceConditions,appliedOfficialLicense,codeLicenseRecords} from './official-sources.mjs';
+import {reviewAge,reviewSourceConditions,appliedOfficialLicense,codeLicenseRecords} from './official-sources.mjs';
 import {aiResult,cleanTerms} from './ai.mjs';
 import {validateAssignment} from './assignment.mjs';
 export const RULE_DATE='2026-10-16';
@@ -41,8 +41,8 @@ export function projectTasks(p){
  }
  return [...counts].map(([task,count])=>({task,count})).sort((a,b)=>b.count-a.count||a.task.localeCompare(b.task,'ko'));
 }
-export function evaluate(a,c){
- const result=evaluateBase(a,c),review=reviewSourceConditions(appliedOfficialLicense(a)?{...a,confirmed:true}:a,c,Date.now(),{contractConfirmed:result.contractConfirmed});result.blockers ||= result.status==='review'?[...result.notes]:[];
+export function evaluate(a,c,now=Date.now()){
+ const result=evaluateBase(a,c,now),review=reviewSourceConditions(appliedOfficialLicense(a)?{...a,confirmed:true}:a,c,now,{contractConfirmed:result.contractConfirmed});result.blockers ||= result.status==='review'?[...result.notes]:[];
  if(review&&!result.scopeUnresolved&&!(appliedOfficialLicense(a)?.id==='isaac-code-20261016'&&a.reviewScope==='code')){
   if(review.status==='conflict')result.status='conflict';
   else if(review.blockers.length&&result.status==='conditions')result.status='review';
@@ -51,9 +51,12 @@ export function evaluate(a,c){
   result.tasks=[...new Set([...result.tasks,...review.missing])];result.blockers=[...new Set([...result.blockers,...review.blockers])];
   if(!result.sources.some(([,url])=>url===review.source.url))result.sources.push([review.source.title,review.source.url]);
  }
+ result.reviewDates=[...new Set([review?.source.observedOn,result.reviewedEvidence?.builtIn?result.reviewedEvidence.checkedAt.slice(0,10):undefined,appliedOfficialLicense(a)?.date].filter(Boolean))];
+ if(!result.reviewDates.length&&!a.terms&&!a.sourceCandidates?.length)result.reviewDates=[RULE_DATE];
+ result.reviewWarnings=[...new Set(result.reviewDates.map(d=>reviewAge(d,now)).filter(Boolean))];
  return result;
 }
-function evaluateBase(a,c){
+function evaluateBase(a,c,now){
  if(a.licenseOrigin&&!appliedOfficialLicense(a)){
   const record=codeLicenseRecords.find(r=>a.licenseOrigin.startsWith(r.id));
   const reason=record?.requiresVersion&&!a.version?'실제 MinerU 배포 버전이 필요합니다. 현재 추가 조건 라이선스를 과거 AGPL 배포판에 적용할 수 없습니다.':a.reviewScope==='service'?'확인한 코드·모델 라이선스는 호스팅 서비스·API 구독 계약을 포함하지 않습니다.':a.reviewScope==='bundle'?'설치 배포판의 추가 구성요소·에셋 계약이 아직 확인되지 않았습니다.':record?.requiresScope&&a.reviewScope!=='code'?'공개 소스 코드만 검토할지, Kit·추가 자료까지 포함할지 선택해야 합니다.':a.version?'등록한 버전과 확보한 공식 원문의 적용 버전이 일치하는지 확인해야 합니다.':'정확한 제품·모델 배포판 또는 공식 저장소의 적용 범위가 미확인입니다.';
@@ -61,7 +64,7 @@ function evaluateBase(a,c){
  }
 
  if(a.kind==='ai'&&a.provider){
-  const result=evaluateContractBundle(a,c)||aiResult(a);
+  const result=evaluateContractBundle(a,c,now)||aiResult(a,now);
   // An explicitly commercial-only prohibition cannot decide a noncommercial use.
   if(!c.commercial&&result.status==='conflict'&&result.notes.includes('현재 공식 안내에서 무료 플랜의 상용 권리를 부여하지 않습니다.')){result.status='review';result.notes.push('상업 이용 제한과 별개로 현재 비상업 이용 범위에 대한 허가를 확인해야 합니다.');}
 

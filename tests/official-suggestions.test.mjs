@@ -5,7 +5,7 @@ import {commercialVerdict} from '../dist/core.mjs';
 import {buildProjectReport} from '../dist/report.mjs';
 const context={platform:'research',commercial:false};
 test('known services receive reference links without changing license clearance',()=>{
- for(const name of ['Gemini','Midjourney','Suno','Hugging Face 모델']){
+ for(const name of ['Gemini','Suno','Hugging Face 모델']){
   const a={name,kind:'ai',provider:'other',selection:'used'},before=commercialVerdict(a,context);
   const s=assetSources(a,context).find(s=>s.type==='suggested');
   assert.ok(s,name);assert.equal(sourceGroup(s),'참고 링크 · 적용 미확인');

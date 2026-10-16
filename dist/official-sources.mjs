@@ -1,6 +1,7 @@
 // Curated public-source observations, reviewed 2026-10-15; never user/project data.
 const observedOn='2026-10-15';
 const records=[
+ ['midjourney',['Midjourney','미드저니'],'Midjourney 이용약관','https://docs.midjourney.com/hc/en-us/articles/32083055291277-Terms-of-Service','Rights You Give to Midjourney; Your Rights','매출 조건과 Pro/Mega 플랜, 직접 생성 여부를 확인하세요.','직접 생성한 출력물 · 추가 조건 별도'],
  ['elevenlabs',['ElevenLabs'],'ElevenLabs 일반 약관 (non-EEA)','https://elevenlabs.io/terms-of-use','Free User / Paid User; Output / Models','무료 서비스는 비상업 용도, 유료 구독은 상업 용도를 허용하는 조항이 있습니다. 금지 이용 정책·서비스별 추가 약관과 실제 계약 적용 범위는 별도입니다.','일반 서비스 계약 · 지역·구독·제품별 조건 구분'],
  ['copilot',['GitHub Copilot','깃허브 코파일럿'],'GitHub Copilot 적용 계약 안내','https://docs.github.com/en/site-policy/github-terms/github-terms-for-additional-products-and-features','GitHub Copilot — purchasing route','개인용은 GitHub ToS J, GitHub 직접 기업 구매는 Generative AI Services Terms, Microsoft 구매는 Microsoft Product Terms. 출력물의 제3자 라이선스 확인 필요.','구매 경로별 계약 · 코드 출력물과 API 제공 구분'],
  ['runway',['Runway','Runway ML','런웨이'],'Runway 생성물 상업 이용 안내','https://help.runwayml.com/hc/en-us/articles/21668707517587-Can-I-use-the-content-I-made-in-Runway-for-commercial-purposes','Commercial use of generated content','직접 생성한 콘텐츠는 상업 이용이 허용됩니다. 출력물 표시와 별개로 API 통합에는 별도 표시·접근 조건이 적용됩니다.','직접 생성한 출력물 · API·가중치 제외'],
@@ -20,7 +21,7 @@ const records=[
  ['usd',['OpenUSD','USD'],'OpenUSD 공식 소개 및 라이선스 안내','https://openusd.org/dev/intro.html','Introduction to USD — license','공식 소개는 TOST 라이선스를 안내합니다. USD 라이브러리 허가는 USD 파일 안에 포함한 차량·텍스처·상표의 권리를 부여하지 않습니다.','OpenUSD 구현 · 컨테이너 안의 콘텐츠 권리와 구분'],
  ['porsche',['Porsche 997'],'Porsche 공식 법적 고지','https://newsroom.porsche.com/en_US/legal-notice.html','Restricted Use and Copyrights; Trademarks','미국 뉴스룸 고지는 사진·차량의 구별되는 형상·상표 등을 다루며 사이트 공개가 사용 허가를 뜻하지 않음을 명시합니다. 실제 적용 법과 별도 허가를 확인해야 합니다.','미국 뉴스룸 자료 · 차량 디자인 사용 허가의 대체 문서 아님'],
  ['tesla',['Tesla Cybertruck','Cybertruck'],'Tesla 지식재산권 안내','https://www.tesla.com/legal/additional-resources#intellectual-property','Intellectual Property — Copyrights; Trademarks; No Licenses','공식 사이트 자료·상표의 권리를 보호하며 사이트 자료 제공 자체가 지식재산권 라이선스를 부여하지 않는다고 명시합니다.','사이트 콘텐츠·상표 안내 · 차량 모델 사용 허가 별도']
-].map(([id,names,title,url,clause,note,scope])=>({id,names,title,url,clause,note,scope,observedOn:['meshy','openai','anthropic','tripo','runway','copilot','elevenlabs'].includes(id)?'2026-10-16':observedOn}));
+].map(([id,names,title,url,clause,note,scope])=>({id,names,title,url,clause,note,scope,observedOn:['meshy','openai','anthropic','tripo','runway','copilot','elevenlabs','midjourney'].includes(id)?'2026-10-16':observedOn}));
 
 export function officialSource(a){
  const text=String(a.serviceName||a.name||'').normalize('NFKC').trim().toLowerCase();
@@ -28,19 +29,18 @@ export function officialSource(a){
 }
 export function reviewSourceConditions(a,c,now=Date.now(),{contractConfirmed=false}={}){
  const source=officialSource(a);if(!source)return undefined;
- const stale=now-Date.parse(source.observedOn+'T00:00:00+09:00')>7*86400000;
+ const stale=now-Date.parse(source.observedOn+'T00:00:00+09:00')>90*86400000;
  const checked=Date.parse((a.sourceConditionsDate||'')+'T00:00:00+09:00');
  const reviewedRecently=a.sourceConditionsConfirmed&&a.confirmed&&!!a.evidence?.trim()&&Number.isFinite(checked)&&checked<=now&&now-checked<=7*86400000;
  const missing=[];let status='review';
  const fixedLicense=['chrono','blender'].includes(source.id)&&a.confirmed&&!!a.evidence?.trim()&&['BSD-3-Clause','GPL-3.0-only','GPL-2.0-or-later'].includes(a.license);
- if(stale&&!reviewedRecently&&!contractConfirmed&&!fixedLicense)missing.push('공식 원문 검토 기록이 7일을 지났습니다. 최신 조항을 다시 확인하세요.');
  if((['tripo','rodin','unity'].includes(source.id)||source.id==='meshy'&&!contractConfirmed)&&(!a.planType||a.planType==='unknown')&&!a.plan)missing.push('사용하거나 생성할 당시의 요금제·구매 유형이 미정입니다.');
  if(['hunyuan','cosmos','isaac','chrono','unity','unreal','usd'].includes(source.id)&&!a.version&&!fixedLicense)missing.push('실제 배포판·모델·엔진 버전이 미정입니다.');
  if(['hunyuan','unity','unreal'].includes(source.id)&&!reviewedRecently)missing.push('사용 지역·조직/고객 조건·배포 방식 중 적용 조건을 근거에 기록하세요.');
  if(!contractConfirmed&&['openai','anthropic'].includes(source.id)&&(!a.planType||['unknown','business'].includes(a.planType)))missing.push('개인용 또는 기업/API 계약 중 어떤 문서가 적용되는지 확정해야 합니다.');
  if(!contractConfirmed&&(a.kind==='ai'||a.kind==='model')&&a.rights!=='cleared')missing.push('입력 자료·상표·초상 등 제3자 권리가 미확인입니다.');
  if(!contractConfirmed&&!a.confirmed)missing.push('이 자료에 대한 원문 적용 범위를 아직 직접 확인하지 않았습니다.');
- if(!stale&&a.kind==='ai'&&a.provider==='tripo'&&source.id==='tripo'&&a.scope==='output'&&a.planType==='free'&&c.commercial){status='conflict';missing.unshift('공식 안내에서 무료 플랜 결과물의 상업 이용 권리는 부여되지 않습니다.');}
+ if(a.kind==='ai'&&a.provider==='tripo'&&source.id==='tripo'&&a.scope==='output'&&a.planType==='free'&&c.commercial){status='conflict';missing.unshift('공식 안내에서 무료 플랜 결과물의 상업 이용 권리는 부여되지 않습니다.');}
  return {source,status,missing,blockers:[...missing],stale,summary:source.note};
 }
 
@@ -97,3 +97,8 @@ export function webLicenseRecord(a){
  return {id:'web:'+v.hash,license:v.licenseKey,url:v.finalUrl,home:s.url,versions:v.sourceRef?[v.sourceRef]:[],scope:'저장소 코드 · '+v.repositoryId+(v.sourceRef?' · '+v.sourceRef:''),clause:'GitHub 라이선스 원문과 SPDX 식별자를 확보했습니다. 공식 저장소 여부·별도 파일 적용은 구분합니다.',date:v.checkedAt.slice(0,10),trusted:v.status==='matched'&&!v.imported&&fresh};
  }
 }
+
+export const oldReviewWarning='검토한 지 오래된 기록입니다. 원문을 다시 확인하세요';
+export function reviewAge(date,now=Date.now()){return Number.isFinite(Date.parse(date))&&now-Date.parse(date)>90*86400000?oldReviewWarning:'';}
+
+export const officialRecord=id=>records.find(r=>r.id===id);

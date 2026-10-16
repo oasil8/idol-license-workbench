@@ -40,3 +40,5 @@ export function outcomeReason(a,r){
 export function resultItems(r){
  return {conditions:[...new Set(r.tasks||[])],checks:[...new Set([...(r.status==='review'?r.blockers||[]:[]),...(r.humanChecks||[])])]};
 }
+
+export function reviewStampMarkup(r,esc){return (r.reviewDates||[]).map(d=>'<small>검토일: '+esc(d)+'</small>').join('')+(r.reviewWarnings||[]).map(w=>'<p class="warning">'+esc(w)+'</p>').join('');}

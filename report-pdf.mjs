@@ -24,7 +24,7 @@ export function pdfReportData(input, includeOriginals=false) {
    for(const s of sources)add(a.name+' · '+s.label+' · '+s.url,s.verification?.text);
   }
   const quotes=[...new Set([...(a.terms?.excerpts||[]),...sources.filter(s=>!s.contractDocument).flatMap(s=>(s.verification?.excerpts||[]).map(x=>x.text))].filter(Boolean))];
-  return {name:a.name,status:statuses[r.status],reason:outcomeReason(a,r),...parts,
+  return {reviewDates:r.reviewDates,reviewWarnings:r.reviewWarnings,name:a.name,status:statuses[r.status],reason:outcomeReason(a,r),...parts,
    sources:sources.map(s=>({label:s.label,url:s.url,group:sourceGroup(s),date:s.date,scope:s.scope,note:s.note,clause:s.clause,quote:s.contractDocument?s.verification?.excerpts?.[0]?.text:''})),
    quotes:quotes.slice(0,3),extraQuotes:Math.max(0,quotes.length-3),evidence:a.evidence,
    scope:({code:'코드·오픈소스 자체',model:'모델·가중치',service:'서비스·API 계약',bundle:'패키지·번들 전체'}[a.reviewScope]||({output:'AI 생성 결과물',weights:'모델 가중치',service:'API·서비스 계약',training:'학습·미세조정',other:'기타 이용'}[a.scope])||'등록한 자료 범위')};
@@ -51,6 +51,7 @@ export async function createReportPdf(project,{includeOriginals=false}={}) {
  text(`실제 사용 ${data.items.length}개 · 선택 전 ${data.pending}개 · 전체 원문 부록 ${includeOriginals?'포함':'제외'}`,8);
  for(const [i,item] of data.items.entries()) {
   heading(`${i+1}. ${item.name} — ${item.status}`,12);text(item.reason);
+  for(const date of item.reviewDates||[])text('검토일: '+date,8);for(const warning of item.reviewWarnings||[])text(warning,9);
   list('지켜야 할 조건',item.conditions);list('확인 필요한 부분',item.checks);
   heading('적용 범위·핵심 근거',10);text('검토 범위: '+item.scope);
   for(const s of item.sources){

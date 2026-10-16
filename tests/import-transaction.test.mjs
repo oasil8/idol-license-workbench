@@ -64,11 +64,11 @@ test('document extraction failure never changes the existing project',async()=>{
  await assert.rejects(()=>read([{name:'bad.docx',size:1}]),/corrupt file/);assert.equal(p.assets.length,0);assert.equal(p.assignment,undefined);
  }finally{globalThis.document=previous;}
 });
-test('stale source exceptions require dated, confirmed evidence and expire',()=>{
+test('built-in license reviews do not expire because a user confirmation date is absent',()=>{
  const now=Date.parse('2026-11-01T03:00:00Z');const a={name:'Project Chrono',kind:'code',version:'9',confirmed:true,evidence:'license record',sourceConditionsConfirmed:true};
- assert.equal(reviewSourceConditions(a,c,now).blockers.length,1);
+ assert.equal(reviewSourceConditions(a,c,now).blockers.length,0);
  assert.equal(reviewSourceConditions({...a,sourceConditionsDate:'2026-11-01'},c,now).blockers.length,0);
- assert.equal(reviewSourceConditions({...a,sourceConditionsDate:'2026-10-20'},c,now).blockers.length,1);
+ assert.equal(reviewSourceConditions({...a,sourceConditionsDate:'2026-10-20'},c,now).blockers.length,0);
 });
 
 test('failed item deletion keeps original assets and editing dialog',()=>{

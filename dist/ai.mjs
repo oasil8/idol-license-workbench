@@ -1,3 +1,4 @@
+import {officialRecord} from './official-sources.mjs';
 import {contractProfile} from './contract-review.mjs';
 import {analyzeTerms} from './terms-analysis.mjs';
 export const providerNames={openai:'OpenAI / ChatGPT · 개인용',anthropic:'Anthropic / Claude · 개인용',meshy:'Meshy',tripo:'Tripo',huggingface:'Hugging Face 모델',other:'다른 서비스 · 수동 검토'};
@@ -23,9 +24,9 @@ function verifiedTerms(a,now){
 }
 // Reviewed public help article, not a live fetch or user attestation.
 function publicOutputTerms(a,now){
- const checkedAt='2026-10-16T00:00:00+09:00';
  const provider=officialTermsUrls[a.provider]?a.provider:a.provider==='other'?({'runway':'runway','runway ml':'runway','런웨이':'runway','midjourney':'midjourney','미드저니':'midjourney','github copilot':'copilot','깃허브 코파일럿':'copilot'})[String(a.serviceName||a.name||'').trim().toLowerCase()]:undefined;
- if(!provider||a.scope!=='output'||a.selection==='pending'||a.sourceCandidates?.length||a.terms||a.repository||a.version||(a.planType==='business'&&provider!=='copilot')||/community|커뮤니티|타인|다른 사람|evaluation|preview|평가판|미리보기|경쟁.*(?:모델|서비스)|competing/i.test(a.useDescription||'')||now<Date.parse(checkedAt)||now-Date.parse(checkedAt)>7*86400000)return;
+ const checkedAt=(officialRecord(provider)?.observedOn||'')+'T00:00:00+09:00';
+ if(!provider||a.scope!=='output'||a.selection==='pending'||a.sourceCandidates?.length||a.terms||a.repository||a.version||(a.planType==='business'&&provider!=='copilot')||/community|커뮤니티|타인|다른 사람|evaluation|preview|평가판|미리보기|경쟁.*(?:모델|서비스)|competing/i.test(a.useDescription||'')||now<Date.parse(checkedAt))return;
  const common=['금지 콘텐츠·입력 자료의 권리·서비스 이용 정책을 준수하세요.','현재 공개 안내의 생성물 범위입니다. 과거 생성물·별도 계약·외부 콘텐츠의 적용 여부는 따로 확인하세요.'];
  let analysis;
  if(provider==='meshy')analysis=analyzeTerms(a,'if you are a paid customer, you own the assets created through our platform. If you are on a free plan, we grant you a CC BY 4.0 license instead.');
@@ -43,14 +44,14 @@ function publicOutputTerms(a,now){
   const grant=grants[provider];if(!grant)return;
   analysis={status:'conditions',summary:grant[0],excerpts:[grant[1]],conditions:provider==='anthropic'?['Claude 서비스·출력물을 경쟁 제품·서비스 제작이나 AI 모델 학습에 이용하지 마세요.']:provider==='openai'?['출력물을 OpenAI와 경쟁하는 모델 개발에 이용하지 말고, 정확성과 적합성을 확인하세요.']:[]};
  }
- return {...analysis,conditions:[...analysis.conditions,...common],checkedAt,queryKey:queryKey(a),sourceUrl:officialTermsUrls[provider][provider==='meshy'||provider==='copilot'&&a.contractRoute==='github-business'?1:0],sourceName:'공식 공개 안내 · 2026-10-16 검토 기록',verifiedProvider:provider,method:'public-review'};
+ return {...analysis,conditions:[...analysis.conditions,...common],checkedAt,queryKey:queryKey(a),sourceUrl:officialTermsUrls[provider][provider==='meshy'||provider==='copilot'&&a.contractRoute==='github-business'?1:0],sourceName:'공식 공개 안내 · '+checkedAt.slice(0,10)+' 검토 기록',builtIn:true,verifiedProvider:provider,method:'public-review'};
 }
 export function aiResult(a,now=Date.now()){
  let t=a.terms?.method==='manual'?a.terms:(!a.terms||a.terms.error||a.terms.queryKey!==queryKey(a)||(a.terms.status==='review'&&a.terms.method!=='manual'&&!a.terms.imported))?(verifiedTerms(a,now)||a.terms):a.terms;t ||= publicOutputTerms(a,now);let status='review',notes=[],tasks=[],sources=[],humanChecks=[];
  if(t?.method==='manual'){const original=String(t.originalText||'');const analysis=analyzeTerms({...a,manual:true,sourceUrl:t.sourceUrl},original.replace(/\s+/g,' ').trim());t={...t,...analysis,summary:analysis.summary.replace('조회한 공식 문서','직접 입력한 약관')};if(original.trim().length<40)t.status='review';}
  if(!t){const captured=(a.sourceCandidates||[]).some(s=>s.verification?.text);notes.push(captured?'후보 원문은 확보했지만 이 이용 방식의 허용 범위·적용 조건이 아직 확정되지 않았습니다.':'최신 약관을 아직 조회하지 않았습니다.');tasks.push(captured?'확보한 원문의 허용 조항·적용 범위를 확인하고 필요한 계약 정보를 보완':a.provider==='other'?'공식 참고 링크에서 약관을 확인하고 원문·적용 플랜을 기록':'서비스·플랜을 지정하고 최신 약관 조회 실행');if(a.rights!=='cleared')humanChecks.push('입력 자료·상표·초상·음성 등 실제 자료의 추가 권리는 별도 확인이 필요합니다.');return {status,notes,tasks,sources,humanChecks};}
  if(/^https:\/\//.test(t.sourceUrl||''))sources.push([t.sourceName||'공식 문서',t.sourceUrl]);
- const stale=!t.checkedAt||!Number.isFinite(Date.parse(t.checkedAt))||now-Date.parse(t.checkedAt)>7*86400000||Date.parse(t.checkedAt)>now+60000;
+ const stale=!t.checkedAt||!Number.isFinite(Date.parse(t.checkedAt))||(!t.builtIn&&now-Date.parse(t.checkedAt)>7*86400000)||Date.parse(t.checkedAt)>now+60000;
  if(t.error)notes.push('조회 실패: '+t.error);
  else if(t.method==='manual'&&!t.attested)notes.push('직접 입력한 문서의 전체 내용과 적용 범위를 확인하세요.');
  else if(t.imported)notes.push('가져온 조회 기록입니다. 이 기기에서 다시 조회하거나 직접 입력 약관을 재검토하세요.');
@@ -61,7 +62,7 @@ export function aiResult(a,now=Date.now()){
  const contractConfirmed=status==='conditions'&&['output','service'].includes(a.scope)&&t.excerpts?.length>0&&(t.method==='manual'?t.attested===true&&!!t.originalText:(t.verifiedSource===true||(officialTermsUrls[t.verifiedProvider||a.provider]||[]).includes(t.sourceUrl)));
  if(status==='conditions'&&a.rights!=='cleared'){if(contractConfirmed)humanChecks.push('입력 자료·상표·초상·음성 등 제3자 권리: 실제 자료를 기준으로 별도 확인해야 합니다. 약관상 허용만으로 이 권리가 확보되지는 않습니다.');else{status='review';notes.push('입력·제3자 권리 또는 원문 출처의 확인이 필요합니다.');tasks.push('입력 자료와 제3자 권리 확인을 기록');}}
  if(contractConfirmed&&t.method==='manual'){humanChecks.push('직접 입력한 원문의 공식 출처·최신성·전체 내용 여부를 확인하세요. 사이트에서 자동 확보한 문서가 아닙니다.');notes.push('사용자가 제공하고 적용 여부를 확인한 원문에 근거한 결과입니다. 공식 출처의 자동 검증과는 구분됩니다.');}
- if(t.method==='public-review')notes.push('2026-10-16에 검토한 공식 공개 안내를 적용했습니다. 이 항목에서 실시간 조회한 기록은 아닙니다.');
+ if(t.method==='public-review')notes.push(t.checkedAt.slice(0,10)+'에 검토한 공식 공개 안내를 적용했습니다. 이 항목에서 실시간 조회한 기록은 아닙니다.');
  if(contractConfirmed){humanChecks.push('선택한 플랜·계약과 실제 자료의 취득·이용 조건이 일치하는지 확인하고, 표시 의무와 서비스 이용 정책을 이행하세요.');notes.push('서비스 약관상 허용 범위에 대한 결과입니다. 실제 자료의 제3자 권리 확인은 아래에 별도로 표시합니다.');}
  if(status==='conditions'&&a.provider==='huggingface'&&(!a.confirmed||!a.evidence?.trim())){status='review';notes.push('모델 게시자의 권한과 원본 LICENSE 적용 범위를 직접 확인하세요.');}
  return {status,notes,tasks,sources,humanChecks,reviewedEvidence:t.method==='public-review'||t.verifiedSource?t:undefined,permissions:!t.error&&!t.imported&&!stale&&t.queryKey===queryKey(a)?t.permissions||[]:[],contractConfirmed,evidenceMethod:t.method==='manual'?'manual':t.method==='public-review'?'public-review':'automatic'};
@@ -76,10 +77,10 @@ export function cleanTerms(t,{imported=false}={}){
 }
 // Public terms checked 2026-10-15. This classifies the need for a plan, not permission.
 const planEvidence={
- recraft:{names:['recraft','리크래프트','레크래프트'],reason:'직접 생성한 무료 자료의 상업 이용 제한과 유료 자료의 권리 조건이 다릅니다. 공유 자료·API에는 별도 범위가 적용됩니다.',url:'https://www.recraft.ai/legal/terms',section:'7.1 Free Tier / 7.2 Paid Subscription / 7.3 Programmatic Access',quote:'no commercial use of Free Tier Assets is permitted'},
- tripo:{names:['tripo','트리포'],reason:'무료·유료에 따라 결과물의 상업 이용 권한이 달라집니다.',url:'https://www.tripo3d.ai/help/privacy-policy/how-to-use-tripo-models-commercially',section:'Free vs Paid Plans',quote:'If you need commercial use rights, upgrade to a paid plan.'},
- meshy:{names:['meshy','meshy ai','메시','메쉬'],reason:'무료 결과물의 출처 표시 의무와 유료 결과물의 소유권 조건이 다릅니다.',url:'https://www.meshy.ai/terms-of-use',section:'3.2 Ownership of User Content',quote:'such customers on a paid Meshy plan own their Customer Output.'},
- suno:{names:['suno','수노'],reason:'플랜별 출력 권리와 허용 다운로드 조건을 구분합니다. 유료라도 리믹스 제한은 별도입니다.',url:'https://suno.com/terms',section:'Pro and Premier Accounts / Free or Basic Tier Accounts / Permitted Commercial Use',quote:'The number of Downloads you are permitted per month depends on your service tier'}
+ recraft:{reviewedOn:'2026-10-15',names:['recraft','리크래프트','레크래프트'],reason:'직접 생성한 무료 자료의 상업 이용 제한과 유료 자료의 권리 조건이 다릅니다. 공유 자료·API에는 별도 범위가 적용됩니다.',url:'https://www.recraft.ai/legal/terms',section:'7.1 Free Tier / 7.2 Paid Subscription / 7.3 Programmatic Access',quote:'no commercial use of Free Tier Assets is permitted'},
+ tripo:{reviewedOn:'2026-10-15',names:['tripo','트리포'],reason:'무료·유료에 따라 결과물의 상업 이용 권한이 달라집니다.',url:'https://www.tripo3d.ai/help/privacy-policy/how-to-use-tripo-models-commercially',section:'Free vs Paid Plans',quote:'If you need commercial use rights, upgrade to a paid plan.'},
+ meshy:{reviewedOn:'2026-10-15',names:['meshy','meshy ai','메시','메쉬'],reason:'무료 결과물의 출처 표시 의무와 유료 결과물의 소유권 조건이 다릅니다.',url:'https://www.meshy.ai/terms-of-use',section:'3.2 Ownership of User Content',quote:'such customers on a paid Meshy plan own their Customer Output.'},
+ suno:{reviewedOn:'2026-10-15',names:['suno','수노'],reason:'플랜별 출력 권리와 허용 다운로드 조건을 구분합니다. 유료라도 리믹스 제한은 별도입니다.',url:'https://suno.com/terms',section:'Pro and Premier Accounts / Free or Basic Tier Accounts / Permitted Commercial Use',quote:'The number of Downloads you are permitted per month depends on your service tier'}
 };
 export function planImpact(a,now=Date.now()){
  const profile=contractProfile(a);if(profile?.planDependent)return {status:'affected',checkedAt:profile.checkedOn,reason:profile.planExplanation,evidence:{section:'일반 약관 1(c) 및 서비스별 추가 약관',quote:'Free User / Paid User',url:profile.root}};
@@ -88,14 +89,14 @@ export function planImpact(a,now=Date.now()){
  const paid=verified?.text?.match(/if you access or use our Services through a paid subscription plan[\s\S]{0,180}?may use the Services for commercial purposes/i);
  if(a.kind==='ai'&&free&&paid)return {status:'affected',checkedAt:verified.checkedAt.slice(0,10),reason:'확보한 계약에 무료는 비상업 용도, 유료 구독은 상업 용도라는 차이가 명시되어 있습니다. 실제 이용 당시 구독을 선택하세요. 제품별 추가 약관의 적용은 결과에서 별도로 확인합니다.',evidence:{section:'원문에서 확인한 무료·유료 이용 범위 · 추가 약관 별도',quote:free[0]+'; '+paid[0],url:verified.url}};
  const shared=publicOutputTerms(a,now);
- if(shared?.verifiedProvider==='copilot')return {status:'contract',checkedAt:'2026-10-16',reason:'Copilot은 개인용·GitHub 직접 기업 구매·Microsoft 구매에 따라 적용 계약이 다릅니다. 위 계약 경로를 선택하세요.',evidence:{section:'계약 경로별 적용 약관',quote:'GitHub Terms of Service / Generative AI Services Terms / Microsoft Product Terms',url:'https://docs.github.com/en/site-policy/github-terms/github-terms-for-additional-products-and-features'}};
- if(shared?.status==='conditions'&&!['meshy','tripo','copilot'].includes(shared.verifiedProvider))return {status:'unaffected',checkedAt:'2026-10-16',reason:'확인한 일반 생성물 허용 범위에는 무료·유료 플랜 미선택만으로 보류하지 않습니다. API·기업 별도 계약과 특별 기능은 별도입니다.',evidence:{section:'생성물 권리 · 공식 공개 안내',quote:shared.excerpts[0],url:shared.sourceUrl}};
+ if(shared?.verifiedProvider==='copilot')return {status:'contract',checkedAt:shared.checkedAt.slice(0,10),reason:'Copilot은 개인용·GitHub 직접 기업 구매·Microsoft 구매에 따라 적용 계약이 다릅니다. 위 계약 경로를 선택하세요.',evidence:{section:'계약 경로별 적용 약관',quote:'GitHub Terms of Service / Generative AI Services Terms / Microsoft Product Terms',url:'https://docs.github.com/en/site-policy/github-terms/github-terms-for-additional-products-and-features'}};
+ if(shared?.status==='conditions'&&!['meshy','tripo','copilot'].includes(shared.verifiedProvider))return {status:'unaffected',checkedAt:shared.checkedAt.slice(0,10),reason:'확인한 일반 생성물 허용 범위에는 무료·유료 플랜 미선택만으로 보류하지 않습니다. API·기업 별도 계약과 특별 기능은 별도입니다.',evidence:{section:'생성물 권리 · 공식 공개 안내',quote:shared.excerpts[0],url:shared.sourceUrl}};
  const name=String(a.serviceName||a.name||'').trim().toLowerCase();
  const id=['tripo','meshy'].includes(a.provider)?a.provider:(!a.provider||a.provider==='other')?Object.keys(planEvidence).find(k=>planEvidence[k].names.includes(name)):undefined;
  const evidence=planEvidence[id];
- const fresh=now>=Date.parse('2026-10-15T00:00:00+09:00')&&now-Date.parse('2026-10-15T00:00:00+09:00')<=7*86400000;
+ const fresh=evidence&&now>=Date.parse(evidence.reviewedOn);
  const confirmed=a.kind==='ai'&&a.scope==='output'&&evidence&&fresh;
- return {status:confirmed?'affected':'unknown',evidence,checkedAt:'2026-10-15',reason:confirmed?evidence.reason:!name&&!a.provider?'먼저 AI 서비스를 입력하세요.':a.scope!=='output'?'이 이용 방식은 결과물 약관과 다를 수 있어 별도 계약 확인이 필요합니다.':evidence&&!fresh?'근거 확인일이 지나 최신 약관의 플랜 조건을 다시 확인해야 합니다.':'플랜에 따라 이용 권리가 달라지는지 아직 확인하지 못했습니다.'};
+ return {status:confirmed?'affected':'unknown',evidence,checkedAt:evidence?.reviewedOn,reason:confirmed?evidence.reason:!name&&!a.provider?'먼저 AI 서비스를 입력하세요.':a.scope!=='output'?'이 이용 방식은 결과물 약관과 다를 수 있어 별도 계약 확인이 필요합니다.':evidence&&!fresh?'근거 확인일이 지나 최신 약관의 플랜 조건을 다시 확인해야 합니다.':'플랜에 따라 이용 권리가 달라지는지 아직 확인하지 못했습니다.'};
 }
 export function planImpactMarkup(a,esc,now=Date.now()){
  const p=planImpact(a,now);

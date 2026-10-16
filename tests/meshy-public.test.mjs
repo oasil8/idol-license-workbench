@@ -11,7 +11,7 @@ test('reviewed Meshy output grants both plans without treating third-party check
  assert.equal(aiResult({...a,planType:'business'},now).status,'review');
  for(const scope of ['weights','service','training'])assert.equal(aiResult({...a,scope},now).status,'review');
  assert.equal(aiResult({...a,useDescription:'커뮤니티 자료'},now).status,'review');
- assert.equal(aiResult(a,now+8*86400000).status,'review');
+ assert.equal(aiResult(a,now+8*86400000).status,'conditions');
 });
 test('explicit records are not overridden by public guidance',()=>{
  const terms={status:'conflict',summary:'별도 계약상 금지',checkedAt:new Date(now).toISOString(),queryKey:queryKey(a)};

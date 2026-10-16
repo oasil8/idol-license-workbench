@@ -1,6 +1,6 @@
 import {installReportPrint,reportPrintCss} from './print-report.mjs';
 import {brandIcon,brandIconCss} from './brand-icons.mjs';
-import {permissionMarkup,outcomeReason,resultItems} from './result-sections.mjs';
+import {reviewStampMarkup,permissionMarkup,outcomeReason,resultItems} from './result-sections.mjs';
 import {evidenceMarkup} from './document-text.mjs';
 import {verificationMarkup} from './source-search.mjs';
 import {conditionsConfirmed,conditionsPrompt,projectSummary,summaryReason,selectionOf,selectionLabels} from './workflow.mjs';
@@ -69,6 +69,7 @@ export function buildProjectReport(p){
  for(const [materialIndex,a] of summary.assets.entries()){
   const r=results[materialIndex],purpose=commercialVerdict(a,c),t=a.terms,{conditions,checks}=resultItems(r);
   body+=`<section data-material id="material-${materialIndex}" class="material-report"><div class="material-heading"><div><p class="report-kicker">자료 ${materialIndex+1}</p><h2 class="brand-name">${brandIcon(a)}${esc(a.name)}</h2></div>${badge(r.status)}</div>`;
+  body+=reviewStampMarkup(r,esc);
   if(r.evidenceMethod==='manual')body+='<p class="evidence-origin">직접 입력한 약관 기준 · 공식 출처 자동 검증 아님</p>';
   if(r.status!==purpose.status)body+=`<p class="comparison">상업 이용으로 바꾸면: ${esc(statuses[purpose.status])}</p>`+list(purpose.notes);
   body+='<div class="material-overview">'+permissionMarkup(a,r,esc)+'<section class="report-conditions"><h3>지켜야 할 조건</h3>'+list(conditions)+'</section><section class="report-checks"><h3>확인 필요한 부분</h3>'+list(checks)+'</section></div>';
