@@ -78,6 +78,7 @@ export function reviewReason(r){
  t.includes('개인용과 기업/API')?'개인용 / 기업·API 중 적용 계약 필요':
  t.includes('조회 실패:')?'공식 원문 확보 실패 · 재조회 또는 직접 원문 필요':
  t.includes('공식 사이트에서 최신 약관을 열어')?'해당 이용 방식의 공식 허용 근거 필요':
+ t.includes('도구의 라이선스·구독 플랜에서 제작물')?'적용 라이선스가 기록되지 않았습니다.':
  t.includes('적용 라이선스의 사용 허가')?'적용 라이선스가 기록되지 않았습니다.':
  t.includes('라이선스 적용 범위와 근거')?'이 자료에 대한 라이선스 적용 미확인':
  t.includes('도구 자체를 함께 배포')?'도구 자체의 배포·번들 여부 미확인':
@@ -92,8 +93,9 @@ export function reviewReason(r){
 export function outcomeReason(a,r){
  if(r.status==='review')return reviewReason(r);
  if(r.status==='conflict')return (r.conflicts?.join(' ')||'현재 이용 조건이 확인한 허가 범위와 충돌합니다.');
+ if(r.reason)return r.reason;
  const specific=(r.notes||[]).find(note=>/허용|가능|금지되지|^외부 배포·네트워크 제공이 없어 현재는 소스 제공 의무가 발생하지/.test(note)&&!note.startsWith('공식 원문'));
- return specific||(a.kind==='ai'?'해당 약관에서 선택한 이용 범위의 허용을 확인했습니다.':`${a.license==='LicenseRef-OpenSees'?'OpenSees 라이선스':a.license||'확인한 라이선스'}에 따라 현재 이용이 허용됩니다.`);
+ return specific||(a.kind==='ai'?'해당 약관에서 선택한 이용 범위의 허용을 확인했습니다.':`${a.license==='LicenseRef-OpenSees'?'OpenSees 라이선스':r.sourceLicense||a.license||'확인한 라이선스'}에 따라 현재 이용이 허용됩니다.`);
 }
 
 export function summaryReasonText(reason,limit=56){

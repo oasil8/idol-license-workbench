@@ -77,8 +77,9 @@ for(const input of stores)test(`store ${input} uses its supported rule or stays 
  assert.match(resultItems(r,outcomeReason(a,r)).checks.join(' '),/구매·다운로드 당시.*라이선스 원문.*게임.*판매·배포.*단독 재배포/);
 });
 for(const input of ['MIT OR Apache-2.0','(MIT AND Apache-2.0)','MIT WITH LLVM-exception','mit or apache 2.0','MIT (Apache-2.0)','MIT / ISC','MIT License except commercial use','CC BY 4.0 NC SA ND','GPLv4','AGPL v2','CC BY 3.0 US','Kenney CC0','Proprietary',''])
- test(`unresolved ${input} never becomes permissive`,()=>{
-  for(const context of [steam,research])assert.equal(evaluate(asset(input),context).status,'review');
+ test(`unresolved ${input} uses round9 support or stays conservative`,()=>{
+  const supported=['MIT OR Apache-2.0','mit or apache 2.0','MIT / ISC','Kenney CC0'].includes(input);
+  for(const context of [steam,research])assert.equal(evaluate(asset(input),context).status,supported?'conditions':'review');
  });
 test('abbreviation parentheses alone do not imply an SPDX expression',()=>{
  const a=asset('MIT (Apache-2.0)'),r=evaluate(a,steam);
