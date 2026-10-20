@@ -51,6 +51,13 @@ test('Unity preserves application confirmation, evidence and conservative scope 
   assert.equal(evaluate({...asset,license},{...context,distribute:undefined}).status,'review');
  }
  for(const license of ['Fab Standard License','Pixabay License','Unity Asset Store Restricted Assets','Unity Asset Store EULA except commercial use']){
+  if(license==='Pixabay License'){
+   const a={...asset,license},r=evaluate(a,context);
+   assert.equal(r.status,'conditions');
+   assert.match(outcomeReason(a,r),/Pixabay 라이선스.*상업 이용과 수정.*pixabay\.com/);
+   assert.equal(resultItems(r,outcomeReason(a,r)).conditions.length,5);
+   continue;
+  }
   assert.equal(evaluate({...asset,license},context).status,'review');
  }
 });

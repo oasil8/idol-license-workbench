@@ -19,7 +19,7 @@ export function projectConclusion(p){
  })).concat(p.assets.filter(a=>selectionOf(a)==='pending').map(a=>({name:a.name,action:'실제 사용 여부를 선택하세요.'})));
  return {title:purpose+': '+({conflict:'아직 불가',review:'판단 보류',conditions:'가능 (조건 이행 필요)'}[summary.status]),
   actionsTitle:'이 목적으로 쓰려면 해결할 일',actions,
-  conditionsText:summary.counts.conditions?`나머지 ${summary.counts.conditions}개는 표시된 조건을 지키면 사용할 수 있습니다.`:'',
+  conditionsText:summary.counts.conditions?(actions.length?`나머지 ${summary.counts.conditions}개는`:`${summary.counts.conditions}개 모두`)+' 표시된 조건을 지키면 사용할 수 있습니다.':'',
   countsText:`현재 조건으로 사용 불가 ${summary.counts.conflict}개 · 판단 보류 ${summary.counts.review}개 · 사용 가능 (조건부) ${summary.counts.conditions}개 · 선택 전 ${summary.pending}개`,
   contextText:`${platform} · 상업 ${c.commercial?'예':'아니요'} · 배포 ${c.distribute?'예':'아니요'} · 수정 ${c.modified?'예':'아니요'} · 네트워크 ${c.network?'예':'아니요'}`,
   emptyText:!summary.assets.length&&!summary.pending?'실제 사용할 자료가 선택되지 않았습니다.':'',disclaimer:reportDisclaimer};

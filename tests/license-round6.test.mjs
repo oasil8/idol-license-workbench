@@ -61,6 +61,15 @@ for(const [input,pattern] of unclear)test(`unclear ${input} requests missing evi
 const stores=['Unity Asset Store EULA','Unity Asset Store Standard EULA','Fab Standard License','Unreal Engine EULA','Epic Content License','Pixabay License','Unsplash License','Pexels License','Adobe Stock','Adobe Stock Standard','Envato','Envato Elements','Epidemic Sound','itch.io','itch.io custom'];
 for(const input of stores)test(`store ${input} uses its supported rule or stays review with a concrete action`,()=>{
  const a=asset(input),r=evaluate(a,steam);
+ if(['Pixabay License','Unsplash License','Pexels License'].includes(input)){
+  const site=input.split(' ')[0],parts=resultItems(r,outcomeReason(a,r));
+  assert.equal(r.status,'conditions');
+  assert.equal(outcomeReason(a,r),`${site} 라이선스는 상업 이용과 수정을 허용하며 출처 표시가 필수가 아닙니다. 근거: ${site} 라이선스 (${site.toLowerCase()}.com).`);
+  assert.equal(parts.conditions.length,site==='Unsplash'?4:5);
+  assert.equal(parts.checks.length,site==='Pixabay'?3:2);
+  assert.ok(parts.checks.includes('다운로드한 페이지 주소와 다운로드 날짜를 기록하세요.'));
+  return;
+ }
  if(input.startsWith('Unity Asset Store')){
   assert.equal(r.status,'conditions');
   assert.match(outcomeReason(a,r),/Unity Asset Store 표준 EULA.*허용/);

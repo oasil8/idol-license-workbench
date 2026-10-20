@@ -30,7 +30,11 @@ export const sources=[
  ['SIL OFL 1.1 공식 원문','https://openfontlicense.org/open-font-license-official-text/'],
  ['ISC License','https://opensource.org/license/isc'],
  ...['Zlib','BSL-1.0','0BSD','Unlicense','EPL-2.0','WTFPL','CC-BY-3.0','CC-BY-SA-3.0','CC-BY-NC-3.0','CC-BY-ND-3.0','CC-BY-NC-SA-3.0','CC-BY-NC-ND-3.0'].map(id=>[id,`https://spdx.org/licenses/${id}.html`]),
- ['Unity Asset Store EULA (unity.com)','https://unity.com/legal/as-terms']
+ ['Unity Asset Store EULA (unity.com)','https://unity.com/legal/as-terms'],
+ ['Pixabay 라이선스 (pixabay.com)','https://pixabay.com/service/terms/'],
+ ['Pixabay 라이선스 요약 (pixabay.com)','https://pixabay.com/service/license-summary/'],
+ ['Unsplash 라이선스 (unsplash.com)','https://unsplash.com/license'],
+ ['Pexels 라이선스 (pexels.com)','https://www.pexels.com/license/']
 ];
 export const kinds={code:'코드 / 오픈소스',model:'모델 / 가중치 / 3D',image:'이미지 / 텍스처',audio:'음원 / 음성',ai:'서비스 / API / AI',data:'데이터셋',tool:'제작 도구',other:'기타'};
 export const statuses={conflict:'현재 조건으로 사용 불가',review:'판단 보류',conditions:'사용 가능 (조건부)'};
@@ -60,6 +64,7 @@ export function evaluate(a,c,now=Date.now()){
  result.reviewDates=[...new Set([review?.source.observedOn,result.reviewedEvidence?.checkedAt?.slice(0,10),!a.terms?.imported&&!a.terms?.error?a.terms?.checkedAt?.slice(0,10):undefined,a.sourceConditionsConfirmed?a.sourceConditionsDate:undefined,appliedOfficialLicense(a)?.date].filter(Boolean))];
  result.reviewDates=result.reviewDates.filter(d=>/^\d{4}-\d{2}-\d{2}$/.test(d)&&Number.isFinite(Date.parse(d))&&Date.parse(d)<=now);
  if(!result.reviewDates.length)result.ruleDate=normalizeLicense(a.license)==='LicenseRef-Unity-Asset-Store-EULA'&&result.sources.some(([,url])=>url==='https://unity.com/legal/as-terms')?'2026-10-20':RULE_DATE;
+ if(!result.reviewDates.length&&['LicenseRef-Pixabay','LicenseRef-Unsplash','LicenseRef-Pexels'].includes(normalizeLicense(a.license))&&result.sources.some(([,url])=>['https://pixabay.com/service/terms/','https://unsplash.com/license','https://www.pexels.com/license/'].includes(url)))result.ruleDate='2026-10-20';
  result.reviewWarnings=[...new Set(result.reviewDates.map(d=>reviewAge(d,now)).filter(Boolean))];
  return result;
 }
@@ -113,6 +118,7 @@ function evaluateBase(a,c,now){
   reason=operator==='OR'?licenses.join(' 또는 ')+' 중 하나를 선택해 이용할 수 있습니다.':licenses.join('·')+'의 조건을 모두 지켜야 합니다.';
  }else if(details.multiple){refs.add(16);review('복수 라이선스 또는 예외 조항입니다. AND의 모든 조건, OR의 선택한 조건, WITH의 예외 범위를 직접 확인하세요.');tasks.push('적용할 라이선스와 선택·예외 근거를 기록하세요.');}
  else if(clarification)review(`${clarification[0]} — 자동 판정 미지원. ${clarification[1]}`);
+ else if(['LicenseRef-Unity-Asset-Store-EULA','LicenseRef-Pixabay','LicenseRef-Unsplash','LicenseRef-Pexels'].includes(license)&&typeof c.distribute!=='boolean')review('외부 배포 여부가 정해지지 않았습니다. 사용 조건에서 외부 배포 여부를 지정하세요.');
  else if(license==='LicenseRef-Unity-Asset-Store-EULA'&&['code','model','image','audio','data','other','tool'].includes(a.kind)&&typeof c.distribute==='boolean'){
   refs.add(sources.findIndex(([,url])=>url==='https://unity.com/legal/as-terms'));
   notes.push('Unity Asset Store 표준 EULA는 자산을 독자적 콘텐츠와 함께 게임에 포함해 배포·수익화하는 것을 허용합니다. 근거: Unity Asset Store EULA (unity.com).');
@@ -129,6 +135,26 @@ function evaluateBase(a,c,now){
    'UGC 제작이 주목적인 게임이거나 NFT·블록체인에 쓰는 경우 판매자·Unity의 별도 허가를 확인하세요.',
    '구매 영수증과 구매 당시 EULA 버전을 보관하세요.'
   );
+ }
+ else if(['LicenseRef-Pixabay','LicenseRef-Unsplash','LicenseRef-Pexels'].includes(license)&&['image','audio','model','data','other','code'].includes(a.kind)&&typeof c.distribute==='boolean'){
+  const site=license.slice('LicenseRef-'.length),label=`${site} 라이선스 (${site.toLowerCase()}.com)`;
+  refs.add(sources.findIndex(([title])=>title===label));
+  notes.push(`${site} 라이선스는 상업 이용과 수정을 허용하며 출처 표시가 필수가 아닙니다. 근거: ${label}.`);
+  tasks.push(
+   '자료를 수정하지 않은 원본 그대로 단독 판매·배포하지 말고 게임 등 새 창작물의 일부로 사용하세요.',
+   '자료를 상표·로고·상호의 일부로 쓰지 마세요.',
+   '자료 속 인물·브랜드가 게임을 보증하거나 제휴한 것처럼 보이게 하지 마세요.'
+  );
+  humanChecks.push(
+   '자료에 나오는 인물·로고·브랜드·건축물·작품의 제3자 권리(초상권·상표권 등)는 사이트가 보증하지 않으므로 별도로 확인하세요.',
+   '다운로드한 페이지 주소와 다운로드 날짜를 기록하세요.'
+  );
+  if(site==='Pixabay'){
+   refs.add(sources.findIndex(([,url])=>url==='https://pixabay.com/service/license-summary/'));
+   tasks.push('상표·로고·브랜드가 보이는 자료는 상품·서비스와 관련된 상업 목적으로 쓰지 마세요.','음란·공격적·정치적 맥락이나 오해를 부르는 방식으로 쓰지 마세요.');
+   humanChecks.push('2019-01-09 이전 게시물은 CC0일 수 있으니 페이지에 표시된 라이선스를 확인하세요.');
+  }else if(site==='Unsplash')tasks.push('자료를 모아 비슷하거나 경쟁하는 서비스를 만들지 마세요.');
+  else tasks.push('식별 가능한 인물을 부정적이거나 공격적으로 묘사하지 마세요.','다른 스톡·배경화면 플랫폼에 재배포하거나 판매하지 마세요.');
  }
  else if(['Zlib','BSL-1.0','0BSD','Unlicense'].includes(license)){
   refs.add(sources.findIndex(([id])=>id===license));

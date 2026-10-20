@@ -1,6 +1,7 @@
 // Match entire names and explicit source wrappers; never discard unknown qualifiers.
 const nameKey=value=>value.toLowerCase().replace(/\b(?:the|license|licence|version)\b/g,'').replace(/\bv(?=\s*\d)/g,'').replace(/[\s,-]+/g,'');
 const aliases=new Map([
+ ...['Pixabay','Pixabay Content License','Unsplash','Pexels'].map(name=>[nameKey(name),`LicenseRef-${name.split(' ')[0]}`]),
  ...['Unity Asset Store EULA','Unity Asset Store Standard EULA','Standard Unity Asset Store EULA','Unity Asset Store End User License Agreement'].map(name=>[nameKey(name),'LicenseRef-Unity-Asset-Store-EULA']),
  ['mit','MIT'],['mit(mit)','MIT'],['apache2.0','Apache-2.0'],
  ['bsd3clause','BSD-3-Clause'],['newbsd','BSD-3-Clause'],
@@ -52,7 +53,7 @@ const creationAliases=new Map([
  ...['구매함','구매','Purchased','Paid asset','LicenseRef-Purchased'].map(s=>[s.toLowerCase().replace(/\s/g,''),'LicenseRef-Purchased'])
 ]);
 const permissive=new Set(['MIT','BSD-2-Clause','BSD-3-Clause','ISC','Apache-2.0','Zlib','BSL-1.0','0BSD','Unlicense','CC0-1.0']);
-const sourceNames=['Kenney','Freesound','Google Fonts','Sketchfab','OpenGameArt','itch.io','GitHub','Poly Haven','ambientCG'];
+const sourceNames=['Kenney','Freesound','Google Fonts','Sketchfab','OpenGameArt','itch.io','GitHub','Poly Haven','ambientCG','Pixabay','Unsplash','Pexels'];
 function sourceLicense(value){
  for(const source of sourceNames){
   const escaped=source.replace(/[.*+?^${}()|[\]\\]/g,'\\$&').replace(/ /g,'\\s+');
