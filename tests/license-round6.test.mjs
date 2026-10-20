@@ -59,8 +59,18 @@ for(const [input,pattern] of unclear)test(`unclear ${input} requests missing evi
  assert.match([...r.blockers,...r.humanChecks].join(' '),pattern);
 });
 const stores=['Unity Asset Store EULA','Unity Asset Store Standard EULA','Fab Standard License','Unreal Engine EULA','Epic Content License','Pixabay License','Unsplash License','Pexels License','Adobe Stock','Adobe Stock Standard','Envato','Envato Elements','Epidemic Sound','itch.io','itch.io custom'];
-for(const input of stores)test(`store ${input} stays review with a concrete action`,()=>{
+for(const input of stores)test(`store ${input} uses its supported rule or stays review with a concrete action`,()=>{
  const a=asset(input),r=evaluate(a,steam);
+ if(input.startsWith('Unity Asset Store')){
+  assert.equal(r.status,'conditions');
+  assert.match(outcomeReason(a,r),/Unity Asset Store 표준 EULA.*허용/);
+  assert.match(outcomeReason(a,r),/Unity Asset Store EULA \(unity\.com\)/);
+  const parts=resultItems(r,outcomeReason(a,r));
+  assert.equal(parts.conditions.length,5);
+  assert.equal(parts.checks.length,4);
+  assert.match(parts.checks.join(' '),/별도 판매자 EULA.*Restricted Asset Terms.*구매 영수증/);
+  return;
+ }
  assert.equal(r.status,'review');
  assert.match(outcomeReason(a,r),/판매처 라이선스.*자동 판정 미지원/);
  assert.doesNotMatch(outcomeReason(a,r),/지원하지 않는 라이선스·개별 계약/);

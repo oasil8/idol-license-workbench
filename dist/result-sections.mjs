@@ -66,7 +66,7 @@ export function reviewReason(r){
  if(r.status!=='review')return '';
  const reasons=(r.blockers?.length?r.blockers:r.notes||[]).filter(t=>!t.includes('실시간 조회한 기록은 아닙니다')).map(t=>
  t.includes(' — 자동 판정 미지원. ')?t.split(' — 자동 판정 미지원. ')[0]+' — 자동 판정 미지원':
- t.includes('출력물의 상업 이용을 명시적으로 허용하는 문구를 인식하지 못')?'원문 확보됨 · 자동 해석 지원 범위 밖, 허용·예외 조항 검토 필요':
+ t.includes('출력물의 상업 이용을 명시적으로 허용하는 문구를 인식하지 못')||t.includes('생성물의 상업 이용을 명시적으로 허용하는 조항을 찾아')?'원문 확보됨 · 자동 해석 지원 범위 밖, 허용·예외 조항 검토 필요':
  t.includes('허용 문구는 있지만 적용 플랜·예외')?'허용 근거 확보됨 · 플랜·예외 조항 해석 필요':
  t.includes('Copilot 계약 경로를')?'Copilot 계약 경로 선택 필요':
  t.includes('Microsoft 구매 경로')?'Microsoft 구매 약관·허용 범위 확인 필요':

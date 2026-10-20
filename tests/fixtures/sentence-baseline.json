@@ -140,8 +140,8 @@
   {
     "id": "steam:23:code:Unity Asset Store EULA",
     "status": "review",
-    "conditions": 0,
-    "checks": 3
+    "conditions": 5,
+    "checks": 6
   },
   {
     "id": "steam:24:code:",
@@ -194,8 +194,8 @@
   {
     "id": "steam:32:tool:Unity Asset Store EULA",
     "status": "review",
-    "conditions": 0,
-    "checks": 4
+    "conditions": 5,
+    "checks": 7
   },
   {
     "id": "steam:33:tool:",
@@ -248,8 +248,8 @@
   {
     "id": "steam:41:model:Unity Asset Store EULA",
     "status": "review",
-    "conditions": 0,
-    "checks": 4
+    "conditions": 5,
+    "checks": 7
   },
   {
     "id": "steam:42:model:",
@@ -302,8 +302,8 @@
   {
     "id": "steam:50:image:Unity Asset Store EULA",
     "status": "review",
-    "conditions": 0,
-    "checks": 4
+    "conditions": 5,
+    "checks": 7
   },
   {
     "id": "steam:51:image:",
@@ -356,8 +356,8 @@
   {
     "id": "steam:59:audio:Unity Asset Store EULA",
     "status": "review",
-    "conditions": 0,
-    "checks": 4
+    "conditions": 5,
+    "checks": 7
   },
   {
     "id": "steam:60:audio:",
@@ -410,8 +410,8 @@
   {
     "id": "steam:68:data:Unity Asset Store EULA",
     "status": "review",
-    "conditions": 0,
-    "checks": 4
+    "conditions": 5,
+    "checks": 7
   },
   {
     "id": "steam:69:data:",
@@ -728,8 +728,8 @@
   {
     "id": "research:23:code:Unity Asset Store EULA",
     "status": "review",
-    "conditions": 0,
-    "checks": 3
+    "conditions": 5,
+    "checks": 6
   },
   {
     "id": "research:24:code:",
@@ -782,8 +782,8 @@
   {
     "id": "research:32:tool:Unity Asset Store EULA",
     "status": "review",
-    "conditions": 0,
-    "checks": 4
+    "conditions": 5,
+    "checks": 7
   },
   {
     "id": "research:33:tool:",
@@ -836,8 +836,8 @@
   {
     "id": "research:41:model:Unity Asset Store EULA",
     "status": "review",
-    "conditions": 0,
-    "checks": 4
+    "conditions": 5,
+    "checks": 7
   },
   {
     "id": "research:42:model:",
@@ -890,8 +890,8 @@
   {
     "id": "research:50:image:Unity Asset Store EULA",
     "status": "review",
-    "conditions": 0,
-    "checks": 4
+    "conditions": 5,
+    "checks": 7
   },
   {
     "id": "research:51:image:",
@@ -944,8 +944,8 @@
   {
     "id": "research:59:audio:Unity Asset Store EULA",
     "status": "review",
-    "conditions": 0,
-    "checks": 4
+    "conditions": 5,
+    "checks": 7
   },
   {
     "id": "research:60:audio:",
@@ -998,8 +998,8 @@
   {
     "id": "research:68:data:Unity Asset Store EULA",
     "status": "review",
-    "conditions": 0,
-    "checks": 4
+    "conditions": 5,
+    "checks": 7
   },
   {
     "id": "research:69:data:",

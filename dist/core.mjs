@@ -29,7 +29,8 @@ export const sources=[
  ['PSF License 2 · Python 공식 원문','https://docs.python.org/3/license.html#psf-license'],
  ['SIL OFL 1.1 공식 원문','https://openfontlicense.org/open-font-license-official-text/'],
  ['ISC License','https://opensource.org/license/isc'],
- ...['Zlib','BSL-1.0','0BSD','Unlicense','EPL-2.0','WTFPL','CC-BY-3.0','CC-BY-SA-3.0','CC-BY-NC-3.0','CC-BY-ND-3.0','CC-BY-NC-SA-3.0','CC-BY-NC-ND-3.0'].map(id=>[id,`https://spdx.org/licenses/${id}.html`])
+ ...['Zlib','BSL-1.0','0BSD','Unlicense','EPL-2.0','WTFPL','CC-BY-3.0','CC-BY-SA-3.0','CC-BY-NC-3.0','CC-BY-ND-3.0','CC-BY-NC-SA-3.0','CC-BY-NC-ND-3.0'].map(id=>[id,`https://spdx.org/licenses/${id}.html`]),
+ ['Unity Asset Store EULA (unity.com)','https://unity.com/legal/as-terms']
 ];
 export const kinds={code:'코드 / 오픈소스',model:'모델 / 가중치 / 3D',image:'이미지 / 텍스처',audio:'음원 / 음성',ai:'서비스 / API / AI',data:'데이터셋',tool:'제작 도구',other:'기타'};
 export const statuses={conflict:'현재 조건으로 사용 불가',review:'판단 보류',conditions:'사용 가능 (조건부)'};
@@ -58,7 +59,7 @@ export function evaluate(a,c,now=Date.now()){
  if(['conditions','conflict'].includes(result.status)&&a.planType&&a.planType!=='unknown')result.humanChecks=(result.humanChecks||[]).filter(t=>t!=='서비스·플랜을 지정하고 최신 약관 조회를 실행하세요.');
  result.reviewDates=[...new Set([review?.source.observedOn,result.reviewedEvidence?.checkedAt?.slice(0,10),!a.terms?.imported&&!a.terms?.error?a.terms?.checkedAt?.slice(0,10):undefined,a.sourceConditionsConfirmed?a.sourceConditionsDate:undefined,appliedOfficialLicense(a)?.date].filter(Boolean))];
  result.reviewDates=result.reviewDates.filter(d=>/^\d{4}-\d{2}-\d{2}$/.test(d)&&Number.isFinite(Date.parse(d))&&Date.parse(d)<=now);
- if(!result.reviewDates.length)result.ruleDate=RULE_DATE;
+ if(!result.reviewDates.length)result.ruleDate=normalizeLicense(a.license)==='LicenseRef-Unity-Asset-Store-EULA'&&result.sources.some(([,url])=>url==='https://unity.com/legal/as-terms')?'2026-10-20':RULE_DATE;
  result.reviewWarnings=[...new Set(result.reviewDates.map(d=>reviewAge(d,now)).filter(Boolean))];
  return result;
 }
@@ -107,6 +108,23 @@ function evaluateBase(a,c,now){
  if(!license||['UNKNOWN','NOASSERTION','NONE','UNLICENSED'].includes(license.toUpperCase())) review('공개된 파일이라는 사실만으로 허용된다고 보지 말고, 적용 라이선스의 사용 허가를 확인하세요.');
  else if(/(?:^|[\s()])(AND|OR|WITH)(?=$|[\s()])/i.test(license)){refs.add(16);review('복수 라이선스 또는 예외 조항입니다. AND의 모든 조건, OR의 선택한 조건, WITH의 예외 범위를 직접 확인하세요.');tasks.push('적용할 라이선스와 선택·예외 근거를 기록하세요.');}
  else if(clarification)review(`${clarification[0]} — 자동 판정 미지원. ${clarification[1]}`);
+ else if(license==='LicenseRef-Unity-Asset-Store-EULA'&&['code','model','image','audio','data','other','tool'].includes(a.kind)&&typeof c.distribute==='boolean'){
+  refs.add(sources.findIndex(([,url])=>url==='https://unity.com/legal/as-terms'));
+  notes.push('Unity Asset Store 표준 EULA는 자산을 독자적 콘텐츠와 함께 게임에 포함해 배포·수익화하는 것을 허용합니다. 근거: Unity Asset Store EULA (unity.com).');
+  tasks.push(
+   '자산을 게임 등 제품에 포함된 형태로만 배포하고, 자산 자체를 단독으로 판매·배포하거나 이용자가 그렇게 할 수 있게 하지 마세요.',
+   '자산이 제품의 주요 부분이 되지 않도록 독자적 콘텐츠와 함께 사용하세요.',
+   '구매에 참여하지 않은 제3자와 자산을 공유하지 마세요.',
+   '자산을 AI·머신러닝 모델 학습이나 데이터셋에 사용하지 마세요.',
+   '자산에 포함된 저작권·상표 고지를 제거하지 마세요.'
+  );
+  humanChecks.push(
+   '에셋 페이지에 별도 판매자 EULA나 Restricted Asset Terms가 있는지 확인하세요.',
+   'Editor Extension·Scripting·Services 자산이면 좌석 수(2대 초과 동시 사용 금지)를 확인하세요.',
+   'UGC 제작이 주목적인 게임이거나 NFT·블록체인에 쓰는 경우 판매자·Unity의 별도 허가를 확인하세요.',
+   '구매 영수증과 구매 당시 EULA 버전을 보관하세요.'
+  );
+ }
  else if(['Zlib','BSL-1.0','0BSD','Unlicense'].includes(license)){
   refs.add(sources.findIndex(([id])=>id===license));
   notes.push(`${license}는 상업·비상업 이용과 수정·배포를 허용합니다.`);

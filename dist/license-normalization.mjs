@@ -1,6 +1,7 @@
 // Match the entire name; never discard unknown qualifiers or choose between licenses.
 const nameKey=value=>value.toLowerCase().replace(/\b(?:the|license|licence|version)\b/g,'').replace(/\bv(?=\s*\d)/g,'').replace(/[\s,-]+/g,'');
 const aliases=new Map([
+ ...['Unity Asset Store EULA','Unity Asset Store Standard EULA','Standard Unity Asset Store EULA','Unity Asset Store End User License Agreement'].map(name=>[nameKey(name),'LicenseRef-Unity-Asset-Store-EULA']),
  ['mit','MIT'],['mit(mit)','MIT'],['apache2.0','Apache-2.0'],
  ['bsd3clause','BSD-3-Clause'],['newbsd','BSD-3-Clause'],
  ['bsd2clause','BSD-2-Clause'],['simplifiedbsd','BSD-2-Clause'],

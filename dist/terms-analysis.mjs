@@ -9,8 +9,8 @@ export function analyzeTerms(input,text){
   try{const u=new URL(input.sourceUrl);if(u.protocol==='https:'&&['www.meshy.ai','meshy.ai'].includes(u.hostname)&&u.pathname==='/terms-of-use')input={...input,provider:'meshy'};}catch{}
  }
 
- const result={status:'review',summary:'핵심 허가 조항을 확인하지 못했습니다. 원문 검토가 필요합니다.',conditions:[],checks:[],excerpts:[],license:''};
- if(input.scope!=='output'){result.summary='생성 결과물 약관은 모델 가중치·서비스 자체의 재배포 허가가 아닙니다.';return result;}
+ const result={status:'review',summary:'원문에서 현재 이용 방식에 적용되는 핵심 허가 조항을 찾아 확인하세요.',conditions:[],checks:[],excerpts:[],license:''};
+ if(input.scope!=='output'){result.summary='생성 결과물 약관과 구분하여 모델 가중치·서비스 자체의 재배포 허가를 확인하세요.';return result;}
  if(input.provider==='other'&&input.manual===true)return analyzeCustomTerms(input,text,result);
  // Both plan branches must grant permission before an unknown plan can share it.
  if(input.provider==='meshy'&&(!input.planType||input.planType==='unknown')){
@@ -20,10 +20,10 @@ export function analyzeTerms(input,text){
  }
  if(input.planType==='business'||(!['free','paid'].includes(input.planType)&&!['openai','anthropic'].includes(input.provider))){result.summary='플랜이 미확인이거나 기업·API 별도 계약입니다. 적용 계약을 확인하세요.';return result;}
  const restriction=text.match(/non-commercial use only|commercial use (?:is )?(?:not allowed|prohibited)|not (?:use|exploit)[^.]{0,80}commercial/i);
- if(restriction){result.excerpts=[restriction[0]];result.summary='상업 이용 제한 문구가 함께 발견되었습니다. 허가 조항만으로 결론 내리지 않고 원문 검토를 보류합니다.';return result;}
+ if(restriction){result.excerpts=[restriction[0]];result.summary='상업 이용 제한 문구가 함께 있으므로 허가 조항만으로 결론 내리지 말고 원문의 적용 범위를 확인하세요.';return result;}
  let match;
  if(input.provider==='meshy'){
-  if(/community|커뮤니티/i.test(input.useDescription||'')&&/image|이미지|upload|업로드/i.test(input.useDescription||'')){result.summary='커뮤니티의 업로드 이미지 등은 생성 결과물과 라이선스가 다릅니다. 해당 자료의 적용 조항 확인이 필요합니다.';return result;}
+  if(/community|커뮤니티/i.test(input.useDescription||'')&&/image|이미지|upload|업로드/i.test(input.useDescription||'')){result.summary='커뮤니티의 업로드 이미지 등은 생성 결과물과 라이선스가 다르므로 해당 자료의 적용 조항을 확인하세요.';return result;}
 
   match=input.planType==='free'?(text.match(/If you are on a free plan, we grant you a CC BY 4\.0 license instead/i)||text.match(/makes such rights available to free plan customers under the Creative Commons Attribution 4\.0 International License/i)):(text.match(/if you are a paid customer, you own the assets created through our platform/i)||text.match(/such customers on a paid Meshy plan own their Customer Output/i));
   if(match){if(/You agree not to remove, alter, disable, or otherwise tamper with such identifiers/i.test(text))result.conditions.push('결과물의 AI 생성 표시·디지털 워터마크·식별 메타데이터를 제거하거나 변경하지 마세요.');result.conditions.push('이 결과는 생성 결과물에만 해당하므로, 커뮤니티 업로드 이미지 등 다른 자료의 라이선스에 확대 적용하지 마세요.');result.license=input.planType==='free'?'CC-BY-4.0':'Service-Output';result.conditions.push(input.planType==='free'?'Meshy 출처·CC BY 4.0 링크·변경 사실을 표시하세요.':'생성 당시 유료 플랜과 소유권 조건의 적용을 확인하세요.');}
@@ -48,7 +48,7 @@ function analyzeCustomTerms(input,text,result){
  const grants=clauses.filter(s=>grant.test(s));
  if(!grants.length){
   const limited=text.match(/no commercial use of [^;.]{1,160} is permitted/i),ownership=text.match(/we assign to you all of our right, title, and interest.{0,25}in the Outputs/i);
-  result.summary=limited?'확인 필요: 무료·특정 범위의 상업 이용 제한이 있습니다. 적용 플랜과 직접 생성·공유 자료의 범위를 구분해야 합니다.':ownership?'확인 필요: 출력물 권리 양도는 확인했지만 나머지 이용 제한과 적용 계약을 자동 확정하지 못했습니다.':'확인 필요: 출력물의 상업 이용을 명시적으로 허용하는 문구를 인식하지 못했습니다. 소유권 문구나 서비스 이용 허용만으로는 확정하지 않습니다.';
+  result.summary=limited?'무료·특정 범위의 상업 이용 제한에 대해 적용 플랜과 직접 생성·공유 자료의 범위를 구분해 확인하세요.':ownership?'출력물 권리 양도와 별개로 나머지 이용 제한과 적용 계약을 확인하세요.':'가져온 약관에서 생성물의 상업 이용을 명시적으로 허용하는 조항을 찾아 소유권 문구나 서비스 이용 허용과 구분해 확인하세요.';
   if(limited||ownership)result.excerpts=[(limited||ownership)[0]];
   return result;
  }
@@ -64,7 +64,7 @@ function analyzeCustomTerms(input,text,result){
  result.checks=recognized.filter(x=>x.rule[2]==='check').map(x=>x.rule[1]);
  // Conditional, negative, or unrecognized duty clauses may change the grant itself.
  const uncertain=clauses.filter(s=>!grant.test(s)&&!attribution.test(s)&&!recognized.some(x=>x.clause===s));
- if(input.planType==='business'||uncertain.length){result.summary='확인 필요: 허용 문구는 있지만 적용 플랜·예외 또는 추가 의무의 해석이 남아 있습니다.';result.excerpts.push(...uncertain.slice(0,2));result.conditions=[...(duties.length?['결과물을 사용할 때 서비스 출처를 표시하세요.']:[]),...uncertain.slice(0,3).map(s=>'적용 여부 확인 필요: '+s)];return result;}
+ if(input.planType==='business'||uncertain.length){result.summary='허용 문구는 있지만 적용 플랜·예외 또는 추가 의무의 해석이 남아 있으므로 해당 조항을 확인하세요.';result.excerpts.push(...uncertain.slice(0,2));result.conditions=[...(duties.length?['결과물을 사용할 때 서비스 출처를 표시하세요.']:[]),...uncertain.slice(0,3).map(s=>s+' — 이 조항이 실제 이용 범위에 적용되는지 원문과 대조해 확인하세요.')];return result;}
  result.conditions.push(...recognized.filter(x=>x.rule[2]==='condition').map(x=>x.rule[1]));
  result.status='conditions';result.license='Service-Output';
  result.summary='직접 입력한 약관에서 출력물의 명시적 상업 이용 허용을 확인했습니다. 표시된 의무를 이행하는 조건입니다.';
