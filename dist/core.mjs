@@ -118,7 +118,7 @@ function evaluateBase(a,c,now){
  }else if(/^(A?GPL|LGPL)-[23]\.0(-only|-or-later)?$/.test(license)||license==='LGPL-2.1-only'||license==='LGPL-2.1-or-later'){
   refs.add(2);notes.push(c.distribute===false&&c.network===false?'외부 배포·네트워크 제공이 없어 현재는 소스 제공 의무가 발생하지 않습니다.':`${c.commercial?'유료 판매 자체는 금지되지 않습니다.':'라이선스 조건에 따른 이용이 가능합니다.'} 결합 방식과 배포·네트워크 제공 여부가 중요합니다.`);
   if(a.kind==='tool'&&a.reviewScope==='code'&&c.distribute){tasks.push('배포하는 도구·수정본의 대응 소스와 빌드·설치 정보를 해당 GPL 조건으로 제공하세요.','동일 라이선스와 저작권 고지를 유지하고 추가 제한을 부과하지 마세요.');if(license.startsWith('AGPL')&&c.network)tasks.push('수정 AGPL 프로그램과 네트워크로 상호작용하는 사용자에게 대응 소스 제공 기회를 안내하세요.');humanChecks.push('독립 도구 자체의 배포 기준입니다. 다른 프로그램에 결합·링크한 제품은 별도로 검토하세요.');}
-  else if(c.distribute||license.startsWith('AGPL')&&c.network){review('정적/동적 링크·수정·배포 방식과 적용 버전·예외에 따른 소스 제공·재링크·동일 라이선스 적용 범위를 확인하세요.');}
+  else if(c.distribute||license.startsWith('AGPL')&&c.network){review(a.kind==='tool'?'도구로 만든 결과물만 쓰는지, 도구 자체를 함께 배포·수정·번들해 소스 제공·재링크 의무가 생기는지 확인하세요.':'정적/동적 링크·수정·배포 방식과 적용 버전·예외에 따른 소스 제공·재링크·동일 라이선스 적용 범위를 확인하세요.');}
   else tasks.push('내부 사용 범위를 기록하고 외부 제공 전에 재검토하세요.');
  }else if(license==='MPL-2.0'){
   refs.add(13);if(c.distribute===false){notes.push('외부 배포 없는 내부 이용에는 외부 소스 제공 의무가 발생하지 않습니다.');tasks.push('외부 배포를 시작하기 전에 MPL 파일의 고지·소스 제공 범위를 재검토하세요.');}else if(c.distribute===true){notes.push('MPL 파일의 소스 제공과 고지 의무를 지키면 배포할 수 있습니다. 별도 파일 전체에 MPL을 강제하지 않습니다.');tasks.push('MPL 적용 파일(수정분 포함)의 소스를 MPL로 제공하고 수령자에게 입수 방법을 안내하세요.','라이선스·저작권 고지를 유지하고 소스에 대한 수령자의 권리를 제한하지 마세요.');}else review('외부 배포 여부를 지정하세요.');

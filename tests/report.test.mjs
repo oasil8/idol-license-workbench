@@ -30,7 +30,7 @@ test('project report has a linked overview and preserves full evidence behind de
 });
 
 import {evaluate,commercialVerdict} from '../dist/core.mjs';
-import {resultItems,outcomeReason} from '../dist/result-sections.mjs';
+import {projectConclusion,resultItems,outcomeReason} from '../dist/result-sections.mjs';
 // Shared third-party guidance replaces these equivalent task variants, without dropping the obligation.
 const displayedTask=value=>value.includes('제3자 권리')?'입력 자료·브랜드·디자인·상표·초상·음성·개인정보 등 제3자 권리는 라이선스·약관상 허용만으로 확보되지 않으므로 실제 자료를 기준으로 별도 확인하세요.':value;
 test('report preserves evaluated conditions, checks, scope and differing commercial reasons',()=>{
@@ -59,7 +59,7 @@ test('reports preserve all result sections across products, scopes and usage fla
   const p={name:'Coverage',assets:[a],context},r=evaluate(a,context),items=resultItems(r),html=buildProjectReport({...p,contextConfirmed:true});
   seen.add(r.status);
   for(const value of [outcomeReason(a,r),...items.conditions.map(displayedTask),...items.checks.map(displayedTask),...r.notes])assert.ok(html.includes(escape(value)),`${name}/${reviewScope}/${flags}: ${value}`);
-  assert.ok(html.includes(escape(summaryReason(projectSummary(p)))));
+  assert.ok(html.includes(escape(projectConclusion(p).title)));
  }
  assert.deepEqual([...seen].sort(),['conditions','conflict','review']);
 });

@@ -5,7 +5,7 @@ import {sourceRefreshJobs} from './auto-review.mjs';
 import {installReportPrint} from './print-report.mjs';
 import {brandIcon} from './brand-icons.mjs';
 import {createCatalogSearch} from './catalog-search.mjs';
-import {displaySources,compactResultMarkup,reviewStampMarkup,permissionMarkup,reviewReason,outcomeReason,resultItems,resultLayout,commonChecksMarkup} from './result-sections.mjs';
+import {conclusionMarkup,displaySources,compactResultMarkup,reviewStampMarkup,permissionMarkup,reviewReason,outcomeReason,resultItems,resultLayout,commonChecksMarkup} from './result-sections.mjs';
 import {cleanCandidates,sourceSearchName,verificationLabel,verificationMarkup} from './source-search.mjs';
 import {contextConfirmationNotice,conditionsConfirmed,conditionsPrompt,selectionOf,selectionLabels,selectedAssets,projectSummary,summaryReason,commitChange} from './workflow.mjs';
 import {candidateNotice,assetSources,sourceTypes,sourceGroup,sourceSearchUrl,officialSuggestions} from './evidence-sources.mjs';
@@ -66,10 +66,10 @@ function render(){const p=project();
  $('projectSelect').innerHTML=projects.map(x=>`<option value="${x.id}" ${x.id===current?'selected':''}>${esc(x.name)}</option>`).join('');
  if(contextDraftProject&&contextDraftProject!==current){contextDraft=undefined;contextDraftProject='';$('contextPending').textContent='';}
  renderContextConfirmation(p,contextDraftProject===current&&contextDraft||p.context);
- $('projectTitle').textContent=p.name;const purpose={general:'일반 이용 · 직접 설정',steam:'Steam 출시',enterprise:'기업 사용·납품',conference:'학회·논문 공개',research:'연구 프로젝트'}[p.context.platform];const flags=[['commercial','상업 목적'],['distribute','외부 배포'],['modified','자료 수정'],['network','네트워크 서비스']].filter(([key])=>p.context[key]).map(([,label])=>label);const contextText=purpose+' · '+(flags.join(' · ')||'추가 조건 없음');$('contextSummary').textContent=contextText;$('reportContext').textContent='검토 기준: '+contextText+' · 결과는 적용 라이선스·계약상 허용 여부입니다. 실제 자료의 권리는 별도 확인 사항을 보세요.';
+ $('projectTitle').textContent=p.name;const purpose={general:'일반 이용 · 직접 설정',steam:'Steam 출시',enterprise:'기업 사용·납품',conference:'학회·논문 공개',research:'연구 프로젝트'}[p.context.platform];const flags=[['commercial','상업 목적'],['distribute','외부 배포'],['modified','자료 수정'],['network','네트워크 서비스']].filter(([key])=>p.context[key]).map(([,label])=>label);const contextText=purpose+' · '+(flags.join(' · ')||'추가 조건 없음');$('contextSummary').textContent=contextText;
  for(const field of ['platform','commercial','distribute','modified','network']){if(field==='platform')$(field).value=(contextDraftProject===current&&contextDraft||p.context)[field];else $(field).checked=(contextDraftProject===current&&contextDraft||p.context)[field];}
  const summary=projectSummary(p),counts=summary.counts;
- $('stats').innerHTML=`<div class="stat"><span>검토 대상</span><strong>${summary.assets.length}<small>개 항목</small></strong><p>코드 · 에셋 · AI · 도구</p></div>`+[['conditions','사용 가능 · 조건부','고지·허가 조건 이행 필요'],['review','판단 보류','근거 또는 적용 범위 확인'],['conflict','현재 조건으로 사용 불가','현재 조건 기준 · 별도 허가 검토']].map(([s,label,hint])=>`<div class="stat ${s}"><span>${label}</span><strong>${counts[s]}<small>개 항목</small></strong><p>${hint}</p></div>`).join('');
+
  $('assetCount').textContent=p.assets.length;$('scanLog').textContent=p.scan||'아직 선택한 파일이 없습니다.';
  const mentions=new Map(reviewAssignment(p.assignment?.documents||[]).candidates.map(c=>[c.name,c]));
  const mentionLabel=a=>{const c=mentions.get(a.name);return c?`<small class="source-role-label">${c.references.every(r=>r.role==='feedback')?'피드백에서만 언급 · 대안 후보':'문서에서 추출한 후보'}</small>`:'';};
@@ -82,17 +82,17 @@ function render(){const p=project();
  if(p.assets.length&&!rows.length)$('assetRows').innerHTML='<tr><td colspan="5" class="no-results">검색 조건에 맞는 항목이 없습니다.</td></tr>';
  renderReport();
  const overall=summary.status;
- $('overall').innerHTML=`<div><span class="eyebrow">현재 사용 목적 · 프로젝트 결과</span><h2>${statuses[overall]}</h2><p>${esc(summaryReason(summary))}</p><small>실제 사용 ${summary.assets.length}개에 대한 잠정 결과 · 선택 전 ${summary.pending}개 · 사람이 별도로 확인할 사항이 있는 자료 ${summary.assets.filter(a=>evaluate(a,p.context).humanChecks?.length).length}개 · 출시 승인이 아닙니다.</small></div>`;
+ $('overall').innerHTML=conclusionMarkup(p,esc);
  $('overall').className='overall '+overall;
  renderProjects();
  renderAssignment(p);
- if(!conditionsConfirmed(p)){$('overall').innerHTML=`<h2>${conditionsPrompt}</h2><p>2단계에서 실제 사용 조건을 확인하고 적용하세요.</p><button data-set-conditions>사용 조건 정하기</button>`;$('overall').querySelector('[data-set-conditions]').onclick=()=>setView('inventory');$('stats').hidden=true;$('documentReviewSection').hidden=true;}else $('stats').hidden=false;
+ if(!conditionsConfirmed(p)){$('overall').innerHTML=`<h2>${conditionsPrompt}</h2><p>2단계에서 실제 사용 조건을 확인하고 적용하세요.</p><button data-set-conditions>사용 조건 정하기</button>`;$('overall').querySelector('[data-set-conditions]').onclick=()=>setView('inventory');$('documentReviewSection').hidden=true;}
 }
 function renderReport(){const p=project();if(!conditionsConfirmed(p)){$('reportContent').innerHTML='';return;}
  const layout=resultLayout(selectedAssets(p),p.context);
  $('reportContent').innerHTML=commonChecksMarkup(layout,esc)+layout.items.map(item=>{const {a,r}=item;return `<article class="report-item result-card"><h3 class="brand-name">${brandIcon(a)}${esc(a.name)} ${badge(r)}</h3>${compactResultMarkup(a,r,assetSources(a,p.context),esc,item)}<button class="outline" data-edit="${a.id}">정보 보완</button></article>`;}).join('');
 }
-function setView(next){if(next==='report'&&contextDraftProject===current)message('사용 조건에 미적용 변경이 있습니다. 결과는 마지막으로 적용한 조건 기준입니다.');view=next;window.scrollTo({top:0,behavior:'instant'});for(const v of ['intake','inventory','report','guide'])$(v+'View').hidden=v!==view;document.querySelectorAll('[data-view]').forEach(b=>{b.classList.toggle('active',b.dataset.view===view);if(b.dataset.view===view)b.setAttribute('aria-current','step');else b.removeAttribute('aria-current');});$('viewSubtitle').textContent={intake:'파일을 가져오거나 이름으로 검색해서 자료를 등록하세요.',inventory:'각 자료를 실제 사용, 대안 보관, 사용 안 함으로 분류하세요.',report:'실제 사용하는 자료의 결론과 근거를 확인하세요.',guide:'사용 순서와 결과를 읽는 방법을 확인하세요.'}[view];$('pageLabel').textContent={intake:'1. 자료 넣기',inventory:'2. 실제 사용할 것 선택',report:'3. 결과 확인',guide:'사용법·결과 안내'}[view];}
+function setView(next){if(next==='report'&&contextDraftProject===current)message('사용 조건에 미적용 변경이 있습니다. 결과는 마지막으로 적용한 조건 기준입니다.');view=next;window.scrollTo({top:0,behavior:'instant'});for(const v of ['intake','inventory','report','guide'])$(v+'View').hidden=v!==view;document.querySelectorAll('[data-view]').forEach(b=>{b.classList.toggle('active',b.dataset.view===view);if(b.dataset.view===view)b.setAttribute('aria-current','step');else b.removeAttribute('aria-current');});$('viewSubtitle').textContent={intake:'파일을 가져오거나 이름으로 검색해서 자료를 등록하세요.',inventory:'각 자료를 실제 사용, 대안 보관, 사용 안 함으로 분류하세요.',report:'',guide:'사용 순서와 결과를 읽는 방법을 확인하세요.'}[view];$('pageLabel').textContent={intake:'1. 자료 넣기',inventory:'2. 실제 사용할 것 선택',report:'3. 결과 확인',guide:'사용법·결과 안내'}[view];}
 $('assetRows').addEventListener('change',e=>{const id=e.target.dataset.selection;if(!id)return;const value=e.target.value;if(!Object.hasOwn(selectionLabels,value))return;transact(state=>{state.projects.find(p=>p.id===state.current).assets.find(a=>a.id===id).selection=value;});render();});
 function focusAssetInput(name){
  const field=$('assetForm').elements.namedItem(name);if(!field)return;

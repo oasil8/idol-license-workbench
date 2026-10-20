@@ -1,10 +1,33 @@
 import {resultBodyLayout,commonGroups} from './result-layout.mjs';
 import {evaluate,statuses} from './core.mjs';
+import {projectSummary,selectionOf} from './workflow.mjs';
 import {reviewAge} from './official-sources.mjs';
 import {candidateNotice} from './evidence-sources.mjs';
 import {normalizeAsset,assetScope} from './asset-normalization.mjs';
 import {planImpact} from './ai.mjs';
 export const conflictNextAction='현재 사용 조건에서는 이 자료를 쓰지 마세요. 플랜·계약이나 사용 목적이 바뀌면 정보를 수정해 다시 판정하세요.';
+
+
+export const reportDisclaimer='검토 기록이며 출시 승인·법률 의견이 아닙니다.';
+export function projectConclusion(p){
+ const summary=projectSummary(p),c=p.context;
+ const platform={general:'일반 이용',research:'연구',conference:'학회·논문',enterprise:'기업·납품',steam:'Steam 출시'}[c.platform]||'일반 이용';
+ const purpose=c.commercial?(c.platform==='steam'?'Steam 상업 출시':platform+' (상업)'):platform;
+ const actions=['conflict','review'].flatMap(status=>resultLayout(summary.assets,c).items.flatMap(({a,r,checks})=>{
+  if(r.status!==status)return [];
+  return [{name:a.name,action:status==='conflict'?conflictNextAction:checks[0]||resultItems(r,outcomeReason(a,r)).checks[0]||reviewReason(r)}];
+ })).concat(p.assets.filter(a=>selectionOf(a)==='pending').map(a=>({name:a.name,action:'실제 사용 여부를 선택하세요.'})));
+ return {title:purpose+': '+({conflict:'아직 불가',review:'판단 보류',conditions:'가능 (조건 이행 필요)'}[summary.status]),
+  actionsTitle:'이 목적으로 쓰려면 해결할 일',actions,
+  conditionsText:summary.counts.conditions?`나머지 ${summary.counts.conditions}개는 표시된 조건을 지키면 사용할 수 있습니다.`:'',
+  countsText:`현재 조건으로 사용 불가 ${summary.counts.conflict}개 · 판단 보류 ${summary.counts.review}개 · 사용 가능 (조건부) ${summary.counts.conditions}개 · 선택 전 ${summary.pending}개`,
+  contextText:`${platform} · 상업 ${c.commercial?'예':'아니요'} · 배포 ${c.distribute?'예':'아니요'} · 수정 ${c.modified?'예':'아니요'} · 네트워크 ${c.network?'예':'아니요'}`,
+  emptyText:!summary.assets.length&&!summary.pending?'실제 사용할 자료가 선택되지 않았습니다.':'',disclaimer:reportDisclaimer};
+}
+export function conclusionMarkup(p,esc){
+ const c=projectConclusion(p);
+ return `<div class="project-conclusion"><h2>${esc(c.title)}</h2><small>${esc(c.contextText)}</small>${c.actions.length?`<h3>${c.actionsTitle}</h3><ul class="resolution-actions">${c.actions.map(a=>`<li>${esc(a.name)} — ${esc(a.action)}</li>`).join('')}</ul>`:''}${c.conditionsText?`<p>${esc(c.conditionsText)}</p>`:''}${c.emptyText?`<p>${esc(c.emptyText)}</p>`:''}<p class="verdict-counts">${esc(c.countsText)}</p><small>${c.disclaimer}</small></div>`;
+}
 
 export function resultLayout(assets,context){
  return resultBodyLayout(assets.map(a=>{
@@ -56,6 +79,7 @@ export function reviewReason(r){
  t.includes('공식 사이트에서 최신 약관을 열어')?'해당 이용 방식의 공식 허용 근거 필요':
  t.includes('적용 라이선스의 사용 허가')?'적용 라이선스가 기록되지 않았습니다.':
  t.includes('라이선스 적용 범위와 근거')?'이 자료에 대한 라이선스 적용 미확인':
+ t.includes('도구 자체를 함께 배포')?'도구 자체의 배포·번들 여부 미확인':
  t.includes('소스 제공·재링크')?'결합·배포 범위와 소스 제공 방법 미확인':
  t.includes('지원하지 않는 라이선스')?'지원하지 않는 라이선스·개별 계약':t);
  const specific=reasons.filter(t=>!t.includes('제3자 권리가 미확인')&&!t.includes('실제 사용한 버전·기능에 공식 원문'));

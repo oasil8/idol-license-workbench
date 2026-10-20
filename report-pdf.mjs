@@ -5,7 +5,7 @@ import {existsSync} from 'node:fs';
 import {join} from 'node:path';
 import {evaluate,statuses,validateProject} from './dist/core.mjs';
 import {conditionsConfirmed,conditionsPrompt,selectedAssets,selectionOf,projectSummary,summaryReason} from './dist/workflow.mjs';
-import {summaryReasonText,displaySources,resultItems,outcomeReason,conflictNextAction} from './dist/result-sections.mjs';
+import {projectConclusion,reportDisclaimer,summaryReasonText,displaySources,resultItems,outcomeReason,conflictNextAction} from './dist/result-sections.mjs';
 import {candidateNotice,assetSources,sourceGroup} from './dist/evidence-sources.mjs';
 
 export const verdictColor=status=>({[statuses.conflict]:'#9e3025',[statuses.review]:'#775310',[statuses.conditions]:'#16613c'}[status]||'#263e38');
@@ -67,7 +67,7 @@ export function pdfReportData(input, includeOriginals=false) {
    scope:assetScope(a)};
  });
  if(includeOriginals)for(const d of p.assignment?.documents||[])add(d.name+' · '+(d.role==='feedback'?'피드백':'검토 자료'),d.text);
- return {name:p.name,context:p.context,status:statuses[summary.status],reason:summaryReason(summary),usedCount:summary.assets.length,pending:summary.pending,items,originals};
+ return {conclusion:projectConclusion(p),name:p.name,context:p.context,status:statuses[summary.status],reason:summaryReason(summary),usedCount:summary.assets.length,pending:summary.pending,items,originals};
 }
 
 export {resultBodyLayout as pdfBodyLayout} from './dist/result-layout.mjs';
@@ -85,11 +85,14 @@ export async function createReportPdf(project,{includeOriginals=false}={}) {
  const text=(value,size=9,color='#263e38')=>{doc.fontSize(size).fillColor(color).text(wrapped(value),42,doc.y,{width,lineGap:2,paragraphGap:3});};
  const heading=(value,size=12,color='#086f64')=>{room(55);doc.moveDown(.4);text(value,size,color);doc.moveDown(.2);};
  text(data.name,18);text('IDOL License WORKBENCH · '+new Date().toLocaleDateString('ko-KR',{timeZone:'Asia/Seoul'}),8);
- const c=data.context;
- text(`사용 목적: ${{general:'일반 이용',research:'연구',conference:'학회·논문',enterprise:'기업·납품',steam:'Steam 출시'}[c.platform]} · 상업 ${c.commercial?'예':'아니요'} · 배포 ${c.distribute?'예':'아니요'} · 수정 ${c.modified?'예':'아니요'} · 네트워크 ${c.network?'예':'아니요'}`,8);
- heading('전체 결과: '+data.status,12,verdictColor(data.status));text(data.reason);
- if(data.items.length)text([statuses.conflict,statuses.review,statuses.conditions].map(status=>`${status} ${data.items.filter(i=>i.status===status).length}개`).join(' · '),8);
- text(`실제 사용 ${data.usedCount}개 · 선택 전 ${data.pending}개 · 전체 원문 부록 ${includeOriginals?'포함':'제외'}`,8);
+ if(data.conclusion){
+  const c=data.conclusion;
+  heading(c.title,14,verdictColor(data.status));text(c.contextText,8);
+  if(c.actions.length){heading(c.actionsTitle,10);for(const a of c.actions)text(a.name+' — '+a.action,9);}
+  if(c.conditionsText)text(c.conditionsText,9);
+  if(c.emptyText)text(c.emptyText,9);
+  text(c.countsText,8);
+ }else{heading(data.status);text(data.reason);text(`실제 사용 ${data.usedCount}개 · 선택 전 ${data.pending}개`,8);}
  if(data.items.length){
   const columns=[42,180,290],widths=[138,110,width-248];
   const row=(values,header=false)=>{
@@ -145,7 +148,7 @@ export async function createReportPdf(project,{includeOriginals=false}={}) {
   doc.y+=6;doc.save().strokeColor('#c7d4cf').moveTo(42,doc.y).lineTo(42+width,doc.y).stroke().restore();doc.y+=8;
   for(const block of blocks)drawBlock(block);
  }
- text('검토 기록이며 출시 승인·법률 의견이 아닙니다. 확인 날짜와 실제 적용 범위를 함께 확인하세요.',8,'#65766e');
+ text(reportDisclaimer,8,'#65766e');
  if(includeOriginals){
   doc.addPage();heading('부록 · 전체 보관 원문',15);
   text('앱에 저장된 원문과 검토 기록의 발췌를 포함합니다. 실시간 조회한 원문이 아니며 출처와 적용 범위를 확인하세요.',9);

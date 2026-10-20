@@ -33,7 +33,8 @@ test('screen, exported HTML and PDFs use actions instead of unchecked-state sent
 });
 test('only conflict cards show the prescribed next action in web and PDF',async()=>{
  const p=fixture('mixed');for(const a of p.assets.filter(a=>a.selection==='used')){const r=evaluate(a,p.context),html=sections.compactResultMarkup(a,r,assetSources(a,p.context),String);assert.equal(html.includes(action),r.status==='conflict');}
- for(const text of [screen(p),buildProjectReport(p),(await pdf(p)).text])assert.equal(norm(text).split(norm(action)).length-1,1);
+ assert.equal(norm(screen(p)).split(norm(action)).length-1,1);
+ for(const text of [buildProjectReport(p),(await pdf(p)).text])assert.equal(norm(text).split(norm(action)).length-1,2);
 });
 test('web groups common tasks once, sorts cards by verdict and keeps edit shortcuts',()=>{
  const p=fixture('mixed');p.assets.forEach((a,i)=>a.id='asset-'+i);const html=screen(p),cards=[...html.matchAll(/<article class="report-item result-card">([\s\S]*?)<\/article>/g)].map(m=>m[1]);

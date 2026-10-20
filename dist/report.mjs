@@ -1,7 +1,7 @@
 import {normalizeAsset,assetScope} from './asset-normalization.mjs';
 import {installReportPrint,reportPrintCss} from './print-report.mjs';
 import {brandIcon,brandIconCss} from './brand-icons.mjs';
-import {displaySources,reviewStampMarkup,permissionMarkup,outcomeReason,resultItems,resultLayout,commonChecksMarkup} from './result-sections.mjs';
+import {conclusionMarkup,displaySources,reviewStampMarkup,permissionMarkup,outcomeReason,resultItems,resultLayout,commonChecksMarkup} from './result-sections.mjs';
 import {evidenceMarkup} from './document-text.mjs';
 import {verificationMarkup} from './source-search.mjs';
 import {conditionsConfirmed,conditionsPrompt,projectSummary,summaryReason,selectionOf,selectionLabels} from './workflow.mjs';
@@ -60,12 +60,7 @@ export function buildProjectReport(p){
  const layout=resultLayout(summary.assets,c);
  summary.assets=layout.items.map(item=>item.a);
  const results=summary.assets.map(a=>evaluate(a,c));
- let body=`<div class="report-heading" id="report-top"><p class="report-kicker">IDOL LICENSE WORKBENCH · 검토 리포트</p><h1>${esc(p.name)}</h1><p class="report-date">작성: ${esc(new Intl.DateTimeFormat('ko-KR',{dateStyle:'long',timeStyle:'short',timeZone:'Asia/Seoul'}).format(new Date()))} (한국 시간)</p></div><section class="report-cover"><h2>현재 사용 목적의 결론: ${badge(summary.status)}</h2>`;
- body+=paragraph(summaryReason(summary));
- body+=paragraph(`실제 사용 ${summary.assets.length}개 · 선택 전 ${summary.pending}개 · 대안/제외 ${p.assets.length-summary.assets.length-summary.pending}개`);
- body+=paragraph(`사용 목적: ${{general:'일반 이용 · 직접 설정',steam:'Steam 출시',enterprise:'기업 사용·납품',conference:'학회·논문',research:'연구'}[c.platform]} / 상업 목적: ${c.commercial?'예':'아니요'} / 외부 배포: ${c.distribute?'예':'아니요'} / 수정: ${c.modified?'예':'아니요'} / 네트워크 서비스: ${c.network?'예':'아니요'}`);
- body+=paragraph(`결과: 사용 가능 ${summary.counts.conditions}개 · 판단 보류 ${summary.counts.review}개 · 현재 조건으로 사용 불가 ${summary.counts.conflict}개 / 검토 규칙 기준일: ${RULE_DATE}`);
- body+=paragraph('실제 사용으로 선택한 자료만 검토했습니다. 선택 전 항목이 남으면 전체 결론은 보류합니다. 조건부 결과는 의무 이행을 전제로 하며 출시 승인이나 법률 의견이 아닙니다.')+'</section>';
+ let body=`<div class="report-heading" id="report-top"><p class="report-kicker">IDOL LICENSE WORKBENCH · 검토 리포트</p><h1>${esc(p.name)}</h1><p class="report-date">작성: ${esc(new Intl.DateTimeFormat('ko-KR',{dateStyle:'long',timeStyle:'short',timeZone:'Asia/Seoul'}).format(new Date()))} (한국 시간)</p></div><section class="report-cover">${conclusionMarkup(p,esc)}</section>`;
  body+=commonChecksMarkup(layout,esc,{buttons:false});
  body+='<section class="result-legend"><h2>결과를 읽는 방법</h2><dl><dt>사용 가능 (조건부)</dt><dd>이용 허용 근거가 있습니다. 표시된 고지·배포 등 의무를 이행하세요.</dd><dt>판단 보류</dt><dd>허용 여부를 결정할 핵심 근거나 적용 정보가 부족합니다.</dd><dt>현재 조건으로 사용 불가</dt><dd>선택한 이용 방식이 명시된 제한과 충돌합니다. 이용 방식을 바꾸거나 별도 허가가 필요합니다.</dd></dl><p>상표·초상·입력 자료 등 별도 권리 확인은 라이선스상 결과와 구분합니다.</p></section>';
  body+=`<section class="report-index"><h2>자료별 결과 한눈에 보기</h2><p>자료 이름을 누르면 해당 결과로 이동합니다. 확인 필요 사항은 사용 불가와 구분합니다.</p><div class="report-table-wrap"><table><thead><tr><th scope="col">자료</th><th scope="col">현재 결과</th><th scope="col">결과 이유</th></tr></thead><tbody>${summary.assets.map((a,i)=>{const r=results[i];return `<tr><td><a href="#material-${i}">${brandIcon(a)}${esc(a.name)}</a></td><td>${badge(r.status)}</td><td>아래 자료별 이유 참조</td></tr>`;}).join('')||'<tr><td colspan="3">실제 사용으로 선택한 자료가 없습니다.</td></tr>'}</tbody></table></div></section>`;
