@@ -67,7 +67,7 @@ export function reviewReason(r){
 export function outcomeReason(a,r){
  if(r.status==='review')return reviewReason(r);
  if(r.status==='conflict')return (r.conflicts?.join(' ')||'현재 이용 조건이 확인한 허가 범위와 충돌합니다.');
- const specific=(r.notes||[]).find(note=>/허용|가능|금지되지|조건은 간소/.test(note)&&!note.startsWith('공식 원문'));
+ const specific=(r.notes||[]).find(note=>/허용|가능|금지되지|^외부 배포·네트워크 제공이 없어 현재는 소스 제공 의무가 발생하지/.test(note)&&!note.startsWith('공식 원문'));
  return specific||(a.kind==='ai'?'해당 약관에서 선택한 이용 범위의 허용을 확인했습니다.':`${a.license==='LicenseRef-OpenSees'?'OpenSees 라이선스':a.license||'확인한 라이선스'}에 따라 현재 이용이 허용됩니다.`);
 }
 

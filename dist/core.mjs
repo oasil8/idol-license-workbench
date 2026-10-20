@@ -85,7 +85,7 @@ function evaluateBase(a,c,now){
  if(!license||['UNKNOWN','NOASSERTION','NONE','UNLICENSED'].includes(license.toUpperCase())) review('공개된 파일이라는 사실만으로 허용된다고 보지 말고, 적용 라이선스의 사용 허가를 확인하세요.');
  else if(/\b(AND|OR|WITH)\b|[()]/.test(license)){refs.add(16);review('복수 라이선스 또는 예외 조항입니다. AND의 모든 조건, OR의 선택한 조건, WITH의 예외 범위를 직접 확인하세요.');tasks.push('적용할 라이선스와 선택·예외 근거를 기록');}
  else if(license==='MIT'||/^BSD-[23]-Clause$/.test(license)){
-  notes.push('상업 이용 가능. 배포 시 저작권 및 라이선스 고지를 유지해야 합니다.');tasks.push('원본 저작권 고지와 라이선스 전문을 함께 배포하세요.');refs.add(license==='MIT'?0:license==='BSD-2-Clause'?11:12);
+  notes.push(`${c.commercial?'상업 이용 가능.':'현재 목적의 이용이 허용됩니다.'} 배포 시 저작권 및 라이선스 고지를 유지해야 합니다.`);tasks.push('원본 저작권 고지와 라이선스 전문을 함께 배포하세요.');refs.add(license==='MIT'?0:license==='BSD-2-Clause'?11:12);
  }else if(license==='ISC'){
   refs.add(19);notes.push('ISC는 유료·무료의 사용·복제·수정·배포를 허용합니다.');tasks.push('모든 사본에 원 저작권 고지와 ISC 허가 문구를 유지하세요.');
  }else if(license==='PSF-2.0'){
@@ -114,22 +114,22 @@ function evaluateBase(a,c,now){
   if(c.network)tasks.push('온라인 서비스 화면 또는 공개 문서에 MinerU 사용을 명확하게 표시하세요.');
   humanChecks.push('별도 모델 가중치·입력 문서의 권리와 실제 배포 버전은 구분하세요.');
  }else if(license==='Apache-2.0'){
-  notes.push('상업 이용 가능. 라이선스·고지 보존 및 수정 표시 조건이 있습니다.');tasks.push('라이선스 전문 및 해당 NOTICE를 포함하세요.','수정한 파일에 변경 사실을 표시하세요.');refs.add(1);
+  notes.push(`${c.commercial?'상업 이용 가능.':'현재 목적의 이용이 허용됩니다.'} 라이선스·고지 보존 및 수정 표시 조건이 있습니다.`);tasks.push('라이선스 전문 및 해당 NOTICE를 포함하세요.','수정한 파일에 변경 사실을 표시하세요.');refs.add(1);
  }else if(/^(A?GPL|LGPL)-[23]\.0(-only|-or-later)?$/.test(license)||license==='LGPL-2.1-only'||license==='LGPL-2.1-or-later'){
-  refs.add(2);notes.push('유료 판매 자체는 금지되지 않습니다. 결합 방식과 배포·네트워크 제공 여부가 중요합니다.');
+  refs.add(2);notes.push(c.distribute===false&&c.network===false?'외부 배포·네트워크 제공이 없어 현재는 소스 제공 의무가 발생하지 않습니다.':`${c.commercial?'유료 판매 자체는 금지되지 않습니다.':'라이선스 조건에 따른 이용이 가능합니다.'} 결합 방식과 배포·네트워크 제공 여부가 중요합니다.`);
   if(a.kind==='tool'&&a.reviewScope==='code'&&c.distribute){tasks.push('배포하는 도구·수정본의 대응 소스와 빌드·설치 정보를 해당 GPL 조건으로 제공하세요.','동일 라이선스와 저작권 고지를 유지하고 추가 제한을 부과하지 마세요.');if(license.startsWith('AGPL')&&c.network)tasks.push('수정 AGPL 프로그램과 네트워크로 상호작용하는 사용자에게 대응 소스 제공 기회를 안내하세요.');humanChecks.push('독립 도구 자체의 배포 기준입니다. 다른 프로그램에 결합·링크한 제품은 별도로 검토하세요.');}
   else if(c.distribute||license.startsWith('AGPL')&&c.network){review('정적/동적 링크·수정·배포 방식과 적용 버전·예외에 따른 소스 제공·재링크·동일 라이선스 적용 범위를 확인하세요.');}
   else tasks.push('내부 사용 범위를 기록하고 외부 제공 전에 재검토하세요.');
  }else if(license==='MPL-2.0'){
   refs.add(13);if(c.distribute===false){notes.push('외부 배포 없는 내부 이용에는 외부 소스 제공 의무가 발생하지 않습니다.');tasks.push('외부 배포를 시작하기 전에 MPL 파일의 고지·소스 제공 범위를 재검토하세요.');}else if(c.distribute===true){notes.push('MPL 파일의 소스 제공과 고지 의무를 지키면 배포할 수 있습니다. 별도 파일 전체에 MPL을 강제하지 않습니다.');tasks.push('MPL 적용 파일(수정분 포함)의 소스를 MPL로 제공하고 수령자에게 입수 방법을 안내하세요.','라이선스·저작권 고지를 유지하고 소스에 대한 수령자의 권리를 제한하지 마세요.');}else review('외부 배포 여부를 지정하세요.');
  }else if(license==='CC0-1.0'){
-  notes.push('저작권 관련 조건은 간소하지만 상표·특허·제3자 권리까지 허가하는 것은 아닙니다.');refs.add(5);
+  notes.push('CC0에 따라 저작권 관련 조건 없이 현재 목적의 이용이 허용됩니다.');humanChecks.push('CC0는 상표·특허·제3자 권리까지 허가하지 않으므로, 해당 권리를 별도로 확인하세요.');refs.add(5);
  }else if(/^CC-BY(?:-NC)?(?:-SA|-ND)?-4\.0$/.test(license)){
   refs.add(license.includes('-NC')?4:license.includes('-SA')?14:license.includes('-ND')?15:3);tasks.push('저작자·출처·라이선스 링크·변경 사실을 표시하세요.');
-  if(license.includes('-NC')&&c.commercial)conflict('비상업용(NC) 조건과 선택한 상업 목적이 충돌합니다. 별도 허가나 대체 자료가 필요합니다.');
+  if(license.includes('-NC')&&c.commercial)conflict('비상업용(NC) 조건과 선택한 상업 목적이 충돌합니다.');
   if(license.includes('-NC')&&c.commercial===false){tasks.push('상업적 이익이나 금전적 보상을 주된 목적으로 사용하지 마세요.');humanChecks.push('비상업 목적을 선택했더라도 연구·학회라는 명칭만으로 NC 충족이 보장되지는 않으므로, 실제 이용 목적이 NC 조건을 충족하는지 확인하세요.');}else if(license.includes('-NC')&&c.commercial!==true)review('상업 목적 여부를 지정하세요.');
   if(license.includes('-SA')&&c.distribute&&c.modified!==false){if(typeof c.modified!=='boolean')review('자료 수정 여부를 지정하세요.');else{tasks.push('공유하는 변형물에 동일하거나 호환되는 SA 라이선스를 적용하세요.','추가 법적 제한이나 이용을 막는 기술적 조치를 부과하지 마세요.');humanChecks.push('단순 모음과 변형물의 구분이 애매하면 해당 부분의 적용 범위를 확인하세요.');}}
-  if(license.includes('-ND')&&c.modified&&c.distribute)conflict('변경금지(ND) 자료의 변형물 공유와 충돌할 수 있습니다. 별도 허가를 확인하세요.');
+  if(license.includes('-ND')&&c.modified&&c.distribute)conflict('변경금지(ND) 자료를 수정해 배포하는 것은 허용되지 않습니다.');
  }else if(license==='Editorial-Only'){
   refs.add(10);if(c.commercial||c.platform==='steam')conflict('Editorial 전용 허가는 일반 상업 게임 사용을 허용하지 않습니다. 권리자의 별도 허가가 필요합니다.');
   else review('해당 이용이 허가된 보도·편집·연구 용도에 해당하는지 확인하세요.');
