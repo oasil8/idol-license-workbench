@@ -126,7 +126,7 @@ export function displaySources(r,rows,now=Date.now()){
 }
 
 export function compactResultMarkup(a,r,rows,esc,parts){
- a=normalizeAsset(a);
+ a=normalizeAsset(a,{resolveProvider:false});
  const reason=outcomeReason(a,r),{conditions,checks}=parts||resultItems(r,reason),todo=[...conditions,...checks];
  const excerpts=[...new Set([...(r.reviewedEvidence?.excerpts||a.terms?.excerpts||[]),...rows.flatMap(s=>(s.verification?.excerpts||[]).map(e=>e.text))])].filter(t=>!reason.includes(t)&&!todo.includes(t));
  return `<p class="review-scope">검토 범위: ${esc(assetScope(a))}</p><p class="review-reason">${esc(reason)}</p>${r.status==='conflict'?`<p class="conflict-next-action">${esc(conflictNextAction)}</p>`:''}${reviewStampMarkup(r,esc)}${todo.length?`<h4>해야 할 일</h4><ul>${todo.map(t=>`<li>${esc(t)}${taskButton(t,a,esc)}</li>`).join('')}</ul>`:''}<section class="report-citations"><h4>근거 링크</h4>${candidateNotice(a)?`<p>${esc(candidateNotice(a))}</p>`:''}${displaySources(r,rows).map(s=>`<p><a href="${esc(s.url)}" target="_blank" rel="noopener noreferrer">${esc(s.label)} ↗</a>${s.recordLabel?` · ${esc(s.recordLabel)}`:''}${s.date?` · ${esc(s.dateLabel)}: ${esc(s.date)}`:''}${s.warning?` · ${esc(s.warning)}`:''}</p>`).join('')||'<p>확인한 근거 없음</p>'}</section>${excerpts.length?`<details class="material-evidence"><summary>원문 발췌</summary>${excerpts.map(t=>`<blockquote>${esc(t)}</blockquote>`).join('')}</details>`:''}`;

@@ -88,7 +88,7 @@ function evaluateBase(a,c,now){
   return {status:'review',scopeUnresolved:true,notes:[reason],blockers:[reason],humanChecks:[],tasks:['정보 보완에서 실제 검토 범위와 해당 계약·배포판을 지정'],sources:record?[[record.scope,record.url]]:[]};
  }
 
- if(a.kind==='ai'&&a.provider){
+ if(a.kind==='ai'&&(a.provider||!a.terms&&!a.sourceCandidates?.length&&(a.serviceName||a.name))){
   const result=evaluateContractBundle(a,c,now)||aiResult(a,now);
   // An explicitly commercial-only prohibition cannot decide a noncommercial use.
   if(!c.commercial&&result.status==='conflict'&&result.notes.includes('현재 공식 안내에서 무료 플랜의 상용 권리를 부여하지 않습니다.')){result.status='review';result.notes.push('상업 이용 제한과 별개로 현재 비상업 이용 범위에 대한 허가를 확인해야 합니다.');}

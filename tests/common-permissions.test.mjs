@@ -26,14 +26,15 @@ test('reviewed public grants distinguish output ownership, paid entitlement and 
  assert.match(aiResult({...base,provider:'other',serviceName:'Midjourney'},now).notes.join(' '),/Pro\/Mega/);
  assert.equal(aiResult({...base,provider:'anthropic',useDescription:'evaluation'},now).status,'review');
 });
-test('new source search reuses actual Runway terms for output and API without making candidates evidence',()=>{
+test('named Runway uses the explicit provider URL restrictions for output and API',()=>{
  const text=fs.readFileSync(new URL('./fixtures/real-terms/runway.txt',import.meta.url),'utf8');
  const url='https://runway.com/terms-ofuse',a={...base,name:'Runway',serviceName:'Runway',provider:'other'};
  const candidate={url,verification:{url,finalUrl:url,query:'Runway',status:'matched',checkedAt:new Date().toISOString(),text}};
  for(const scope of ['output','service']){
   const asset={...a,scope,apiAccessConfirmed:true,sourceCandidates:[candidate]};
-  const r=evaluate(asset,context);assert.equal(r.status,'conditions',scope);assert.equal(r.contractConfirmed,true);
-  assert.ok(assetSources(asset,context).some(s=>s.type==='queried'&&s.clause.length));
+  const r=evaluate(asset,context);assert.equal(r.status,'review',scope);assert.notEqual(r.contractConfirmed,true);
+  assert.deepEqual(r,evaluate({...asset,provider:'runway'},context));
+  assert.equal(assetSources(asset,context).some(s=>s.type==='queried'&&s.clause.length),false);
  }
  assert.equal(evaluate({...a,scope:'service',sourceCandidates:[candidate]},context).status,'review');
  for(const patch of [{status:'candidate'},{truncated:true},{imported:true},{query:'Different'},{finalUrl:'https://example.org/terms'}])assert.equal(evaluate({...a,sourceCandidates:[{...candidate,verification:{...candidate.verification,...patch}}]},context).status,'review');

@@ -1,6 +1,11 @@
+import {officialNameMatches} from './official-sources.mjs';
 // Calculation/form view only: never mutate stored or imported records.
-export function normalizeAsset(a){
- if(a.kind==='ai')return a;
+export function normalizeAsset(a,{resolveProvider=true}={}){
+ if(a.kind==='ai'){
+  if(!resolveProvider||a.provider&&a.provider!=='other')return a;
+  const matches=officialNameMatches(a.serviceName||a.name);
+  return matches.length===1?{...a,provider:matches[0].id}:a;
+ }
  const result={...a};
  for(const key of ['serviceName','provider','scope','planType','outputType','repository','contractRoute','apiAccessConfirmed'])delete result[key];
  return result;

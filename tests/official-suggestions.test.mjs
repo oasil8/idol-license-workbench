@@ -10,7 +10,7 @@ test('known services receive reference links without changing license clearance'
   const s=assetSources(a,context).find(s=>s.type==='suggested');
   assert.ok(s,name);assert.equal(sourceGroup(s),'참고 링크 · 적용 미확인');
   assert.equal(s.date,'2026-10-15');assert.deepEqual(commercialVerdict(a,context),before);
-  assert.equal(before.status,'review');assert.ok(before.humanChecks.some(x=>x.includes('원문과 적용 플랜')));
+  assert.equal(before.status,'review');assert.equal(before.humanChecks[0],`${name} 공식 약관에서 생성물 소유권·상업 이용 허용 조항과 적용 플랜을 찾아 원문을 입력하세요.`);
   const report=buildProjectReport({contextConfirmed:true,name:'Test',context,assets:[a]});
   assert.ok(report.includes(s.url));assert.match(report,/참고 링크 · 적용 미확인/);assert.match(report,/주소 확인일:/);
  }

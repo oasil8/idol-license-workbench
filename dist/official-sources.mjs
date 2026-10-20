@@ -24,10 +24,16 @@ const records=[
  ['tesla',['Tesla Cybertruck','Cybertruck'],'Tesla 지식재산권 안내','https://www.tesla.com/legal/additional-resources#intellectual-property','Intellectual Property — Copyrights; Trademarks; No Licenses','공식 사이트 자료·상표의 권리를 보호하며 사이트 자료 제공 자체가 지식재산권 라이선스를 부여하지 않는다고 명시합니다.','사이트 콘텐츠·상표 안내 · 차량 모델 사용 허가 별도']
 ].map(([id,names,title,url,clause,note,scope])=>({id,names,title,url,clause,note,scope,observedOn:['meshy','openai','anthropic','tripo','runway','copilot','elevenlabs','midjourney'].includes(id)?'2026-10-16':observedOn}));
 
+const normalizedName=name=>String(name||'').normalize('NFKC').trim().toLowerCase();
+export function officialNameMatches(name,{partial=false}={}){
+ const text=normalizedName(name);
+ return text?records.filter(r=>r.names.some(n=>partial?text.includes(normalizedName(n)):normalizedName(n)===text)):[];
+}
 export function officialSource(a){
  a=normalizeAsset(a);
- const text=String(a.serviceName||a.name||'').normalize('NFKC').trim().toLowerCase();
- return records.find(r=>['tripo','meshy','openai','anthropic'].includes(a.provider)?r.id===a.provider:r.names.some(n=>n.toLowerCase()===text));
+ if(['tripo','meshy','openai','anthropic'].includes(a.provider))return records.find(r=>r.id===a.provider);
+ const matches=officialNameMatches(a.serviceName||a.name);
+ return matches.length===1?matches[0]:undefined;
 }
 export function reviewSourceConditions(a,c,now=Date.now(),{contractConfirmed=false}={}){
  const source=officialSource(a);if(!source)return undefined;

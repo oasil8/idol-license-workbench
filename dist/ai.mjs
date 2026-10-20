@@ -1,5 +1,5 @@
 import {officialDomains,isOfficialCandidate} from './source-policy.mjs';
-import {officialRecord} from './official-sources.mjs';
+import {officialRecord,officialNameMatches} from './official-sources.mjs';
 import {contractProfile} from './contract-review.mjs';
 import {analyzeTerms,pastOutputCheck,thirdPartyCheck} from './terms-analysis.mjs';
 export const providerNames={openai:'OpenAI / ChatGPT · 개인용',anthropic:'Anthropic / Claude · 개인용',meshy:'Meshy',tripo:'Tripo',huggingface:'Hugging Face 모델',other:'다른 서비스 · 수동 검토'};
@@ -49,8 +49,18 @@ function publicOutputTerms(a,now){
 }
 export function aiResult(a,now=Date.now()){
  let t=a.terms?.method==='manual'?a.terms:(!a.terms||a.terms.error||a.terms.queryKey!==queryKey(a)||(a.terms.status==='review'&&a.terms.method!=='manual'&&!a.terms.imported))?(verifiedTerms(a,now)||a.terms):a.terms;t ||= publicOutputTerms(a,now);let status='review',notes=[],tasks=[],sources=[],humanChecks=a.rights!=='cleared'?[thirdPartyCheck]:[];
+ if((!a.provider||a.provider==='other')&&officialNameMatches(a.serviceName||a.name).length>1&&t?.method!=='manual')t=undefined;
  if(t?.method==='manual'){const original=String(t.originalText||'');const analysis=analyzeTerms({...a,manual:true,sourceUrl:t.sourceUrl},original.replace(/\s+/g,' ').trim());t={...t,...analysis,summary:analysis.summary.replace('조회한 공식 문서','직접 입력한 약관')};if(original.trim().length<40)t.status='review';}
- if(!t){const captured=(a.sourceCandidates||[]).some(s=>s.verification?.text);notes.push(captured?'후보 원문은 확보했지만 이 이용 방식의 허용 범위·적용 조건이 아직 확정되지 않았습니다.':'공식 사이트에서 최신 약관을 열어 원문과 적용 플랜을 기록하세요.');humanChecks.push(captured?'확보한 원문의 허용 조항·적용 범위를 확인하고 필요한 계약 정보를 보완':a.provider==='other'?'공식 사이트에서 최신 약관을 열어 원문과 적용 플랜을 기록하세요.':'서비스·플랜을 지정하고 최신 약관 조회를 실행하세요.');return {status,notes,tasks,sources,humanChecks};}
+ if(!t){
+  const captured=(a.sourceCandidates||[]).some(s=>s.verification?.text);
+  const name=String(a.serviceName||a.name||'').trim();
+  if(name&&(!a.provider||a.provider==='other')&&!captured){
+   const candidates=officialNameMatches(name,{partial:true});
+   const action=candidates.length?`서비스 목록에서 ${candidates.map(r=>r.names[0]).join(', ')} 중 해당 서비스를 선택하거나 공식 약관을 직접 입력하세요.`:`${name} 공식 약관에서 생성물 소유권·상업 이용 허용 조항과 적용 플랜을 찾아 원문을 입력하세요.`;
+   return {status,notes:[`${name} 공식 약관 미확보`],blockers:[],tasks,sources,humanChecks:[action,...humanChecks]};
+  }
+  notes.push(captured?'후보 원문은 확보했지만 이 이용 방식의 허용 범위·적용 조건이 아직 확정되지 않았습니다.':'공식 사이트에서 최신 약관을 열어 원문과 적용 플랜을 기록하세요.');humanChecks.push(captured?'확보한 원문의 허용 조항·적용 범위를 확인하고 필요한 계약 정보를 보완':a.provider==='other'?'공식 사이트에서 최신 약관을 열어 원문과 적용 플랜을 기록하세요.':'서비스·플랜을 지정하고 최신 약관 조회를 실행하세요.');return {status,notes,tasks,sources,humanChecks};
+ }
  const sourceName=a.serviceName||a.name;if(t.sourceUrl&&officialDomains(sourceName).length&&!isOfficialCandidate(sourceName,t.sourceUrl))return {status:'review',notes:['비공식 해설은 허용 근거로 사용할 수 없습니다.'],tasks:['공식 도메인의 원문을 확인하세요.'],sources:[],humanChecks:[]};
  if(/^https:\/\//.test(t.sourceUrl||''))sources.push([t.sourceName||'공식 문서',t.sourceUrl]);
  const stale=!t.checkedAt||!Number.isFinite(Date.parse(t.checkedAt))||(!t.builtIn&&now-Date.parse(t.checkedAt)>7*86400000)||Date.parse(t.checkedAt)>now+60000;
