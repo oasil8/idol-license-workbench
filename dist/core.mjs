@@ -1,4 +1,5 @@
 import {normalizeAsset} from './asset-normalization.mjs';
+import {normalizeLicense} from './license-normalization.mjs';
 import {evaluateContractBundle,cleanContractChoices} from './contract-review.mjs';
 import {categoryRecommendation} from './catalog.mjs';
 import {cleanCandidates} from './source-search.mjs';
@@ -27,7 +28,8 @@ export const sources=[
  ['SPDX 표현식','https://spdx.github.io/spdx-spec/v2.3/SPDX-license-expressions/'],
  ['PSF License 2 · Python 공식 원문','https://docs.python.org/3/license.html#psf-license'],
  ['SIL OFL 1.1 공식 원문','https://openfontlicense.org/open-font-license-official-text/'],
- ['ISC License','https://opensource.org/license/isc']
+ ['ISC License','https://opensource.org/license/isc'],
+ ...['Zlib','BSL-1.0','0BSD','Unlicense','EPL-2.0','WTFPL','CC-BY-3.0','CC-BY-SA-3.0','CC-BY-NC-3.0','CC-BY-ND-3.0','CC-BY-NC-SA-3.0','CC-BY-NC-ND-3.0'].map(id=>[id,`https://spdx.org/licenses/${id}.html`])
 ];
 export const kinds={code:'코드 / 오픈소스',model:'모델 / 가중치 / 3D',image:'이미지 / 텍스처',audio:'음원 / 음성',ai:'서비스 / API / AI',data:'데이터셋',tool:'제작 도구',other:'기타'};
 export const statuses={conflict:'현재 조건으로 사용 불가',review:'판단 보류',conditions:'사용 가능 (조건부)'};
@@ -60,6 +62,25 @@ export function evaluate(a,c,now=Date.now()){
  result.reviewWarnings=[...new Set(result.reviewDates.map(d=>reviewAge(d,now)).filter(Boolean))];
  return result;
 }
+function licenseClarification(license){
+ const key=license.toLowerCase().replace(/\b(?:the|license|licence)\b/g,'').replace(/[\s-]+/g,'');
+ const gpl=key.match(/^(a?gpl|lgpl)$/);
+ if(gpl){const family=gpl[1].toUpperCase();return [`${family} 버전 미확인`,`${family} 버전(${family==='LGPL'?'2/2.1/3':family==='AGPL'?'3':'2/3'})과 'or later' 여부를 확인해 입력하세요.`];}
+ if(['ofl','silofl','openfont','silopenfont'].includes(key))return ['OFL 버전 미확인','글꼴에 포함된 OFL 원문에서 버전(1.0/1.1)을 확인해 입력하세요.'];
+ if(key==='bsd')return ['BSD 조항 수 미확인','BSD 라이선스 원문에서 조항 수(2/3 등)를 확인해 입력하세요.'];
+ if(/^(?:ccby|creativecommonsattribution)(?:nc|noncommercial)?(?:sa|nd|sharealike|noderivatives)?$/.test(key))return ['Creative Commons 버전 미확인','Creative Commons 라이선스의 버전과 BY·NC·SA·ND 조건을 원문에서 확인해 입력하세요.'];
+ if(key==='publicdomain')return ['Public Domain 권리 포기·만료 근거 미확인','Public Domain의 권리 포기 선언 또는 저작권 만료 근거와 적용 지역을 확인해 입력하세요.'];
+ if(key==='royaltyfree')return ['Royalty Free 계약 범위 미확인','판매처의 라이선스 원문에서 게임 판매·배포 허용 범위와 제한 조건을 확인해 입력하세요.'];
+ if(key==='boost')return ['Boost 라이선스 버전 미확인','Boost 배포판에 적용된 라이선스 원문과 버전을 확인해 입력하세요.'];
+ const store=[
+  [/^unity\s+asset\s+store\b/i,'Unity Asset Store'],[/^fab\b/i,'Fab'],
+  [/^unreal\s+engine\b/i,'Unreal Engine'],[/^epic\s+content\b/i,'Epic Content'],
+  [/^pixabay\b/i,'Pixabay'],[/^unsplash\b/i,'Unsplash'],[/^pexels\b/i,'Pexels'],
+  [/^adobe\s+stock\b/i,'Adobe Stock'],[/^envato\b/i,'Envato'],
+  [/^epidemic\s+sound\b/i,'Epidemic Sound'],[/^itch\.io\b/i,'itch.io']
+ ].find(([pattern])=>pattern.test(license));
+ if(store)return [`판매처 라이선스(${license})`,`구매·다운로드 당시 ${store[1]} 라이선스 원문을 저장하고, 게임에 포함해 판매·배포하는 것이 허용되는지와 단독 재배포 금지 조건을 확인하세요.`];
+}
 function evaluateBase(a,c,now){
  if(a.licenseOrigin&&!appliedOfficialLicense(a)){
   const record=codeLicenseRecords.find(r=>a.licenseOrigin.startsWith(r.id));
@@ -79,12 +100,27 @@ function evaluateBase(a,c,now){
  }
  const recommendation=categoryRecommendation(a);
  if(recommendation){const reason=`범주 추천: ${recommendation.name} → ${kinds[recommendation.kind]}. 실제 이용 방식을 선택하세요.`;return {status:'review',notes:[reason],blockers:[reason],tasks:['정보 보완에서 추천 범주를 확인하고 생성물·API·가중치 등 실제 이용 방식 선택'],humanChecks:[],sources:[]};}
- const license=(a.license||'').trim(), notes=[], tasks=[], humanChecks=[], blockers=[], conflicts=[], refs=new Set(); let status='conditions';
+ const license=normalizeLicense(a.license), notes=[], tasks=[], humanChecks=[], blockers=[], conflicts=[], refs=new Set(); let status='conditions';
  const review=t=>{if(status!=='conflict')status='review';notes.push(t);blockers.push(t);};
  const conflict=t=>{status='conflict';notes.push(t);conflicts.push(t);};
+ const clarification=licenseClarification(license);
  if(!license||['UNKNOWN','NOASSERTION','NONE','UNLICENSED'].includes(license.toUpperCase())) review('공개된 파일이라는 사실만으로 허용된다고 보지 말고, 적용 라이선스의 사용 허가를 확인하세요.');
- else if(/\b(AND|OR|WITH)\b|[()]/.test(license)){refs.add(16);review('복수 라이선스 또는 예외 조항입니다. AND의 모든 조건, OR의 선택한 조건, WITH의 예외 범위를 직접 확인하세요.');tasks.push('적용할 라이선스와 선택·예외 근거를 기록');}
- else if(license==='MIT'||/^BSD-[23]-Clause$/.test(license)){
+ else if(/(?:^|[\s()])(AND|OR|WITH)(?=$|[\s()])/i.test(license)){refs.add(16);review('복수 라이선스 또는 예외 조항입니다. AND의 모든 조건, OR의 선택한 조건, WITH의 예외 범위를 직접 확인하세요.');tasks.push('적용할 라이선스와 선택·예외 근거를 기록하세요.');}
+ else if(clarification)review(`${clarification[0]} — 자동 판정 미지원. ${clarification[1]}`);
+ else if(['Zlib','BSL-1.0','0BSD','Unlicense'].includes(license)){
+  refs.add(sources.findIndex(([id])=>id===license));
+  notes.push(`${license}는 상업·비상업 이용과 수정·배포를 허용합니다.`);
+  if(license==='Zlib')tasks.push('원 출처를 오인하게 하거나 원본을 직접 작성했다고 주장하지 마세요.','변경한 소스는 변경 사실을 명확히 표시하고 원본으로 오인하게 하지 마세요.','소스 배포 시 원래 고지를 삭제하거나 변경하지 말고 유지하세요.');
+  if(license==='BSL-1.0')tasks.push('배포 시 저작권 고지와 BSL-1.0 라이선스 전문을 유지하세요.');
+ }else if(license==='EPL-2.0'){
+  refs.add(sources.findIndex(([id])=>id===license));
+  if(c.distribute===false){notes.push('EPL-2.0은 외부 배포 없는 내부 이용을 허용합니다.');tasks.push('외부 배포를 시작하기 전에 EPL-2.0 적용 프로그램·수정 부분의 소스 제공 범위를 확인하세요.');}
+  else review('EPL-2.0 소스 제공 범위 미확인 — 자동 판정 미지원. EPL-2.0 배포 시 적용 프로그램·해당 파일과 수정 부분의 소스 제공 범위, 수령자의 소스 입수 방법 및 상업 배포 책임 조항을 확인하세요.');
+  tasks.push('EPL-2.0 적용 부분의 저작권·특허 등 고지와 라이선스 전문을 유지하세요.');
+ }else if(license==='WTFPL'){
+  refs.add(sources.findIndex(([id])=>id===license));
+  review('WTFPL 이용 허가 확인 필요 — 자동 판정 미지원. WTFPL은 법적 효력 해석이 갈리므로 저작권자에게 이용 허가를 확인하세요.');
+ }else if(license==='MIT'||/^BSD-[23]-Clause$/.test(license)){
   notes.push(`${c.commercial?'상업 이용 가능.':'현재 목적의 이용이 허용됩니다.'} 배포 시 저작권 및 라이선스 고지를 유지해야 합니다.`);tasks.push('원본 저작권 고지와 라이선스 전문을 함께 배포하세요.');refs.add(license==='MIT'?0:license==='BSD-2-Clause'?11:12);
  }else if(license==='ISC'){
   refs.add(19);notes.push('ISC는 유료·무료의 사용·복제·수정·배포를 허용합니다.');tasks.push('모든 사본에 원 저작권 고지와 ISC 허가 문구를 유지하세요.');
@@ -124,11 +160,12 @@ function evaluateBase(a,c,now){
   refs.add(13);if(c.distribute===false){notes.push('외부 배포 없는 내부 이용에는 외부 소스 제공 의무가 발생하지 않습니다.');tasks.push('외부 배포를 시작하기 전에 MPL 파일의 고지·소스 제공 범위를 재검토하세요.');}else if(c.distribute===true){notes.push('MPL 파일의 소스 제공과 고지 의무를 지키면 배포할 수 있습니다. 별도 파일 전체에 MPL을 강제하지 않습니다.');tasks.push('MPL 적용 파일(수정분 포함)의 소스를 MPL로 제공하고 수령자에게 입수 방법을 안내하세요.','라이선스·저작권 고지를 유지하고 소스에 대한 수령자의 권리를 제한하지 마세요.');}else review('외부 배포 여부를 지정하세요.');
  }else if(license==='CC0-1.0'){
   notes.push('CC0에 따라 저작권 관련 조건 없이 현재 목적의 이용이 허용됩니다.');humanChecks.push('CC0는 상표·특허·제3자 권리까지 허가하지 않으므로, 해당 권리를 별도로 확인하세요.');refs.add(5);
- }else if(/^CC-BY(?:-NC)?(?:-SA|-ND)?-4\.0$/.test(license)){
-  refs.add(license.includes('-NC')?4:license.includes('-SA')?14:license.includes('-ND')?15:3);tasks.push('저작자·출처·라이선스 링크·변경 사실을 표시하세요.');
+ }else if(/^CC-BY(?:-NC)?(?:-SA|-ND)?-[34]\.0$/.test(license)){
+  const cc3=license.endsWith('-3.0');
+  refs.add(cc3?sources.findIndex(([id])=>id===license):license.includes('-NC')?4:license.includes('-SA')?14:license.includes('-ND')?15:3);tasks.push(cc3?'CC 3.0 원문의 저작자·작품명(제공된 경우)·출처·라이선스 링크와 변경 사실을 표시하세요.':'저작자·출처·라이선스 링크·변경 사실을 표시하세요.');
   if(license.includes('-NC')&&c.commercial)conflict('비상업용(NC) 조건과 선택한 상업 목적이 충돌합니다.');
   if(license.includes('-NC')&&c.commercial===false){tasks.push('상업적 이익이나 금전적 보상을 주된 목적으로 사용하지 마세요.');humanChecks.push('비상업 목적을 선택했더라도 연구·학회라는 명칭만으로 NC 충족이 보장되지는 않으므로, 실제 이용 목적이 NC 조건을 충족하는지 확인하세요.');}else if(license.includes('-NC')&&c.commercial!==true)review('상업 목적 여부를 지정하세요.');
-  if(license.includes('-SA')&&c.distribute&&c.modified!==false){if(typeof c.modified!=='boolean')review('자료 수정 여부를 지정하세요.');else{tasks.push('공유하는 변형물에 동일하거나 호환되는 SA 라이선스를 적용하세요.','추가 법적 제한이나 이용을 막는 기술적 조치를 부과하지 마세요.');humanChecks.push('단순 모음과 변형물의 구분이 애매하면 해당 부분의 적용 범위를 확인하세요.');}}
+  if(license.includes('-SA')&&c.distribute&&c.modified!==false){if(typeof c.modified!=='boolean')review('자료 수정 여부를 지정하세요.');else{tasks.push(cc3?'공유하는 변형물에 CC 3.0 원문이 허용하는 동일하거나 호환되는 SA 라이선스를 적용하세요.':'공유하는 변형물에 동일하거나 호환되는 SA 라이선스를 적용하세요.','추가 법적 제한이나 이용을 막는 기술적 조치를 부과하지 마세요.');humanChecks.push('단순 모음과 변형물의 구분이 애매하면 해당 부분의 적용 범위를 확인하세요.');}}
   if(license.includes('-ND')&&c.modified&&c.distribute)conflict('변경금지(ND) 자료를 수정해 배포하는 것은 허용되지 않습니다.');
  }else if(license==='Editorial-Only'){
   refs.add(10);if(c.commercial||c.platform==='steam')conflict('Editorial 전용 허가는 일반 상업 게임 사용을 허용하지 않습니다. 권리자의 별도 허가가 필요합니다.');

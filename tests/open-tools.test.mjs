@@ -21,6 +21,8 @@ test('official PSF page and OFL original title detect candidates, never confirme
  const ofl='SIL OPEN FONT LICENSE Version 1.1 - 26 February 2007\nFont Software'; // Official OFL title/defined term, https://openfontlicense.org/documents/OFL.txt (2026-10-16).
  for(const [text,expected] of [[psf,'PSF-2.0'],[ofl,'OFL-1.1']]){const r=parseFile('LICENSE.txt',text)[0];assert.equal(r.license,expected);assert.equal(r.confirmed,false);}
  for(const license of ['PSF','OFL','OFL-1.0'])assert.equal(evaluate({...a,license},c).status,'review');
+ assert.match(evaluate({...a,license:'OFL'},c).blockers.join(' '),/OFL 버전 미확인/);
+ assert.deepEqual(evaluate({...a,license:'SIL OFL 1.1'},c),evaluate({...a,license:'OFL-1.1'},c));
 });
 
 test('actual installed ISC license is supported with notice obligations, not an unsupported-license hold',()=>{
