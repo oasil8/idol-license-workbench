@@ -107,5 +107,8 @@ npm test      # 자동 테스트 (node --test)
 
 ## 라이선스·고지
 
+이 프로젝트의 코드는 [MIT 라이선스](LICENSE)입니다. 저작권 표시를 남기면 자유롭게 쓰고 고치고 배포할 수 있습니다.
+앱 안에 인용한 약관 문구와 `tests/fixtures`의 라이선스 원문은 각 권리자의 것이며 MIT 대상이 아닙니다.
+
 사용한 오픈소스(PDF.js, Mammoth, JSZip, PDFKit)의 고지는 [`THIRD-PARTY-NOTICES.txt`](THIRD-PARTY-NOTICES.txt)에 있습니다.
 `tests/fixtures`의 약관 원문 스냅샷은 각 서비스의 저작물이며 테스트 용도로만 보관합니다.
