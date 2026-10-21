@@ -11,7 +11,7 @@ export function brandOf(asset={}){
 export function brandIcon(asset={}){
  const icon=icons[brandOf(asset)];
  if(icon)return `<img class="brand-icon" src="${icon.src}" width="22" height="22" alt="" aria-hidden="true">`;
- const label={ai:'AI',api:'API',code:'&lt;/&gt;',model:'3D',image:'▧',font:'Aa',audio:'♪',data:'▦',tool:'⚙'}[asset.kind]||'◇';
+ const label={ai:'AI',api:'API',code:'&lt;/&gt;',model:'3D',image:'▧',audio:'♪',data:'▦',tool:'⚙'}[asset.kind]||'◇';
  // The label is CSS-generated so it never joins the title in copied or extracted text.
  return `<span class="brand-icon brand-fallback" aria-hidden="true" data-label="${label}"></span>`;
 }

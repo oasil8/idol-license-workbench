@@ -16,12 +16,11 @@ export const catalog=[
  ['model','모델 · 가중치 · 3D','모델 가중치 mesh 3d fbx glb obj','model',''],
  ['car','차량 3D 모델','차량 디자인 자동차 로고 메시 fbx glb obj blend','model',''],
  ['image','이미지 · 디자인','사진 일러스트 텍스처 폰트 그림','image',''],
- ['font','글꼴 / 폰트','글꼴 폰트 font ttf otf woff','font',''],
  ['audio','음악 · 음성','음원 효과음 사운드','audio',''],
  ['data','데이터셋','학습 데이터 연구 자료 csv','data',''],
  ['tool','개발 도구 · 소프트웨어','cad cam cadcam sdk 엔진 프로그램','tool','']
 ].map(([id,name,aliases,kind,provider])=>({id,name,aliases,kind,provider}));
-export const categoryNames={ai:'AI · 서비스 · API',code:'코드 · 오픈소스 · 도구',model:'모델 · 가중치 · 3D',image:'이미지 · 디자인',font:'글꼴 / 폰트',audio:'음악 · 음성',data:'데이터셋'};
+export const categoryNames={ai:'AI · 서비스 · API',code:'코드 · 오픈소스 · 도구',model:'모델 · 가중치 · 3D',image:'이미지 · 디자인',audio:'음악 · 음성',data:'데이터셋'};
 export function categoriesOf(item){return [...new Set([item.id==='huggingface'?'model':item.kind==='tool'?'code':item.kind,...({nanobanana:['image'],midjourney:['image'],suno:['audio'],copilot:['code']}[item.id]||[])])];}
 export function searchCatalog(query='',aiOnly=false){
  const words=query.normalize('NFKC').toLowerCase().trim().split(/\s+/).filter(Boolean);
@@ -210,7 +209,7 @@ export const referenceCatalog=[
   "id": "ibm-plex",
   "name": "IBM Plex Sans KR",
   "aliases": "ibm plex 폰트 글꼴 한글",
-  "kind": "font",
+  "kind": "image",
   "provider": "",
   "url": "https://github.com/IBM/plex"
  },
@@ -279,7 +278,7 @@ export function categoryRecommendation(a){
  if(a.provider||a.license?.trim())return;
  const name=String(a.name||'').normalize('NFKC').trim().toLowerCase();
  if(name.length<2)return;
- const generic=new Set(['code','model','car','image','font','audio','data','tool','other-ai']);
+ const generic=new Set(['code','model','car','image','audio','data','tool','other-ai']);
  const matches=catalog.filter(x=>!generic.has(x.id)&&([x.name.toLowerCase(),...x.aliases.toLowerCase().split(/\s+/)]).includes(name));
  if(matches.length!==1||matches[0].kind===a.kind)return;
  return matches[0];
