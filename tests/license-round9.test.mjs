@@ -24,7 +24,7 @@ for(const [names,id,status,checks] of [
  assert.equal(run(name,{evidence:''}).status,'review');
 });
 for(const name of ['구매함','구매','Purchased','Paid asset'])test(`purchase ${name}`,()=>{
- const r=run(name);assert.equal(r.status,'review');assert.equal(r.reason,'구매 자료 — 판매처 라이선스 미기록');assert.deepEqual(r.conditions,[]);assert.deepEqual(r.checks,['구매한 판매처의 라이선스 이름이나 원문을 입력하세요.']);
+ const r=run(name);assert.equal(r.status,'review');assert.equal(r.reason,'구매 자료 · 판매처 라이선스 미기록');assert.deepEqual(r.conditions,[]);assert.deepEqual(r.checks,['구매한 판매처의 라이선스 이름이나 원문을 입력하세요.']);
 });
 const expressions=[['MIT OR Apache-2.0',['MIT','Apache-2.0'],'OR'],['Apache-2.0 OR MIT',['Apache-2.0','MIT'],'OR'],['MIT/Apache-2.0',['MIT','Apache-2.0'],'OR'],['MIT / Apache 2.0',['MIT','Apache-2.0'],'OR'],['Apache 2.0 or MIT',['Apache-2.0','MIT'],'OR'],['MIT AND Zlib',['MIT','Zlib'],'AND'],['BSD 2-Clause / BSD 3-Clause / ISC / Apache 2.0 / Zlib / BSL-1.0 / 0BSD / Unlicense / CC0',['BSD-2-Clause','BSD-3-Clause','ISC','Apache-2.0','Zlib','BSL-1.0','0BSD','Unlicense','CC0-1.0'],'OR'],['MIT AND ISC AND BSL-1.0',['MIT','ISC','BSL-1.0'],'AND']];
 for(const [input,ids,op] of expressions)test(`permissive expression ${input}`,()=>{
@@ -62,8 +62,8 @@ test('source names accept case, spacing and attached parentheses without droppin
  }
 });
 test('creation review reasons and every new action stay explicit',()=>{
- assert.equal(run('팀원 제작').reason,'팀 내부 제작 자료 — 저작권 귀속·이용 허락 합의 미확인');
- assert.equal(run('외주').reason,'외주 제작 자료 — 계약상 이용 허락 범위 미확인');
+ assert.equal(run('팀원 제작').reason,'팀 내부 제작 자료 · 저작권 귀속·이용 허락 합의 미확인');
+ assert.equal(run('외주').reason,'외주 제작 자료 · 계약상 이용 허락 범위 미확인');
  for(const name of ['직접 제작','팀원 제작','외주','구매','MIT OR Apache-2.0','MIT AND Zlib','Kenney CC0','Sketchfab CC BY','']){
   for(const kind of ['code','tool','image','audio','model','data']){
    const r=run(name,{kind});for(const text of [...r.conditions,...r.checks])assert.ok(text.endsWith('세요.'),text);
@@ -76,4 +76,12 @@ test('new recognition never changes stored input or bypasses confirmation and AI
   assert.equal(run(name,{confirmed:false}).status,'review');assert.equal(run(name,{evidence:''}).status,'review');
   assert.equal(run(name,{aiGenerated:true}).status,'review');
  }
+});
+
+test('first-time spellings: bare Unity Asset Store, "free" labels and Mixamo get specific guidance',()=>{
+ const steam={platform:'steam',commercial:true,distribute:true,modified:true,network:false};
+ const at=license=>evaluate({name:'x',kind:'model',license,confirmed:true,evidence:'https://example.org'},steam);
+ assert.deepEqual(at('Unity Asset Store'),at('Unity Asset Store EULA'));
+ for(const license of ['무료','상업용 무료','Free']){const r=at(license);assert.equal(r.status,'review');assert.ok(r.blockers.some(t=>t.includes('무료 배포는 이용 허락과 다르므로')),license);}
+ const mixamo=at('Mixamo');assert.equal(mixamo.status,'review');assert.ok(mixamo.blockers.some(t=>t.includes('Mixamo 라이선스 원문')));
 });

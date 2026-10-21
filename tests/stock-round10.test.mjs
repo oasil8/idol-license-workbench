@@ -39,7 +39,7 @@ for(const [site,names,url,extra] of [
     assert.deepEqual(parts.conditions,[...common,...extra]);
     assert.deepEqual(parts.checks,[...checks,...(site==='Pixabay'?['2019-01-09 이전 게시물은 CC0일 수 있으니 페이지에 표시된 라이선스를 확인하세요.']:[])]);
     for(const text of [...parts.conditions,...parts.checks])assert.ok(text.endsWith('세요.'),text);
-    assert.ok(r.sources.some(([label,ref])=>label===`${site} 라이선스 (${site.toLowerCase()}.com)`&&ref===url));
+    assert.ok(r.sources.some(([label,ref])=>label===`${site} 라이선스`&&ref===url));
     if(site==='Pixabay')assert.ok(r.sources.some(([,ref])=>ref==='https://pixabay.com/service/license-summary/'));
     assert.equal(r.ruleDate,'2026-10-20');
    }

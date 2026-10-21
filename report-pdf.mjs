@@ -148,7 +148,9 @@ export async function createReportPdf(project,{includeOriginals=false}={}) {
   doc.y+=6;doc.save().strokeColor('#c7d4cf').moveTo(42,doc.y).lineTo(42+width,doc.y).stroke().restore();doc.y+=8;
   for(const block of blocks)drawBlock(block);
  }
- text(reportDisclaimer,8,'#65766e');
+ // A disclaimer that no longer fits goes in the bottom margin instead of opening a page by itself.
+ if(doc.y+16>doc.page.height-44){const bottom=doc.page.margins.bottom;doc.page.margins.bottom=0;doc.fontSize(8).fillColor('#65766e').text(reportDisclaimer,42,doc.page.height-40,{width:width-60,lineBreak:false});doc.page.margins.bottom=bottom;}
+ else text(reportDisclaimer,8,'#65766e');
  if(includeOriginals){
   doc.addPage();heading('부록 · 전체 보관 원문',15);
   text('앱에 저장된 원문과 검토 기록의 발췌를 포함합니다. 실시간 조회한 원문이 아니며 출처와 적용 범위를 확인하세요.',9);

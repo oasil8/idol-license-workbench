@@ -43,7 +43,7 @@ export function reviewSourceConditions(a,c,now=Date.now(),{contractConfirmed=fal
  const missing=[],conflicts=[];let status='review';
  const fixedLicense=['chrono','blender'].includes(source.id)&&a.confirmed&&!!a.evidence?.trim()&&['BSD-3-Clause','GPL-3.0-only','GPL-2.0-or-later'].includes(a.license);
  if((['tripo','rodin','unity'].includes(source.id)||source.id==='meshy'&&!contractConfirmed)&&(!a.planType||a.planType==='unknown')&&!a.plan)missing.push('사용하거나 생성할 당시의 요금제·구매 유형을 확인해 입력하세요.');
- if(['hunyuan','cosmos','isaac','chrono','unity','unreal','usd'].includes(source.id)&&!a.version&&!fixedLicense)missing.push('실제 배포판·모델·엔진 버전이 미정입니다.');
+ if(['hunyuan','cosmos','isaac','chrono','unity','unreal','usd'].includes(source.id)&&!a.version&&!fixedLicense)missing.push('실제 사용하는 배포판·모델·엔진 버전을 확인해 입력하세요.');
  if(['hunyuan','unity','unreal'].includes(source.id)&&!reviewedRecently)missing.push('사용 지역·조직/고객 조건·배포 방식 중 적용 조건을 근거에 기록하세요.');
  if(!contractConfirmed&&['openai','anthropic'].includes(source.id)&&(!a.planType||['unknown','business'].includes(a.planType)))missing.push('개인용과 기업/API 계약 중 어떤 문서가 적용되는지 확인하세요.');
  if(!contractConfirmed&&a.kind==='model'&&a.rights!=='cleared')missing.push('입력 자료·상표·초상 등 제3자 권리가 미확인입니다.');

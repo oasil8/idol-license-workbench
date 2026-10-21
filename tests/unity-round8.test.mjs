@@ -34,7 +34,7 @@ test('Unity aliases share distribution rules, obligations, checks and dated offi
    assert.equal(parts.checks.length,kind==='tool'?5:4);
    for(const text of [...parts.conditions,...parts.checks])assert.ok(text.endsWith('세요.'),text);
    assert.match(outcomeReason(a,r),/Unity Asset Store EULA \(unity\.com\)/);
-   assert.ok(r.sources.some(([label,url])=>label==='Unity Asset Store EULA (unity.com)'&&url==='https://unity.com/legal/as-terms'));
+   assert.ok(r.sources.some(([label,url])=>label==='Unity Asset Store EULA'&&url==='https://unity.com/legal/as-terms'));
    assert.equal(r.ruleDate,'2026-10-20');
   }
  }

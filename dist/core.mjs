@@ -30,11 +30,11 @@ export const sources=[
  ['SIL OFL 1.1 공식 원문','https://openfontlicense.org/open-font-license-official-text/'],
  ['ISC License','https://opensource.org/license/isc'],
  ...['Zlib','BSL-1.0','0BSD','Unlicense','EPL-2.0','WTFPL','CC-BY-3.0','CC-BY-SA-3.0','CC-BY-NC-3.0','CC-BY-ND-3.0','CC-BY-NC-SA-3.0','CC-BY-NC-ND-3.0'].map(id=>[id,`https://spdx.org/licenses/${id}.html`]),
- ['Unity Asset Store EULA (unity.com)','https://unity.com/legal/as-terms'],
- ['Pixabay 라이선스 (pixabay.com)','https://pixabay.com/service/terms/'],
- ['Pixabay 라이선스 요약 (pixabay.com)','https://pixabay.com/service/license-summary/'],
- ['Unsplash 라이선스 (unsplash.com)','https://unsplash.com/license'],
- ['Pexels 라이선스 (pexels.com)','https://www.pexels.com/license/']
+ ['Unity Asset Store EULA','https://unity.com/legal/as-terms'],
+ ['Pixabay 라이선스','https://pixabay.com/service/terms/'],
+ ['Pixabay 라이선스 요약','https://pixabay.com/service/license-summary/'],
+ ['Unsplash 라이선스','https://unsplash.com/license'],
+ ['Pexels 라이선스','https://www.pexels.com/license/']
 ];
 export const kinds={code:'코드 / 오픈소스',model:'모델 / 가중치 / 3D',image:'이미지 / 텍스처',audio:'음원 / 음성',ai:'서비스 / API / AI',data:'데이터셋',tool:'제작 도구',other:'기타'};
 export const statuses={conflict:'현재 조건으로 사용 불가',review:'판단 보류',conditions:'사용 가능 (조건부)'};
@@ -91,21 +91,21 @@ function evaluateBase(a,c,now){
  const review=t=>{if(status!=='conflict')status='review';notes.push(t);blockers.push(t);};
  const conflict=t=>{status='conflict';notes.push(t);conflicts.push(t);};
  const clarification=licenseClarification(license);
- if(!license||['UNKNOWN','NOASSERTION','NONE','UNLICENSED'].includes(license.toUpperCase())) review(!license&&a.kind==='tool'?'도구의 라이선스·구독 플랜에서 제작물을 상업적으로 이용할 수 있는지 확인하고 라이선스를 입력하세요.':'공개된 파일이라는 사실만으로 허용된다고 보지 말고, 적용 라이선스의 사용 허가를 확인하세요.');
+ if(!license||['UNKNOWN','NOASSERTION','NONE','UNLICENSED'].includes(license.toUpperCase())) review(!license&&a.kind==='tool'?`도구의 라이선스·구독 플랜에서 제작물을 ${c.commercial?'상업적으로':'현재 목적으로'} 이용할 수 있는지 확인하고 라이선스를 입력하세요.`:'공개된 파일이라는 사실만으로 허용된다고 보지 말고, 적용 라이선스의 사용 허가를 확인하세요.');
  else if(['LicenseRef-Own-Work','LicenseRef-Team-Work','LicenseRef-Commissioned'].includes(license)){
   const included='다른 사람의 에셋·AI 생성물·참고 이미지·폰트·음원을 포함하지 않았는지 확인하세요. 포함했다면 그 자료를 따로 등록하세요.';
   if(license==='LicenseRef-Commissioned'){
-   status='review';notes.push('외주 제작 자료 — 계약상 이용 허락 범위 미확인');
+   status='review';notes.push('외주 제작 자료 · 계약상 이용 허락 범위 미확인');
    humanChecks.push('외주 계약서에서 저작권 양도 또는 게임 상업 이용 허락 범위를 확인하세요.',included);
   }else{
    humanChecks.push(included,'회사·학교 업무나 과제로 만든 경우 저작권이 소속 기관에 있는지 확인하세요.');
    if(license==='LicenseRef-Team-Work'){
-    status='review';notes.push('팀 내부 제작 자료 — 저작권 귀속·이용 허락 합의 미확인');
+    status='review';notes.push('팀 내부 제작 자료 · 저작권 귀속·이용 허락 합의 미확인');
     humanChecks.push('팀원 각자의 저작권 귀속 또는 이용 허락 합의를 문서로 확인하세요.');
    }else reason='직접 제작한 자료로 기록되어 있습니다.';
   }
  }else if(license==='LicenseRef-Purchased'){
-  status='review';notes.push('구매 자료 — 판매처 라이선스 미기록');humanChecks.push('구매한 판매처의 라이선스 이름이나 원문을 입력하세요.');
+  status='review';notes.push('구매 자료 · 판매처 라이선스 미기록');humanChecks.push('구매한 판매처의 라이선스 이름이나 원문을 입력하세요.');
  }else if(details.expression){
   const {licenses,operator}=details.expression;
   const results=licenses.map(id=>evaluateBase({...a,license:id},c,now));
@@ -138,7 +138,7 @@ function evaluateBase(a,c,now){
  }
  else if(['LicenseRef-Pixabay','LicenseRef-Unsplash','LicenseRef-Pexels'].includes(license)&&['image','audio','model','data','other','code'].includes(a.kind)&&typeof c.distribute==='boolean'){
   const site=license.slice('LicenseRef-'.length),label=`${site} 라이선스 (${site.toLowerCase()}.com)`;
-  refs.add(sources.findIndex(([title])=>title===label));
+  refs.add(sources.findIndex(([,url])=>url==={Pixabay:'https://pixabay.com/service/terms/',Unsplash:'https://unsplash.com/license',Pexels:'https://www.pexels.com/license/'}[site]));
   notes.push(`${site} 라이선스는 상업 이용과 수정을 허용하며 출처 표시가 필수가 아닙니다. 근거: ${label}.`);
   tasks.push(
    '자료를 수정하지 않은 원본 그대로 단독 판매·배포하지 말고 게임 등 새 창작물의 일부로 사용하세요.',
@@ -288,6 +288,8 @@ export function validateProject(input,{local=false}={}){
  const c=input.context||{};
  const platform=['general','steam','enterprise','conference','research'].includes(c.platform)?c.platform:'general';
  return {id:crypto.randomUUID(),demo:input.demo===true,contextConfirmed:input.contextConfirmed===true,name:str(input.name,200),context:{platform,commercial:bool(c.commercial,true),distribute:bool(c.distribute,true),modified:bool(c.modified),network:bool(c.network)},assets:input.assets.map(a=>{
+  // 'font' existed briefly (981d38b, reverted); read such saved items as 'other' instead of rejecting the whole store.
+  if(a?.kind==='font')a={...a,kind:'other'};
   if(!a||!a.name||!kinds[a.kind||'code'])throw Error('항목 이름 또는 종류가 올바르지 않습니다.');
   return {id:crypto.randomUUID(),name:str(a.name,500),selection:selectionOf(a),sourceCandidates:cleanCandidates(a.sourceCandidates,{imported:!local}),sourceConditionsConfirmed:bool(a.sourceConditionsConfirmed),sourceConditionsDate:str(a.sourceConditionsDate,100),licenseDocument:a.licenseDocument?validateAssignment({documents:[a.licenseDocument]}).documents[0]:undefined,kind:a.kind||'code',license:str(a.license,500),licenseOrigin:str(a.licenseOrigin,100),contractChoices:cleanContractChoices(a.contractChoices),contractRoute:str(a.contractRoute,30),organizationScale:str(a.organizationScale,30),reviewScope:str(a.reviewScope,30),version:str(a.version,500),evidence:str(a.evidence),notes:str(a.notes),plan:str(a.plan,500),date:str(a.date,100),rights:a.rights==='cleared'?'cleared':'unknown',confirmed:bool(a.confirmed),nonprofitEntityConfirmed:bool(a.nonprofitEntityConfirmed),aiGenerated:bool(a.aiGenerated),provider:str(a.provider,50),apiAccessConfirmed:bool(a.apiAccessConfirmed),planType:str(a.planType,30),scope:str(a.scope,30),repository:str(a.repository,200),serviceName:str(a.serviceName,200),outputType:str(a.outputType,30),useDescription:str(a.useDescription,500),terms:cleanTerms(a.terms,{imported:!local})};
  }),scan: typeof input.scan==='string'?input.scan.slice(0,30000):'',assignment:validateAssignment(input.assignment)};

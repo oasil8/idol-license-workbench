@@ -71,7 +71,7 @@ export function permissionMarkup(a,r,esc){
 export function reviewReason(r){
  if(r.status!=='review')return '';
  const reasons=(r.blockers?.length?r.blockers:r.notes||[]).filter(t=>!t.includes('실시간 조회한 기록은 아닙니다')).map(t=>
- t.includes(' — 자동 판정 미지원. ')?t.split(' — 자동 판정 미지원. ')[0]+' — 자동 판정 미지원':
+ t.includes(' — 자동 판정 미지원. ')?t.split(' — 자동 판정 미지원. ')[0]+' · 자동 판정 미지원':
  t.includes('출력물의 상업 이용을 명시적으로 허용하는 문구를 인식하지 못')||t.includes('생성물의 상업 이용을 명시적으로 허용하는 조항을 찾아')?'원문 확보됨 · 자동 해석 지원 범위 밖, 허용·예외 조항 검토 필요':
  t.includes('허용 문구는 있지만 적용 플랜·예외')?'허용 근거 확보됨 · 플랜·예외 조항 해석 필요':
  t.includes('Copilot 계약 경로를')?'Copilot 계약 경로 선택 필요':
@@ -80,7 +80,7 @@ export function reviewReason(r){
  t.includes('실제 MinerU 배포 버전')?'MinerU 배포 버전 필요 · 현재/과거 라이선스가 다름':
  t.includes('합산 MAU')?'조직 규모 기준·별도 상업 허가 적용 여부 필요':
  t.includes('요금제·구매 유형을 확인해')?'생성 당시 플랜·구매 유형 필요':
- t.includes('버전이 미정')?'실제 배포판·모델 버전 필요':
+ t.includes('버전이 미정')||t.includes('엔진 버전을 확인해')?'실제 배포판·모델 버전 필요':
  t.includes('개인용과 기업/API')?'개인용 / 기업·API 중 적용 계약 필요':
  t.includes('조회 실패:')?'공식 원문 확보 실패 · 재조회 또는 직접 원문 필요':
  t.includes('공식 사이트에서 최신 약관을 열어')?'해당 이용 방식의 공식 허용 근거 필요':
@@ -113,7 +113,7 @@ export function summaryReasonText(reason,limit=56){
 }
 
 export function resultItems(r,reason=''){
- const seen=new Set(),unique=items=>items.filter(t=>{const key=String(t).replace(/\s+/g,' ').trim();if(!key||seen.has(key)||reason.includes(key))return false;seen.add(key);return true;});
+ const seen=new Set(),unique=items=>items.map(t=>String(t).replace(/^.*? — 자동 판정 미지원\. /,'')).filter(t=>{const key=String(t).replace(/\s+/g,' ').trim();if(!key||seen.has(key)||reason.includes(key))return false;seen.add(key);return true;});
  const conditions=[],actions=[];
  for(const task of (r.tasks||[]).filter(t=>!r.conflicts?.includes(t))){
   // Older saved terms may combine a prohibition and a check; keep the prohibition intact.
