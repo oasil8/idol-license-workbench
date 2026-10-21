@@ -1,3 +1,4 @@
+import {apiFetch,hosted} from './web-api.mjs';
 import {normalizeAsset} from './asset-normalization.mjs';
 import {isOfficialCandidate,candidateGroupsMarkup} from './source-policy.mjs';
 import {contractProfile,contractChoicesMarkup,cleanContractChoices} from './contract-review.mjs';
@@ -140,7 +141,7 @@ function openAsset(id,ai=false){editing=id||null;$('assetForm').dataset.licenseO
   const generation=searchGeneration,dialog=dialogGeneration,projectId=current;
   verifyBusy=true;updateForm();$('sourceSearchStatus').textContent='공식 주소와 원문을 대조하고 있습니다…';
   try{
-   const response=await fetch('/api/source-verify',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:candidate.query,url:candidate.url}),signal:AbortSignal.timeout(50000)});
+   const response=await apiFetch('/api/source-verify',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:candidate.query,url:candidate.url}),signal:AbortSignal.timeout(50000)});
    const result=await response.json();
    if(dialog!==dialogGeneration||generation!==searchGeneration||projectId!==current||!$('assetDialog').open||candidate.query!==sourceSearchName(formAsset()))return;
    if(!response.ok||result.error)throw Error('확인 실패');
@@ -160,7 +161,7 @@ function openAsset(id,ai=false){editing=id||null;$('assetForm').dataset.licenseO
   const generation=++searchGeneration,dialog=dialogGeneration,projectId=current;
   $('findSources').disabled=true;$('sourceSearchStatus').textContent='무료 웹 검색 중…';
   try{
-   const response=await fetch('/api/source-search',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name}),signal:AbortSignal.timeout(35000)});
+   const response=await apiFetch('/api/source-search',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name}),signal:AbortSignal.timeout(35000)});
    const result=await response.json();
    if(generation!==searchGeneration||dialog!==dialogGeneration||projectId!==current||!$('assetDialog').open)return;
    if(name!==sourceSearchName(formAsset())){$('sourceSearchStatus').textContent='이름이 변경되어 이전 검색 결과를 적용하지 않았습니다. 다시 검색하세요.';return;}
@@ -210,7 +211,7 @@ function openAsset(id,ai=false){editing=id||null;$('assetForm').dataset.licenseO
   const button=$('exportReport');button.disabled=true;
   try{
    message('PDF 리포트를 만들고 있습니다…');
-   const response=await fetch('/api/report-pdf',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({project:project(),includeOriginals:false})});
+   const response=await apiFetch('/api/report-pdf',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({project:project(),includeOriginals:false})});
    if(!response.ok){const error=await response.json();throw Error(error.error||'PDF 생성 실패');}
    download('license-review.pdf',await response.blob(),'application/pdf');
    message('PDF 내려받기를 요청했습니다. 브라우저 다운로드 목록을 확인하세요.');
@@ -236,7 +237,7 @@ function openAsset(id,ai=false){editing=id||null;$('assetForm').dataset.licenseO
    }
    // A downloaded asset pack is usually a zip: list what is inside instead of stopping at the archive name.
    if(/\.zip$/i.test(path)&&f.size<=200*1024*1024){
-    try{await import('/vendor/jszip.min.js');const inside=await readZip(await f.arrayBuffer(),window.JSZip,path);rows.push(...inside.rows);for(const [e,n] of inside.skipped)skipped.set(e,(skipped.get(e)||0)+n);log.push(...inside.notes);rows[0].notes=`압축 파일. 안의 항목 ${inside.count}개를 같은 규칙으로 등록·기록했습니다. 팩 전체에 적용되는 라이선스도 받은 곳에서 확인하세요.`;}
+    try{await import('./vendor/jszip.min.js');const inside=await readZip(await f.arrayBuffer(),window.JSZip,path);rows.push(...inside.rows);for(const [e,n] of inside.skipped)skipped.set(e,(skipped.get(e)||0)+n);log.push(...inside.notes);rows[0].notes=`압축 파일. 안의 항목 ${inside.count}개를 같은 규칙으로 등록·기록했습니다. 팩 전체에 적용되는 라이선스도 받은 곳에서 확인하세요.`;}
     catch(err){failed++;log.push('압축 읽기 실패: '+path+' — '+err.message+' (암호가 걸린 압축은 풀어서 다시 가져오세요.)');}
    }
   }
@@ -301,7 +302,7 @@ function renderProjects(){
  async function retrieveTerms(a){
   if(a.provider==='other'||['training','other'].includes(a.scope))return {status:'review',summary:'이 서비스·이용 방식은 원문을 직접 등록하고 적용 범위를 검토하세요.',conditions:[],excerpts:[],queryKey:queryKey(a)};
   const query={provider:a.provider,planType:a.planType||'unknown',scope:a.scope||'output',repository:(a.repository||'').trim()};
-  try{const response=await fetch('/api/terms',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(query),signal:AbortSignal.timeout(25000)});const result=await response.json();if(!response.ok)throw Error(result.error||`HTTP ${response.status}`);return {...cleanTerms(result),queryKey:queryKey({...a,repository:query.repository}),imported:false};}
+  try{const response=await apiFetch('/api/terms',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(query),signal:AbortSignal.timeout(25000)});const result=await response.json();if(!response.ok)throw Error(result.error||`HTTP ${response.status}`);return {...cleanTerms(result),queryKey:queryKey({...a,repository:query.repository}),imported:false};}
   catch(err){return {status:'review',summary:'조회 실패로 최신 약관 판단을 보류합니다.',error:err.message,attemptedAt:new Date().toISOString(),checkedAt:null,conditions:[],excerpts:[],queryKey:queryKey(a)};}
  }
  $('lookupTerms').onclick=async()=>{
@@ -346,7 +347,9 @@ function renderCatalog(){
  $('catalogSearchStatus').textContent=catalogRemote.name===query?catalogRemote.message||'':query?'인터넷 후보도 함께 검색합니다.':catalogCategory?'범주에 맞는 이름을 입력하면 인터넷 후보까지 찾습니다.':'이름을 입력하거나 범주를 선택하세요.';
 }
 const catalogLookup=createCatalogSearch({request:async name=>{
- const response=await fetch('/api/source-search',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name}),signal:AbortSignal.timeout(35000)});
+ // The link version cannot query web search; say so instead of reporting a connection failure.
+ if(hosted)return {status:'unavailable',candidates:[],message:'링크 버전에서는 인터넷 후보를 자동으로 찾지 않습니다. 목록에서 고르거나, ‘웹 검색 열기’로 찾은 공식 주소를 직접 등록하세요. 자동 검색은 로컬 버전에서 됩니다.'};
+ const response=await apiFetch('/api/source-search',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name}),signal:AbortSignal.timeout(35000)});
  const result=await response.json();if(!response.ok)throw Error(result.error||'검색 실패');return result;
 },onChange:state=>{catalogRemote=state;renderCatalog();}});
 function runCatalogSearch(){clearTimeout(catalogTimer);return catalogLookup.search($('catalogSearch').value);}
@@ -387,8 +390,8 @@ async function supplementRegisteredRepositories(){
  const work=sourceRefreshJobs(projects);
  for(const w of work){try{
   let url=w.url,candidates=[];
-  if(!url){const found=await fetch('/api/source-search',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:w.name}),signal:AbortSignal.timeout(35000)});if(!found.ok)continue;const data=await found.json();candidates=cleanCandidates(data.candidates);url=candidates[0]?.url;if(!url)continue;}
-  const response=await fetch('/api/source-verify',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:w.name,url}),signal:AbortSignal.timeout(50000)});
+  if(!url){const found=await apiFetch('/api/source-search',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:w.name}),signal:AbortSignal.timeout(35000)});if(!found.ok)continue;const data=await found.json();candidates=cleanCandidates(data.candidates);url=candidates[0]?.url;if(!url)continue;}
+  const response=await apiFetch('/api/source-verify',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:w.name,url}),signal:AbortSignal.timeout(50000)});
   if(!response.ok)continue;const verification=await response.json();
   let candidate={url,title:w.name+' 출처 확인',query:w.name,searchedAt:new Date().toISOString(),verification};
   const currentAsset=projects.find(p=>p.id===w.projectId)?.assets.find(a=>a.id===w.assetId);
@@ -402,3 +405,5 @@ async function supplementRegisteredRepositories(){
  if(completed){render();message(`기존 자료 ${completed}개의 출처 확인을 진행했습니다. 적용 범위와 남은 확인 사항을 결과에서 확인하세요.`);}
 }
 supplementRegisteredRepositories();
+// The link version says once what it cannot do, so a blocked lookup is not mistaken for a broken app.
+if(hosted&&!$('notice').textContent)message('링크 버전입니다. 자료는 이 브라우저에만 저장됩니다. 서비스 약관 자동 조회와 웹 검색은 브라우저가 막혀 로컬 버전에서만 되고, 여기서는 공식 원문을 붙여넣어 분석합니다.');

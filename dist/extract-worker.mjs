@@ -4,8 +4,8 @@ self.onmessage=async({data:{buffer,extension,assignment=false}})=>{
  try{
   let result;
   if(extension==='pdf'){
-   const pdfjs=await import('/vendor/pdf.mjs');pdfjs.GlobalWorkerOptions.workerSrc='/vendor/pdf.worker.mjs';
-   const task=pdfjs.getDocument({data:new Uint8Array(buffer),isEvalSupported:false,useSystemFonts:false,cMapUrl:'/vendor/cmaps/',cMapPacked:true,useWorkerFetch:true});
+   const pdfjs=await import('./vendor/pdf.mjs');pdfjs.GlobalWorkerOptions.workerSrc=new URL('./vendor/pdf.worker.mjs',import.meta.url).href;
+   const task=pdfjs.getDocument({data:new Uint8Array(buffer),isEvalSupported:false,useSystemFonts:false,cMapUrl:new URL('./vendor/cmaps/',import.meta.url).href,cMapPacked:true,useWorkerFetch:true});
    task.onPassword=()=>{task.destroy();self.postMessage({error:'암호화된 PDF는 암호를 해제한 사본을 선택하세요.'});};
    const doc=await task.promise,sections=[];let size=0;
    try{if(doc.numPages>150)throw Error('PDF는 최대 150페이지까지 읽습니다. 문서를 나누어 검토하세요.');
@@ -18,13 +18,13 @@ self.onmessage=async({data:{buffer,extension,assignment=false}})=>{
     result=assembleSections(sections,{minimum:assignment?1:40});
    }finally{await task.destroy();}
   }else if(extension==='pptx'){
-   await import('/vendor/jszip.min.js');result=await extractPptx(buffer,self.JSZip);
+   await import('./vendor/jszip.min.js');result=await extractPptx(buffer,self.JSZip);
   }else if(['xlsx','hwpx','odt','ods','odp'].includes(extension)){
-   await import('/vendor/jszip.min.js');result=await extractOfficeXml(buffer,self.JSZip,extension,{minimum:assignment?1:40});
+   await import('./vendor/jszip.min.js');result=await extractOfficeXml(buffer,self.JSZip,extension,{minimum:assignment?1:40});
   }else if(extension==='rtf'){
    result=assembleSections([{label:'RTF 본문',text:rtfText(new TextDecoder('latin1').decode(buffer))}],{minimum:assignment?1:40});
   }else if(extension==='docx'){
-   checkDocxZip(buffer);await import('/vendor/mammoth.browser.min.js');
+   checkDocxZip(buffer);await import('./vendor/mammoth.browser.min.js');
    const doc=await self.mammoth.extractRawText({arrayBuffer:buffer});
    result=assembleSections(doc.value.split(/\n\s*\n/).filter(x=>x.trim()).map((text,i)=>({label:`Word 추출 문단 ${i+1}`,text})),{minimum:assignment?1:40});
    result.warnings=doc.messages.map(x=>x.message).slice(0,10);

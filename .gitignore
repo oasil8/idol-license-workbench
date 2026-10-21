@@ -17,3 +17,5 @@ tests/fixtures/real-terms/minilm-card.txt
 # Service favicons and logos (regenerate with fetch-icons.py):
 dist/brand-icons-data.mjs
 dist/*-transparent.png
+
+site/

@@ -7,9 +7,26 @@
 - 📄 결과는 화면과 PDF 리포트로 확인합니다.
 - ⚖️ 검토를 돕는 기록이며 **법률 의견이나 출시 승인이 아닙니다.**
 
+**▶ 바로 쓰기: https://oasil8.github.io/idol-license-workbench/**
+
 ---
 
-## 빠른 시작
+## 두 가지 버전
+
+| | 🌐 링크 버전 | 🖥️ 로컬 버전 |
+|---|---|---|
+| 시작 | 위 주소를 열기만 하면 됩니다 | Node.js 설치 후 `npm start` |
+| 자료 넣기·판정·결과·PDF·백업 | ✅ | ✅ |
+| Hugging Face 모델, GitHub·PyPI 저장소 라이선스 조회 | ✅ | ✅ |
+| AI 서비스 약관 자동 조회(OpenAI, Meshy 등), 웹 검색으로 출처 찾기 | ❌ 공식 원문을 붙여넣어 분석 | ✅ |
+| 데이터 저장 위치 | 이 브라우저 | 이 브라우저 |
+
+링크 버전에서 일부 조회가 안 되는 이유: 브라우저는 보안 규칙(CORS) 때문에 허용하지 않는 사이트의 내용을 읽을 수 없습니다. 로컬 버전은 내 PC의 서버가 대신 읽습니다.
+판정에 쓰는 공식 약관·라이선스 기록은 앱에 들어 있어 두 버전 모두 같은 결과를 냅니다.
+
+---
+
+## 빠른 시작 (로컬 버전)
 
 **필요한 것:** [Node.js 24](https://nodejs.org/) 이상 (Windows 기준. 다른 OS는 [설정](#설정) 참고)
 
@@ -99,7 +116,10 @@ npm test      # 자동 테스트 (node --test)
 | `server.mjs` | 로컬 서버, 공식 약관 조회·PDF API |
 | `report-pdf.mjs` | PDF 리포트 (PDFKit) |
 | `dist/` | 앱 본체 (빌드 없음). `core.mjs` 판정 규칙, `result-sections.mjs` 결과 화면, `import-files.mjs`·`assignment.mjs` 가져오기 |
-| `tests/` | 테스트와 실제 약관·라이선스 원문 스냅샷 |
+| `dist/web-api.mjs`, `dist/lookup.mjs` | 링크 버전에서 서버 대신 브라우저로 처리하는 조회·PDF |
+| `tools/build-site.mjs` | 링크 버전 조립 (`.github/workflows/pages.yml`이 main에 푸시될 때 자동 배포) |
+| `web/fonts/` | 링크 버전 PDF용 나눔고딕 (SIL OFL 1.1) |
+| `tests/` | 테스트 (서비스 약관 원문 사본은 저장소에 없으며, 없으면 해당 테스트는 건너뜀) |
 
 변경 내역은 git 커밋 기록에 있습니다.
 
