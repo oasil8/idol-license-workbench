@@ -11,7 +11,7 @@ import {contextConfirmationNotice,conditionsConfirmed,conditionsPrompt,selection
 import {candidateNotice,assetSources,sourceTypes,sourceGroup,sourceSearchUrl,officialSuggestions} from './evidence-sources.mjs';
 import {reviewSourceConditions,supplementCodeLicense} from './official-sources.mjs';
 import {reviewAssignment} from './assignment.mjs';
-import {splitImportFiles} from './import-files.mjs';
+import {splitImportFiles,fileAsset} from './import-files.mjs';
 import {setupAssignment,renderAssignment} from './assignment-ui.mjs';
 import {catalog,searchCatalog,categoryNames,categoriesOf,catalogGroup,categoryRecommendation} from './catalog.mjs';
 import {validateWorkspace} from './backup.mjs';
@@ -227,12 +227,11 @@ function openAsset(id,ai=false){editing=id||null;$('assetForm').dataset.licenseO
   if(/(^|\/)(\.git|\.env[^/]*|\.ssh|\.aws)(\/|$)/i.test(path)){ignored++;continue;}
   // Engine caches regenerate from the project and would repeat every package; ordinary folders named Library or obj may hold real assets.
   if(/(^|\/)(Library\/PackageCache|\.godot)\//.test(path)){ignored++;continue;}
-  const model=/\.(glb|gltf|fbx|obj|blend|stl|usd|usdz)$/i.test(path),image=/\.(png|jpg|jpeg|webp|tga|svg|gif|bmp|psd|tif|tiff|exr|hdr)$/i.test(path),audio=/\.(wav|mp3|ogg|flac|m4a|aac|aif|aiff)$/i.test(path),ai=/\.(safetensors|gguf|onnx|pt|pth)$/i.test(path),font=/\.(ttf|otf|ttc|woff2?)$/i.test(path),video=/\.(mp4|mov|webm|avi)$/i.test(path);
-  const unityPackage=/\.unitypackage$/i.test(path);
-  if(model||image||audio||ai||font||video||unityPackage)rows=[{name:f.name,kind:ai?'ai':model?'model':image?'image':audio?'audio':'other',license:'',evidence:path,notes:font?'글꼴 파일. 파일명만 등록. 배포처의 글꼴 라이선스(OFL 등)와 게임 포함·배포 허용을 확인하세요.':unityPackage?'Unity 패키지 파일. 받은 곳(Asset Store 등)과 그 라이선스를 확인하세요.':'파일명만 등록. 콘텐츠·권리·라이선스는 미분석.',rights:'unknown',confirmed:false}];
+  const asset=fileAsset(path);
+  if(asset)rows=[{name:f.name,...asset}];
   else if(!isReadable(path)){ignored++;const ext=(path.match(/\.([^./]+)$/)?.[1]||'확장자 없음').toLowerCase();skipped.set(ext,(skipped.get(ext)||0)+1);continue;}
   else if(f.size>2*1024*1024||bytes+f.size>30*1024*1024){ignored++;log.push('크기 제한으로 건너뜀: '+path);continue;}
-  else{try{bytes+=f.size;rows=parseFile(path,await f.text());read++;if(!rows.length&&/\.(js|mjs|ts|tsx|jsx|py|cs|cpp|c|h|rs|go|java)$/i.test(path))unlabeled++;}catch(err){failed++;log.push('읽기/파싱 실패: '+path+' — '+err.message);continue;}}
+  else{try{bytes+=f.size;rows=parseFile(path,await f.text());read++;if(!rows.length&&/\.(js|mjs|ts|tsx|jsx|py|cs|cpp|c|h|rs|go|java|gd|lua|hlsl|glsl|shader|cginc|compute|rpy|gml|swift|kt|rb|php|dart|cc|cxx|hpp)$/i.test(path))unlabeled++;}catch(err){failed++;log.push('읽기/파싱 실패: '+path+' — '+err.message);continue;}}
   for(const a of rows){const identity=[a.name,a.version||'',a.license,a.evidence].join('|');if(!seen.has(identity)){if(p.assets.length>=5000){log.push('5,000개 등록 제한 도달. 나머지 항목 미등록.');break;}p.assets.push({version:'',...a,selection:'pending',id:crypto.randomUUID()});seen.add(identity);added++;}}
   if(p.assets.length>=5000)break;
   if((read+ignored)%100===0){message(`파일을 읽고 있습니다… ${read}개 텍스트 처리, ${added}개 항목 발견`);await new Promise(r=>setTimeout(r,0));}

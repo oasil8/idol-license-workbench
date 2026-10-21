@@ -241,7 +241,7 @@ function evaluateBase(a,c,now){
 const cleanLicense=x=> typeof x==='string'&&!['NOASSERTION','NONE'].includes(x)?x:typeof x?.type==='string'?x.type:'';
 export function isReadable(path){
  if(/(^|[\\/])(\.git|\.env[^/\\]*|\.ssh|\.aws)([\\/]|$)/i.test(path))return false;
- return /(^|\/)(package(?:-lock)?\.json|requirements[^/]*\.txt|[^/]*(?:sbom|bom)[^/]*\.json|licenses?(?:[.-][^/]*)?|copying(?:[.-][^/]*)?|notice(?:[.-][^/]*)?|ofl(?:[.-][^/]*)?|ProjectVersion\.txt|project\.godot|plugin\.cfg|pyproject\.toml|Pipfile|Cargo\.toml|go\.mod|packages\.config|pom\.xml|build\.gradle(?:\.kts)?)$/i.test(path)||/\.(js|mjs|ts|tsx|jsx|py|cs|cpp|c|h|rs|go|java|json|gd|lua|csproj|uproject|uplugin)$/i.test(path);
+ return /(^|\/)(package(?:-lock)?\.json|requirements[^/]*\.txt|[^/]*(?:sbom|bom)[^/]*\.json|licenses?(?:[.-][^/]*)?|copying(?:[.-][^/]*)?|notice(?:[.-][^/]*)?|ofl(?:[.-][^/]*)?|(?:readme|copyright|credits|attributions?|authors|third[-_ ]?party[-_ ]?notices?)(?:[.-][^/]*)?|ProjectVersion\.txt|project\.godot|plugin\.cfg|pyproject\.toml|Pipfile|Cargo\.toml|go\.mod|packages\.config|pom\.xml|build\.gradle(?:\.kts)?)$/i.test(path)||/\.(js|mjs|ts|tsx|jsx|py|cs|cpp|c|h|rs|go|java|json|gd|lua|hlsl|glsl|shader|cginc|compute|rpy|gml|swift|kt|rb|php|dart|cc|cxx|hpp|csproj|uproject|uplugin)$/i.test(path);
 }
 // Minimal TOML table reader for dependency tables: `name = "1.0"` or `name = { version = "1.0", ... }`.
 function tomlDependencies(text,header){
@@ -351,7 +351,10 @@ export function parseFile(path,text){
  }
  const expressions=[...text.matchAll(/SPDX-License-Identifier:\s*([^\r\n]+)/g)].map(m=>m[1].replace(/\s*\*\/\s*$/,'').trim());
  if(expressions.length){for(const expression of new Set(expressions))add(path,expression);return out;}
- if(/^(license|licence|copying|notice|ofl)/i.test(name)){
+ // A README counts only when it states license or credit terms, as asset-store packs often do.
+ const readme=/^readme/i.test(name);
+ if(readme&&!/\b(?:licen[cs]ed?|attribution|credits?|royalty[- ]free|creative commons|cc[- ]by|cc0|eula)\b|라이선스|저작권|출처 표기|크레딧/i.test(text))return out;
+ if(/^(readme|license|licence|copying|notice|ofl|copyright|credits|attributions?|authors|third[-_ ]?party[-_ ]?notices?)/i.test(name)){
   let candidate='';
   if(/PYTHON SOFTWARE FOUNDATION LICENSE VERSION 2/i.test(text)&&/royalty-free/i.test(text))candidate='PSF-2.0';
   else if(/SIL OPEN FONT LICENSE[\s,]*Version 1\.1/i.test(text)&&/Font Software/i.test(text))candidate='OFL-1.1';
