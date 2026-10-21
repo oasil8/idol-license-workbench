@@ -36,7 +36,7 @@ export const sources=[
  ['Unsplash 라이선스 (unsplash.com)','https://unsplash.com/license'],
  ['Pexels 라이선스 (pexels.com)','https://www.pexels.com/license/']
 ];
-export const kinds={code:'코드 / 오픈소스',model:'모델 / 가중치 / 3D',image:'이미지 / 텍스처',audio:'음원 / 음성',ai:'서비스 / API / AI',data:'데이터셋',tool:'제작 도구',other:'기타'};
+export const kinds={code:'코드 / 오픈소스',model:'모델 / 가중치 / 3D',image:'이미지 / 텍스처',font:'글꼴 / 폰트',audio:'음원 / 음성',ai:'서비스 / API / AI',data:'데이터셋',tool:'제작 도구',other:'기타'};
 export const statuses={conflict:'현재 조건으로 사용 불가',review:'판단 보류',conditions:'사용 가능 (조건부)'};
 export function commercialVerdict(a,c){return evaluate(a,{...c,commercial:true});}
 export function projectTasks(p){
@@ -91,7 +91,8 @@ function evaluateBase(a,c,now){
  const review=t=>{if(status!=='conflict')status='review';notes.push(t);blockers.push(t);};
  const conflict=t=>{status='conflict';notes.push(t);conflicts.push(t);};
  const clarification=licenseClarification(license);
- if(!license||['UNKNOWN','NOASSERTION','NONE','UNLICENSED'].includes(license.toUpperCase())) review(!license&&a.kind==='tool'?'도구의 라이선스·구독 플랜에서 제작물을 상업적으로 이용할 수 있는지 확인하고 라이선스를 입력하세요.':'공개된 파일이라는 사실만으로 허용된다고 보지 말고, 적용 라이선스의 사용 허가를 확인하세요.');
+ const fontUsage=()=>{if(a.kind==='font')humanChecks.push('허용 범위가 달라질 수 있으므로, 게임에 글꼴 파일을 동봉하는지 이미지·텍스처로만 렌더링해 쓰는지 기록하세요.');};
+ if(!license||['UNKNOWN','NOASSERTION','NONE','UNLICENSED'].includes(license.toUpperCase())) review(!license&&a.kind==='font'?'글꼴 배포처의 라이선스 문서(OFL.txt·LICENSE 등)에서 게임 임베딩·동봉 배포와 상업 이용 허용 여부를 확인하고 라이선스를 입력하세요.':!license&&a.kind==='tool'?'도구의 라이선스·구독 플랜에서 제작물을 상업적으로 이용할 수 있는지 확인하고 라이선스를 입력하세요.':'공개된 파일이라는 사실만으로 허용된다고 보지 말고, 적용 라이선스의 사용 허가를 확인하세요.');
  else if(['LicenseRef-Own-Work','LicenseRef-Team-Work','LicenseRef-Commissioned'].includes(license)){
   const included='다른 사람의 에셋·AI 생성물·참고 이미지·폰트·음원을 포함하지 않았는지 확인하세요. 포함했다면 그 자료를 따로 등록하세요.';
   if(license==='LicenseRef-Commissioned'){
@@ -105,7 +106,7 @@ function evaluateBase(a,c,now){
    }else reason='직접 제작한 자료로 기록되어 있습니다.';
   }
  }else if(license==='LicenseRef-Purchased'){
-  status='review';notes.push('구매 자료 — 판매처 라이선스 미기록');humanChecks.push('구매한 판매처의 라이선스 이름이나 원문을 입력하세요.');
+  status='review';notes.push('구매 자료 — 판매처 라이선스 미기록');humanChecks.push('구매한 판매처의 라이선스 이름이나 원문을 입력하세요.');fontUsage();
  }else if(details.expression){
   const {licenses,operator}=details.expression;
   const results=licenses.map(id=>evaluateBase({...a,license:id},c,now));
@@ -117,9 +118,9 @@ function evaluateBase(a,c,now){
   if(operator==='OR')humanChecks.push('선택한 라이선스를 기록하세요.');
   reason=operator==='OR'?licenses.join(' 또는 ')+' 중 하나를 선택해 이용할 수 있습니다.':licenses.join('·')+'의 조건을 모두 지켜야 합니다.';
  }else if(details.multiple){refs.add(16);review('복수 라이선스 또는 예외 조항입니다. AND의 모든 조건, OR의 선택한 조건, WITH의 예외 범위를 직접 확인하세요.');tasks.push('적용할 라이선스와 선택·예외 근거를 기록하세요.');}
- else if(clarification)review(`${clarification[0]} — 자동 판정 미지원. ${clarification[1]}`);
+ else if(clarification){review(`${clarification[0]} — 자동 판정 미지원. ${clarification[1]}`);fontUsage();}
  else if(['LicenseRef-Unity-Asset-Store-EULA','LicenseRef-Pixabay','LicenseRef-Unsplash','LicenseRef-Pexels'].includes(license)&&typeof c.distribute!=='boolean')review('외부 배포 여부가 정해지지 않았습니다. 사용 조건에서 외부 배포 여부를 지정하세요.');
- else if(license==='LicenseRef-Unity-Asset-Store-EULA'&&['code','model','image','audio','data','other','tool'].includes(a.kind)&&typeof c.distribute==='boolean'){
+ else if(license==='LicenseRef-Unity-Asset-Store-EULA'&&['code','model','image','font','audio','data','other','tool'].includes(a.kind)&&typeof c.distribute==='boolean'){
   refs.add(sources.findIndex(([,url])=>url==='https://unity.com/legal/as-terms'));
   notes.push('Unity Asset Store 표준 EULA는 자산을 독자적 콘텐츠와 함께 게임에 포함해 배포·수익화하는 것을 허용합니다. 근거: Unity Asset Store EULA (unity.com).');
   tasks.push(
@@ -136,7 +137,7 @@ function evaluateBase(a,c,now){
    '구매 영수증과 구매 당시 EULA 버전을 보관하세요.'
   );
  }
- else if(['LicenseRef-Pixabay','LicenseRef-Unsplash','LicenseRef-Pexels'].includes(license)&&['image','audio','model','data','other','code'].includes(a.kind)&&typeof c.distribute==='boolean'){
+ else if(['LicenseRef-Pixabay','LicenseRef-Unsplash','LicenseRef-Pexels'].includes(license)&&['image','font','audio','model','data','other','code'].includes(a.kind)&&typeof c.distribute==='boolean'){
   const site=license.slice('LicenseRef-'.length),label=`${site} 라이선스 (${site.toLowerCase()}.com)`;
   refs.add(sources.findIndex(([title])=>title===label));
   notes.push(`${site} 라이선스는 상업 이용과 수정을 허용하며 출처 표시가 필수가 아닙니다. 근거: ${label}.`);
@@ -219,7 +220,7 @@ function evaluateBase(a,c,now){
  }else if(license==='Editorial-Only'){
   refs.add(10);if(c.commercial||c.platform==='steam')conflict('Editorial 전용 허가는 일반 상업 게임 사용을 허용하지 않습니다. 권리자의 별도 허가가 필요합니다.');
   else review('해당 이용이 허가된 보도·편집·연구 용도에 해당하는지 확인하세요.');
- }else if(license)review('사용자 계약 또는 지원하지 않는 라이선스에 해당하므로 원문 조건을 직접 검토하세요.');
+ }else if(license){review('사용자 계약 또는 지원하지 않는 라이선스에 해당하므로 원문 조건을 직접 검토하세요.');fontUsage();}
  const official=appliedOfficialLicense(a);
  if(official){notes.push('공식 원문 자동 보완 · '+official.date+' · '+official.scope);humanChecks.push('공식 원문에 표시된 코드·모델 범위 기준입니다. 별도 배포판·포크·동봉 라이브러리·모델·데이터는 각 라이선스를 확인하세요.');}
  if((!a.confirmed||!a.evidence?.trim())&&!official){review('자동 탐지는 후보 정보이므로, 라이선스 적용 범위와 근거를 직접 확인하세요.');humanChecks.push('원문·구매 증빙·적용 버전을 확인하고 확인 여부를 기록하세요.');if(a.licenseOrigin)blockers.push('자동 보완 원문과 등록된 이름·종류·버전의 적용 범위를 대조해야 합니다.');}

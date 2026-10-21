@@ -306,7 +306,7 @@ $('analyzeManual').onclick=()=>{try{workingTerms=reviewManual(formAsset(),{text:
 $('manualText').addEventListener('input',()=>{documentLocations=[];});
 document.addEventListener('click',e=>{const button=e.target.closest('[data-evidence]');if(!button)return;const panel=button.closest('.terms-record'),details=panel.querySelector('details');if(details)details.open=true;const mark=panel.querySelector(`[data-evidence-mark="${button.dataset.evidence}"]`);if(mark){mark.scrollIntoView({behavior:'smooth',block:'center'});mark.focus({preventScroll:true});}});
 
-const categoryIds=new Set(['other-ai','code','model','image','audio','data','tool']);
+const categoryIds=new Set(['other-ai','code','model','image','font','audio','data','tool']);
 let catalogCategory='',catalogTimer,catalogRemote={status:'idle',candidates:[]};
 function catalogButtons(query,aiOnly=false){
  const matches=searchCatalog(query,aiOnly).filter(x=>!categoryIds.has(x.id)&&(aiOnly||(!catalogCategory||categoriesOf(x).includes(catalogCategory))));
