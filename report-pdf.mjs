@@ -116,9 +116,13 @@ export async function createReportPdf(project,{includeOriginals=false}={}) {
  const layout=pdfBodyLayout(data.items);
  if(data.items.length)doc.addPage();
  // Measure the same wrapped blocks we draw, keeping ordinary cards on one page.
- const drawBlock=({value,size=8.5,color='#263e38',link})=>{
-  doc.fontSize(size);const valueWrapped=wrapped(value),height=doc.heightOfString(valueWrapped,{width,lineGap:1})+2;
-  room(height);doc.fillColor(color).text(valueWrapped,42,doc.y,{width,lineGap:1,link});doc.y+=2;
+ // box: a shaded band so each item's title stands apart without borrowing a verdict colour.
+ const drawBlock=({value,size=8.5,color='#263e38',link,box})=>{
+  const pad=box?6:0,w=width-pad*2;
+  doc.fontSize(size);const valueWrapped=wrapped(value,w),height=doc.heightOfString(valueWrapped,{width:w,lineGap:1})+2+pad*2;
+  room(height);
+  if(box)doc.save().rect(42,doc.y,width,height).fill('#e8efec').restore();
+  doc.fillColor(color).text(valueWrapped,42+pad,doc.y+pad,{width:w,lineGap:1,link});doc.y+=2+pad;
  };
  for(const [kind,title] of commonGroups){
   const notes=layout.common.filter(note=>note.kind===kind&&!minorNote.test(note.text));
@@ -134,7 +138,7 @@ export async function createReportPdf(project,{includeOriginals=false}={}) {
   doc.y+=6;
  }
  for(const [i,item] of layout.items.entries()){
-  const blocks=[{value:`${i+1}. ${item.name}`,size:12,color:'#1f2f2a'},{value:item.status+' — '+item.reason,size:9,color:verdictColor(item.status)}];
+  const blocks=[{value:`${i+1}. ${item.name}`,size:12,color:'#1f2f2a',box:true},{value:item.status+' — '+item.reason,size:9,color:verdictColor(item.status)}];
   if(item.status===statuses.conflict)blocks.push({value:conflictNextAction});
   for(const [title,values] of [['지켜야 할 조건',item.conditions],['확인 필요',item.checks]]){
    if(!values.length)continue;
@@ -151,9 +155,9 @@ export async function createReportPdf(project,{includeOriginals=false}={}) {
   if(item.sources.length>2)blocks.push({value:`외 ${item.sources.length-2}개 · 전체 근거는 웹 화면에 있습니다.`,size:7.5,color:'#65766e'});
   if(item.candidateNotice)blocks.push({value:item.candidateNotice,size:8,color:'#65766e'});
   if(!item.sources.length&&item.evidence)blocks.push({value:'입력 근거: '+item.evidence,size:8});
-  const height=blocks.reduce((total,b)=>{doc.fontSize(b.size||8.5);return total+doc.heightOfString(wrapped(b.value),{width,lineGap:1})+2;},0)+14;
+  const height=blocks.reduce((total,b)=>{doc.fontSize(b.size||8.5);return total+doc.heightOfString(wrapped(b.value),{width,lineGap:1})+2+(b.box?12:0);},0)+14;
   if(height<doc.page.height-84)room(height);
-  doc.y+=6;doc.save().strokeColor('#c7d4cf').moveTo(42,doc.y).lineTo(42+width,doc.y).stroke().restore();doc.y+=8;
+  doc.y+=12;
   for(const block of blocks)drawBlock(block);
  }
  // A disclaimer that no longer fits goes in the bottom margin instead of opening a page by itself.
