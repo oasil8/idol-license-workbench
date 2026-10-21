@@ -1,4 +1,4 @@
-import {assembleSections,checkDocxZip} from './document-text.mjs';
+import {assembleSections,checkDocxZip,extractOfficeXml,rtfText} from './document-text.mjs';
 import {extractPptx} from './pptx-text.mjs';
 self.onmessage=async({data:{buffer,extension,assignment=false}})=>{
  try{
@@ -19,6 +19,10 @@ self.onmessage=async({data:{buffer,extension,assignment=false}})=>{
    }finally{await task.destroy();}
   }else if(extension==='pptx'){
    await import('/vendor/jszip.min.js');result=await extractPptx(buffer,self.JSZip);
+  }else if(['xlsx','hwpx','odt','ods','odp'].includes(extension)){
+   await import('/vendor/jszip.min.js');result=await extractOfficeXml(buffer,self.JSZip,extension,{minimum:assignment?1:40});
+  }else if(extension==='rtf'){
+   result=assembleSections([{label:'RTF 본문',text:rtfText(new TextDecoder('latin1').decode(buffer))}],{minimum:assignment?1:40});
   }else if(extension==='docx'){
    checkDocxZip(buffer);await import('/vendor/mammoth.browser.min.js');
    const doc=await self.mammoth.extractRawText({arrayBuffer:buffer});

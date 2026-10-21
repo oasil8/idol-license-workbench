@@ -1,6 +1,6 @@
 export async function extractFile(file,{assignment=false}={}){
  const extension=file.name.split('.').pop().toLowerCase();
- if(!['pdf','docx','pptx','txt','md'].includes(extension))throw Error('PDF·PPTX·DOCX·TXT·MD를 선택하세요. 구형 .doc·.ppt는 최신 형식으로 저장하세요.');
+ if(!['pdf','docx','pptx','txt','md','xlsx','hwpx','odt','ods','odp','rtf'].includes(extension))throw Error('PDF·PPTX·DOCX·XLSX·HWPX·ODT·RTF·TXT·MD를 선택하세요. 구형 .doc·.ppt·.xls·.hwp는 최신 형식으로 저장하세요.');
  if(file.size>(['txt','md'].includes(extension)?200000:(extension==='pptx'?30:10)*1024*1024))throw Error('PPTX는 최대 30MB, PDF·DOCX는 최대 10MB, TXT·MD는 최대 200KB입니다.');
  const buffer=await file.arrayBuffer();
  return new Promise((resolve,reject)=>{

@@ -11,7 +11,7 @@ import {contextConfirmationNotice,conditionsConfirmed,conditionsPrompt,selection
 import {candidateNotice,assetSources,sourceTypes,sourceGroup,sourceSearchUrl,officialSuggestions} from './evidence-sources.mjs';
 import {reviewSourceConditions,supplementCodeLicense} from './official-sources.mjs';
 import {reviewAssignment} from './assignment.mjs';
-import {splitImportFiles,fileAsset} from './import-files.mjs';
+import {splitImportFiles,fileAsset,readZip,metadataRights} from './import-files.mjs';
 import {setupAssignment,renderAssignment} from './assignment-ui.mjs';
 import {catalog,searchCatalog,categoryNames,categoriesOf,catalogGroup,categoryRecommendation} from './catalog.mjs';
 import {validateWorkspace} from './backup.mjs';
@@ -228,7 +228,18 @@ function openAsset(id,ai=false){editing=id||null;$('assetForm').dataset.licenseO
   // Engine caches regenerate from the project and would repeat every package; ordinary folders named Library or obj may hold real assets.
   if(/(^|\/)(Library\/PackageCache|\.godot)\//.test(path)){ignored++;continue;}
   const asset=fileAsset(path);
-  if(asset)rows=[{name:f.name,...asset}];
+  if(asset){
+   rows=[{name:f.name,...asset}];
+   // Media often carries its own copyright/licence tags near the start of the file.
+   if(['image','audio','other'].includes(asset.kind)&&!/\.(zip|rar|7z|tar|gz|tgz|xz|ttf|otf|ttc|woff2?)$/i.test(path)){
+    try{const meta=metadataRights(new Uint8Array(await f.slice(0,1024*1024).arrayBuffer()));if(meta.summary){rows[0].notes='파일 안 메타데이터: '+meta.summary+'. 메타데이터는 누구나 고칠 수 있으니 받은 곳에서 확인하세요.';if(meta.license)rows[0].license=meta.license;}}catch{}
+   }
+   // A downloaded asset pack is usually a zip: list what is inside instead of stopping at the archive name.
+   if(/\.zip$/i.test(path)&&f.size<=200*1024*1024){
+    try{await import('/vendor/jszip.min.js');const inside=await readZip(await f.arrayBuffer(),window.JSZip,path);rows.push(...inside.rows);for(const [e,n] of inside.skipped)skipped.set(e,(skipped.get(e)||0)+n);log.push(...inside.notes);rows[0].notes=`압축 파일. 안의 항목 ${inside.count}개를 같은 규칙으로 등록·기록했습니다. 팩 전체에 적용되는 라이선스도 받은 곳에서 확인하세요.`;}
+    catch(err){failed++;log.push('압축 읽기 실패: '+path+' — '+err.message+' (암호가 걸린 압축은 풀어서 다시 가져오세요.)');}
+   }
+  }
   else if(!isReadable(path)){ignored++;const ext=(path.match(/\.([^./]+)$/)?.[1]||'확장자 없음').toLowerCase();skipped.set(ext,(skipped.get(ext)||0)+1);continue;}
   // Lock files of real projects are often several MB; ordinary text stays at 2MB.
   else if(f.size>(/(^|\/)(package-lock\.json|packages(?:-lock|\.lock)\.json|yarn\.lock|pnpm-lock\.yaml|[^/]+\.lock|go\.sum)$/i.test(path)?20:2)*1024*1024||bytes+f.size>60*1024*1024){ignored++;log.push('크기 제한으로 건너뜀: '+path);continue;}

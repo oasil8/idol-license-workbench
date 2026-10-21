@@ -48,3 +48,29 @@ export function checkDocxZip(buffer){
   offset+=46+view.getUint16(offset+28,true)+view.getUint16(offset+30,true)+view.getUint16(offset+32,true);
  }
 }
+
+// Office formats that are zipped XML: spreadsheets (xlsx/ods), Hangul (hwpx) and OpenDocument text/slides.
+const xmlEntities=s=>s.replace(/&(#x[0-9a-f]+|#\d+|amp|lt|gt|quot|apos);/gi,(_,c)=>c[0]==='#'?String.fromCodePoint(c[1].toLowerCase()==='x'?parseInt(c.slice(2),16):Number(c.slice(1))):({amp:'&',lt:'<',gt:'>',quot:'"',apos:"'"})[c.toLowerCase()]);
+const xmlText=xml=>xmlEntities(xml.replace(/<\/(?:[\w]+:)?(?:p|h|si|row|tr|para)>/gi,'\n').replace(/<(?:[\w]+:)?(?:tab|c)\b[^>]*\/?>/gi,' ').replace(/<[^>]+>/g,''));
+const officeParts={
+ xlsx:[/^xl\/sharedStrings\.xml$|^xl\/worksheets\/sheet\d+\.xml$/,n=>n.includes('sharedStrings')?'엑셀 문자열':'엑셀 '+n.match(/sheet(\d+)/)[1]+'번 시트'],
+ hwpx:[/^Contents\/section\d+\.xml$/,n=>'한글 '+(+n.match(/section(\d+)/)[1]+1)+'구역'],
+ odt:[/^content\.xml$/,()=>'문서 본문'],ods:[/^content\.xml$/,()=>'스프레드시트 본문'],odp:[/^content\.xml$/,()=>'슬라이드 본문']
+};
+export async function extractOfficeXml(buffer,JSZip,extension,{minimum=40}={}){
+ const zip=await JSZip.loadAsync(buffer),entries=Object.values(zip.files);
+ if(entries.length>5000||entries.reduce((s,e)=>s+(e._data?.uncompressedSize||0),0)>60*1024*1024)throw Error('압축 해제 크기나 항목 수가 너무 큰 문서입니다.');
+ const [pattern,label]=officeParts[extension],sections=[];
+ for(const entry of entries.filter(e=>pattern.test(e.name)).sort((a,b)=>a.name.localeCompare(b.name,undefined,{numeric:true}))){
+  const xml=await entry.async('string');if(/<!DOCTYPE|<!ENTITY/i.test(xml))throw Error('외부 엔티티가 포함된 문서는 지원하지 않습니다.');
+  const text=xmlText(xml);if(text.trim())sections.push({label:label(entry.name),text});
+ }
+ if(!sections.length)throw Error('문서에서 텍스트를 찾지 못했습니다.');
+ return assembleSections(sections,{minimum});
+}
+// RTF: Unicode escapes first (with their fallback characters), then drop non-text groups and control words.
+export function rtfText(source){
+ let s=String(source).replace(/\\u(-?\d+) ?(?:\\'[0-9a-f]{2}|\?)?/gi,(_,n)=>String.fromCharCode(n<0?65536+Number(n):Number(n)));
+ for(let i=0;i<6;i++)s=s.replace(/\{\\(?:\*|fonttbl|colortbl|stylesheet|info|pict|listtable|listoverridetable|themedata|datastore|latentstyles)(?:[^{}]|\{[^{}]*\})*\}/g,'');
+ return s.replace(/\\(?:par|line|row)\b ?/g,'\n').replace(/\\tab\b ?/g,'\t').replace(/\\'([0-9a-f]{2})/gi,(_,h)=>String.fromCharCode(parseInt(h,16))).replace(/\\[a-z]+-?\d* ?/gi,'').replace(/\\([\\{}])/g,'$1').replace(/[{}]/g,'').replace(/\n{3,}/g,'\n\n').trim();
+}
