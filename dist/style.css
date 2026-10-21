@@ -193,3 +193,5 @@ section.context-panel{padding:24px}section.context-panel .context-title{padding:
 .minor-notes>summary{cursor:pointer;font-size:14px;color:#4f6656}
 .guide-steps{margin:18px 0 8px;padding-left:20px;font-size:14px;line-height:1.8;color:#405f4b}.guide-steps li{margin:4px 0}
 .no-choice th:nth-child(4),.no-choice td:nth-child(4){display:none}
+.ai-extra #basicLicense>label:first-child{display:none}
+form label.check{flex-direction:row;align-items:flex-start;text-align:left}form label.check input{margin-top:4px;flex:none}
