@@ -1,4 +1,4 @@
-import {resultBodyLayout as pdfBodyLayout,commonGroups} from './dist/result-layout.mjs';
+import {resultBodyLayout as pdfBodyLayout,commonGroups,noteNames,minorNote} from './dist/result-layout.mjs';
 import {normalizeAsset,assetScope} from './dist/asset-normalization.mjs';
 import PDFDocument from 'pdfkit';
 import {existsSync} from 'node:fs';
@@ -88,8 +88,6 @@ export async function createReportPdf(project,{includeOriginals=false}={}) {
  if(data.conclusion){
   const c=data.conclusion;
   heading(c.title,14,verdictColor(data.status));text(c.contextText,8);
-  if(c.actions.length){heading(c.actionsTitle,10);for(const a of c.actions)text(a.name+' — '+a.action,9);}
-  if(c.conditionsText)text(c.conditionsText,9);
   if(c.emptyText)text(c.emptyText,9);
   text(c.countsText,8);
  }else{heading(data.status);text(data.reason);text(`실제 사용 ${data.usedCount}개 · 선택 전 ${data.pending}개`,8);}
@@ -101,14 +99,18 @@ export async function createReportPdf(project,{includeOriginals=false}={}) {
    sizes[0]*=Math.min(1,(widths[0]-14)/longest);
    values=values.map((v,i)=>{doc.fontSize(sizes[i]);return i===0?wrapPdfName(v,t=>doc.widthOfString(t),widths[i]-14):wrapped(v,widths[i]-12);});
    const height=Math.max(26,...values.map((v,i)=>{doc.fontSize(sizes[i]);return doc.heightOfString(v,{width:widths[i]-12})+14;}));
-   if(doc.y+height>doc.page.height-44){doc.addPage();row(['항목','판정','한 줄 이유'],true);}
+   if(doc.y+height>doc.page.height-44){doc.addPage();row(header_,true);}
    const y=doc.y;doc.save().rect(42,y,width,height).fill(header?'#e8efec':'#ffffff').restore();
    for(let i=0;i<values.length;i++){doc.fontSize(sizes[i]).fillColor(!header&&i===1?verdictColor(values[i]):'#263e38').text(values[i],columns[i]+6,y+6,{width:widths[i]-12});}
    doc.save().strokeColor('#c7d4cf').moveTo(42,y+height).lineTo(42+width,y+height).stroke().restore();doc.y=y+height;
   };
-  row(['항목','판정','한 줄 이유'],true);
+  // One table answers "what do I do with each item"; the detailed reasons follow on the next pages.
+  const c=data.conclusion,todo=c?[...c.actions,...c.usable]:[];
+  const header_=c?['항목','판정','해야 할 일']:['항목','판정','한 줄 이유'];
+  row(header_,true);
   const order=[statuses.conflict,statuses.review,statuses.conditions];
-  for(const item of [...data.items].sort((a,b)=>order.indexOf(a.status)-order.indexOf(b.status))){const reason=summaryReasonText(item.reason);row([item.name,item.status,reason]);}
+  for(const item of [...data.items].sort((a,b)=>order.indexOf(a.status)-order.indexOf(b.status)))row([item.name,item.status,c?todo.find(t=>t.name===item.name)?.action||summaryReasonText(item.reason):summaryReasonText(item.reason)]);
+  for(const t of todo.filter(t=>t.status==='pending'))row([t.name,'선택 전',t.action]);
   doc.moveDown();
  }
  const layout=pdfBodyLayout(data.items);
@@ -119,10 +121,16 @@ export async function createReportPdf(project,{includeOriginals=false}={}) {
   room(height);doc.fillColor(color).text(valueWrapped,42,doc.y,{width,lineGap:1,link});doc.y+=2;
  };
  for(const [kind,title] of commonGroups){
-  const notes=layout.common.filter(note=>note.kind===kind);
+  const notes=layout.common.filter(note=>note.kind===kind&&!minorNote.test(note.text));
   if(!notes.length)continue;
   drawBlock({value:title,size:13,color:'#086f64'});
-  for(const note of notes)drawBlock({value:'• '+note.text+' (해당 항목: '+note.names.join(', ')+')',size:8.5});
+  for(const note of notes)drawBlock({value:'• '+note.text+' (해당 항목: '+noteNames(note.names)+')',size:8.5});
+  doc.y+=6;
+ }
+ const minor=layout.common.filter(note=>minorNote.test(note.text));
+ if(minor.length){
+  drawBlock({value:'그 밖의 일반 주의사항',size:9,color:'#65766e'});
+  for(const note of minor)drawBlock({value:'• '+note.text+' (해당 항목: '+noteNames(note.names)+')',size:7.5,color:'#65766e'});
   doc.y+=6;
  }
  for(const [i,item] of layout.items.entries()){

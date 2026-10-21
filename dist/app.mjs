@@ -82,7 +82,7 @@ function render(){const p=project();
  if(p.assets.length&&!rows.length)$('assetRows').innerHTML='<tr><td colspan="5" class="no-results">검색 조건에 맞는 항목이 없습니다.</td></tr>';
  renderReport();
  const overall=summary.status;
- $('overall').innerHTML=conclusionMarkup(p,esc);
+ $('overall').innerHTML=conclusionMarkup(p,esc,{fold:true});
  $('overall').className='overall '+overall;
  renderProjects();
  renderAssignment(p);

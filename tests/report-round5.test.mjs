@@ -31,14 +31,25 @@ test('round5 shared conclusion lists only conflicts, reviews and pending in prio
   for(const item of sections.resultLayout(workflow.selectedAssets(p),p.context).items.filter(i=>i.r.status==='review'))assert.equal(c.actions.find(a=>a.name===item.name).action,item.checks[0]);
   const pdf=await getDocument({data:new Uint8Array(await createReportPdf(p)),useSystemFonts:true}).promise;
   const pages=[];for(let i=1;i<=pdf.numPages;i++)pages.push((await (await pdf.getPage(i)).getTextContent()).items.map(x=>x.str).join(''));
-  for(const output of [...htmls,pages[0]]){
+  // The screen folds actions into one chip per verdict; reports keep the full list.
+  const web=htmls[0];assert.ok(norm(web).includes(norm(c.title)));
+  for(const key of ['conflict','review','conditions','pending']){
+   const group=web.match(new RegExp(`<details class="verdict-group ${key}" name="verdict">([\\s\\S]*?)</details>`))?.[1]||'';
+   for(const a of [...c.actions,...c.usable].filter(a=>a.status===key))assert.ok(group.includes(`<b>${a.name}</b> — ${a.action}`),a.name);
+  }
+  assert.ok(c.usable.length&&c.usable.every(a=>!c.actions.some(x=>x.name===a.name)));
+  // PDF page 1 is a single table: every item with its to-do in the same row.
+  assert.ok(norm(pages[0]).includes(norm(c.title))&&norm(pages[0]).includes(norm(c.countsText)));
+  for(const a of [...c.actions,...c.usable])assert.ok(norm(pages[0]).includes(norm(a.name))&&norm(pages[0]).includes(norm(a.action)),a.name);
+  for(const output of [htmls[1]]){
    assert.ok(norm(output).includes(norm(c.title)));
    const list=output.slice(output.indexOf(c.actionsTitle),output.indexOf(c.conditionsText));
    for(const a of c.actions)assert.ok(norm(list).includes(norm(a.name+' — '+a.action)),a.name);
    for(const a of p.assets.filter(a=>a.selection!=='pending'&&evaluate(a,p.context).status==='conditions'))assert.ok(!list.includes(a.name));
    assert.equal(norm(output).split(norm(c.countsText)).length-1,1);
   }
-  for(const output of [...htmls,pages.join('')]){assert.equal(norm(output).split(norm(disclaimer)).length-1,1);assert.equal(norm(output).split(norm(c.countsText)).length-1,1);}
+  for(const output of [htmls[1],pages.join('')]){assert.equal(norm(output).split(norm(disclaimer)).length-1,1);assert.equal(norm(output).split(norm(c.countsText)).length-1,1);}
+  assert.equal(norm(web).split(norm(disclaimer)).length-1,1);
  }
 });
 test('round5 no pending or empty project is shown as possible',()=>{
@@ -54,7 +65,7 @@ test('round5 result starts with conclusion and removes repeated explanations',()
  assert.ok(view.indexOf('id="overall"')<view.indexOf('id="reportContent"'));
  for(const text of ['실제 사용하는 자료의 결론과 근거를 확인하세요.','결과는 적용 라이선스·계약상 허용 여부입니다. 실제 자료의 권리는 별도 확인 사항을 보세요.','기본은 핵심 결과만 PDF로 저장합니다. 원문은 앱에 그대로 보관됩니다.'])assert.ok(!app.includes(text)&&!view.includes(text));
  assert.ok(!view.includes('id="stats"'));assert.ok(view.includes('id="exportReport"'));
- assert.match(app,/conclusionMarkup\(p,esc\)/);
+ assert.match(app,/conclusionMarkup\(p,esc,\{fold:true\}\)/);
 });
 test('round5 Blender ambiguous tool scope stays on hold with actionable reason',()=>{
  const p=fixture('sample'),a=p.assets.find(a=>a.name==='Blender');

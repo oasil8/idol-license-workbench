@@ -1,6 +1,9 @@
 import {statuses} from './core.mjs';
 
-const thirdParty='입력 자료·브랜드·디자인·상표·초상·음성·개인정보 등 제3자 권리는 라이선스·약관상 허용만으로 확보되지 않으므로 실제 자료를 기준으로 별도 확인하세요.';
+const thirdParty='브랜드·상표·초상·음성·개인정보 등 제3자 권리는 라이선스와 별도로 확인하세요.';
+// Notes that apply to nearly every item; the result screen folds them so the specific ones stand out.
+export const minorNote=/금지 콘텐츠·서비스 이용 정책|과거 생성물·별도 계약|호스팅 서비스·유료 배포판/;
+export const noteNames=names=>names.length>3?names.slice(0,2).join(', ')+` 외 ${names.length-2}개`:names.join(', ');
 
 // Common notes keep the bucket they came from: an obligation never becomes a check.
 export function resultBodyLayout(items){

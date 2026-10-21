@@ -1,4 +1,4 @@
-import {resultBodyLayout,commonGroups} from './result-layout.mjs';
+import {resultBodyLayout,commonGroups,minorNote,noteNames} from './result-layout.mjs';
 import {evaluate,statuses} from './core.mjs';
 import {projectSummary,selectionOf} from './workflow.mjs';
 import {reviewAge} from './official-sources.mjs';
@@ -15,23 +15,37 @@ export function projectConclusion(p){
  const purpose=c.commercial?(c.platform==='steam'?'Steam 상업 출시':platform+' (상업)'):platform;
  const actions=['conflict','review'].flatMap(status=>resultLayout(summary.assets,c).items.flatMap(({a,r,checks})=>{
   if(r.status!==status)return [];
-  return [{name:a.name,action:status==='conflict'?conflictNextAction:keyAction([...checks,...resultItems(r,outcomeReason(a,r)).checks])||reviewReason(r)}];
- })).concat(p.assets.filter(a=>selectionOf(a)==='pending').map(a=>({name:a.name,action:'실제 사용 여부를 선택하세요.'})));
+  return [{status,name:a.name,action:status==='conflict'?conflictNextAction:keyAction([...checks,...resultItems(r,outcomeReason(a,r)).checks])||reviewReason(r)}];
+ })).concat(p.assets.filter(a=>selectionOf(a)==='pending').map(a=>({status:'pending',name:a.name,action:'실제 사용 여부를 선택하세요.'})));
+ const usable=resultLayout(summary.assets,c).items.filter(({r})=>r.status==='conditions').map(({a,r})=>{
+  const list=resultItems(r).conditions;
+  return {status:'conditions',name:a.name,action:list.length?list[0]+(list.length>1?` (외 조건 ${list.length-1}개)`:''):'표시된 조건을 지키면 사용할 수 있습니다.'};
+ });
  return {title:purpose+': '+({conflict:'아직 불가',review:'판단 보류',conditions:'가능 (조건 이행 필요)'}[summary.status]),
-  actionsTitle:'이 목적으로 쓰려면 해결할 일',actions,
+  actionsTitle:'이 목적으로 쓰려면 해결할 일',actions,usable,
   conditionsText:summary.counts.conditions?(actions.length?`나머지 ${summary.counts.conditions}개는`:`${summary.counts.conditions}개 모두`)+' 표시된 조건을 지키면 사용할 수 있습니다.':'',
   countsText:`현재 조건으로 사용 불가 ${summary.counts.conflict}개 · 판단 보류 ${summary.counts.review}개 · 사용 가능 (조건부) ${summary.counts.conditions}개 · 선택 전 ${summary.pending}개`,
   contextText:`${platform} · 상업 ${c.commercial?'예':'아니요'} · 배포 ${c.distribute?'예':'아니요'} · 수정 ${c.modified?'예':'아니요'} · 네트워크 ${c.network?'예':'아니요'}`,
   emptyText:!summary.assets.length&&!summary.pending?'실제 사용할 자료가 선택되지 않았습니다.':'',disclaimer:reportDisclaimer};
 }
 // Generic checks apply to almost every item; the to-do line should name what blocks this one.
-const genericCheck=/공식 원문이 적용되는지|허용만으로 확보되지|제3자 권리|회사·학교 업무|포함하지 않았는지|다운로드한 .* 페이지|과거 생성물|Steam 공개 범위/;
+const genericCheck=/공식 원문이 적용되는지|허용만으로 확보되지|제3자 권리|회사·학교 업무|포함하지 않았는지|다운로드한 .* 페이지|과거 생성물|Steam 공개/;
 function keyAction(checks){
  const pick=checks.find(t=>!genericCheck.test(t))||checks[0];
  return pick&&pick.replace(/^.*? — 자동 판정 미지원\. /,'');
 }
-export function conclusionMarkup(p,esc){
+const groupLabels=[['conflict','사용 불가'],['review','판단 보류'],['conditions','사용 가능 (조건부)'],['pending','선택 전']];
+// Screen version: one chip per verdict; opening a chip lists what to do for those items.
+export function conclusionMarkup(p,esc,{fold=false}={}){
  const c=projectConclusion(p);
+ if(fold){
+  const rows=[...c.actions,...c.usable];
+  const groups=groupLabels.map(([key,label])=>{
+   const list=rows.filter(a=>a.status===key);
+   return list.length?`<details class="verdict-group ${key}" name="verdict"><summary>${label} <b>${list.length}</b></summary><ul>${list.map(a=>`<li><b>${esc(a.name)}</b> — ${esc(a.action)}</li>`).join('')}</ul></details>`:'';
+  }).join('');
+  return `<div class="project-conclusion"><h2>${esc(c.title)}</h2><small>${esc(c.contextText)}</small>${groups?`<div class="verdict-groups">${groups}</div>`:''}${c.emptyText?`<p>${esc(c.emptyText)}</p>`:''}<small>${c.disclaimer}</small></div>`;
+ }
  return `<div class="project-conclusion"><h2>${esc(c.title)}</h2><small>${esc(c.contextText)}</small>${c.actions.length?`<h3>${c.actionsTitle}</h3><ul class="resolution-actions">${c.actions.map(a=>`<li>${esc(a.name)} — ${esc(a.action)}</li>`).join('')}</ul>`:''}${c.conditionsText?`<p>${esc(c.conditionsText)}</p>`:''}${c.emptyText?`<p>${esc(c.emptyText)}</p>`:''}<p class="verdict-counts">${esc(c.countsText)}</p><small>${c.disclaimer}</small></div>`;
 }
 
@@ -47,16 +61,17 @@ function taskButton(text,a,esc){
  return action&&a.id?` <button type="button" class="text-button" data-edit="${esc(a.id)}" data-field="${action.field}">${action.label}</button>`:'';
 }
 export function commonChecksMarkup(layout,esc,{buttons=true}={}){
+ const minor=layout.common.filter(note=>minorNote.test(note.text));
  return commonGroups.map(([kind,title])=>{
-  const notes=layout.common.filter(note=>note.kind===kind);
+  const notes=layout.common.filter(note=>note.kind===kind&&!minor.includes(note));
   return notes.length?`<section class="report-item common-checks"><h3>${title}</h3><ul>${notes.map(note=>{
    const shortcuts=buttons?layout.items.filter(item=>note.sourceTexts.some(text=>item.allTasks.includes(text))).map(item=>{
     const button=taskButton(note.text,item.a,esc);
     return button?` <span>${esc(item.name)}:${button}</span>`:'';
    }).join(''):'';
-   return `<li>${esc(note.text)} (해당 항목: ${esc(note.names.join(', '))})${shortcuts}</li>`;
+   return `<li>${esc(note.text)} (해당 항목: ${esc(noteNames(note.names))})${shortcuts}</li>`;
   }).join('')}</ul></section>`:'';
- }).join('');
+ }).join('')+(minor.length?`<details class="report-item common-checks minor-notes"><summary>그 밖의 일반 주의사항 ${minor.length}개</summary><ul>${minor.map(note=>`<li>${esc(note.text)} (해당 항목: ${esc(noteNames(note.names))})</li>`).join('')}</ul></details>`:'');
 }
 
 export function permissionMarkup(a,r,esc){

@@ -80,7 +80,7 @@ function evaluateBase(a,c,now){
   // An explicitly commercial-only prohibition cannot decide a noncommercial use.
   if(!c.commercial&&result.status==='conflict'&&result.notes.includes('현재 공식 안내에서 무료 플랜의 상용 권리를 부여하지 않습니다.')){result.status='review';result.notes.push('상업 이용 제한과 별개로 현재 비상업 이용 범위에 대한 허가를 확인해야 합니다.');}
 
-  if(c.platform==='steam'&&a.scope==='output')result.humanChecks.push('플레이어에게 제공되는 AI 콘텐츠인지와 Steam 공개 범위를 확인하세요.');
+  if(c.platform==='steam'&&a.scope==='output')result.humanChecks.push('플레이어에게 보이는 AI 생성물이면 Steam 공개 대상인지 확인하세요.');
   if(a.scope==='weights')result.tasks.push('모델 버전·재배포·고지·학습 데이터 이용 조건을 확인하세요.');
   if(c.platform==='conference')result.humanChecks.push('학회·출판사의 AI 사용 공개 정책을 확인하세요.');
   return result;

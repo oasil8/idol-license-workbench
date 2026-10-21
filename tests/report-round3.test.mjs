@@ -33,7 +33,7 @@ test('common obligations stay under the obligations heading in web and exported 
   }
  }
  const html=screen(json('./fixtures/report-mixed.json'));
- assert.match(html,/<h3>공통으로 지켜야 할 조건<\/h3>[\s\S]*금지 콘텐츠·서비스 이용 정책을 준수하세요\./);
+ assert.match(html,/minor-notes[\s\S]*금지 콘텐츠·서비스 이용 정책을 준수하세요\./);
  assert.ok(!checkBlock(html).includes('금지 콘텐츠'));
 });
 
@@ -41,7 +41,7 @@ test('PDF common checks section contains no obligation sentence',async()=>{
  for(const p of projects().slice(0,2)){
   const doc=await getDocument({data:new Uint8Array(await createReportPdf(p)),useSystemFonts:true}).promise;let text='';
   for(let i=1;i<=doc.numPages;i++)text+=(await (await doc.getPage(i)).getTextContent()).items.map(x=>x.str).join('');
-  text=norm(text);const start=text.indexOf('공통확인사항'),checks=start<0?'':text.slice(start,text.indexOf('1.',start));
+  text=norm(text);const start=text.indexOf('공통확인사항'),end=[text.indexOf('그밖의일반주의사항',start),text.indexOf('1.',start)].filter(i=>i>=0),checks=start<0?'':text.slice(start,Math.min(...end));
   for(const duty of obligations(p))assert.ok(!checks.includes(norm(duty)),duty);
  }
 });

@@ -173,8 +173,22 @@ section.context-panel{padding:24px}section.context-panel .context-title{padding:
 
 /* Compact result cards are articles, so they need their own inner spacing. */
 @media screen {
- main:has(#reportView:not([hidden])) { max-width:none; }
- #reportView { max-width:1360px; margin-inline:auto; }
+ /* Every view centers in the space beside the sidebar; a left-pinned max-width left the right side empty on wide screens. */
+ main { max-width:none; }
+ main>* { max-width:1360px; margin-inline:auto; }
  #reportContent>.result-card { padding:clamp(18px,2.2vw,28px); }
  #reportContent>.result-card>h3 { margin-top:0; }
 }
+
+.verdict-groups{display:flex;flex-wrap:wrap;gap:8px;margin:16px 0 4px}
+.verdict-group>summary{list-style:none;cursor:pointer;display:inline-block;padding:8px 14px;border-radius:999px;border:1px solid #c9d8ce;background:#fff;font-size:14px;font-weight:600}
+.verdict-group>summary::-webkit-details-marker{display:none}
+.verdict-group>summary:after{content:' ▾';font-size:11px}
+.verdict-group[open]{flex-basis:100%}
+.verdict-group[open]>summary:after{content:' ▴'}
+.verdict-group.conflict>summary{color:#9e3025;background:#ffe7e0;border-color:#f0c4b9}
+.verdict-group.review>summary{color:#775310;background:#fff0cf;border-color:#ecd7a3}
+.verdict-group.conditions>summary{color:#16613c;background:#def2e7;border-color:#b6dcc6}
+.verdict-group ul{margin:10px 0 4px;padding-left:20px;font-size:14px;line-height:1.7}
+.minor-notes>summary{cursor:pointer;font-size:14px;color:#4f6656}
+.guide-steps{margin:18px 0 8px;padding-left:20px;font-size:14px;line-height:1.8;color:#405f4b}.guide-steps li{margin:4px 0}
