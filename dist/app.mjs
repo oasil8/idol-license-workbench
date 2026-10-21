@@ -225,8 +225,11 @@ function openAsset(id,ai=false){editing=id||null;$('assetForm').dataset.licenseO
  try{for(const f of Array.from(files).slice(0,10000)){
   const path=f.webkitRelativePath||f.name;let rows=[];
   if(/(^|\/)(\.git|\.env[^/]*|\.ssh|\.aws)(\/|$)/i.test(path)){ignored++;continue;}
+  // Engine caches regenerate from the project and would repeat every package thousands of times.
+  if(/(^|\/)(Library|Temp|Logs|obj|\.godot)\//.test(path)){ignored++;continue;}
   const model=/\.(glb|gltf|fbx|obj|blend|stl|usd|usdz)$/i.test(path),image=/\.(png|jpg|jpeg|webp|tga|svg|gif|bmp|psd|tif|tiff|exr|hdr)$/i.test(path),audio=/\.(wav|mp3|ogg|flac|m4a|aac|aif|aiff)$/i.test(path),ai=/\.(safetensors|gguf|onnx|pt|pth)$/i.test(path),font=/\.(ttf|otf|ttc|woff2?)$/i.test(path),video=/\.(mp4|mov|webm|avi)$/i.test(path);
-  if(model||image||audio||ai||font||video)rows=[{name:f.name,kind:ai?'ai':model?'model':image?'image':audio?'audio':'other',license:'',evidence:path,notes:font?'글꼴 파일. 파일명만 등록. 배포처의 글꼴 라이선스(OFL 등)와 게임 포함·배포 허용을 확인하세요.':'파일명만 등록. 콘텐츠·권리·라이선스는 미분석.',rights:'unknown',confirmed:false}];
+  const unityPackage=/\.unitypackage$/i.test(path);
+  if(model||image||audio||ai||font||video||unityPackage)rows=[{name:f.name,kind:ai?'ai':model?'model':image?'image':audio?'audio':'other',license:'',evidence:path,notes:font?'글꼴 파일. 파일명만 등록. 배포처의 글꼴 라이선스(OFL 등)와 게임 포함·배포 허용을 확인하세요.':unityPackage?'Unity 패키지 파일. 받은 곳(Asset Store 등)과 그 라이선스를 확인하세요.':'파일명만 등록. 콘텐츠·권리·라이선스는 미분석.',rights:'unknown',confirmed:false}];
   else if(!isReadable(path)){ignored++;continue;}
   else if(f.size>2*1024*1024||bytes+f.size>30*1024*1024){ignored++;log.push('크기 제한으로 건너뜀: '+path);continue;}
   else{try{bytes+=f.size;rows=parseFile(path,await f.text());read++;if(!rows.length&&/\.(js|mjs|ts|tsx|jsx|py|cs|cpp|c|h|rs|go|java)$/i.test(path))unlabeled++;}catch(err){failed++;log.push('읽기/파싱 실패: '+path+' — '+err.message);continue;}}

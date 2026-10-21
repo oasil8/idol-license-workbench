@@ -241,15 +241,32 @@ function evaluateBase(a,c,now){
 const cleanLicense=x=> typeof x==='string'&&!['NOASSERTION','NONE'].includes(x)?x:typeof x?.type==='string'?x.type:'';
 export function isReadable(path){
  if(/(^|[\\/])(\.git|\.env[^/\\]*|\.ssh|\.aws)([\\/]|$)/i.test(path))return false;
- return /(^|\/)(package(?:-lock)?\.json|requirements[^/]*\.txt|[^/]*(?:sbom|bom)[^/]*\.json|licenses?(?:[.-][^/]*)?|copying(?:[.-][^/]*)?|notice(?:[.-][^/]*)?|ofl(?:[.-][^/]*)?)$/i.test(path)||/\.(js|mjs|ts|tsx|jsx|py|cs|cpp|c|h|rs|go|java|json)$/i.test(path);
+ return /(^|\/)(package(?:-lock)?\.json|requirements[^/]*\.txt|[^/]*(?:sbom|bom)[^/]*\.json|licenses?(?:[.-][^/]*)?|copying(?:[.-][^/]*)?|notice(?:[.-][^/]*)?|ofl(?:[.-][^/]*)?|ProjectVersion\.txt|project\.godot|plugin\.cfg)$/i.test(path)||/\.(js|mjs|ts|tsx|jsx|py|cs|cpp|c|h|rs|go|java|json)$/i.test(path);
 }
 export function parseFile(path,text){
  const name=path.split('/').pop(), out=[];
  const add=(name,license='',extra={})=>out.push({name,license:cleanLicense(license),kind:'code',version:'',confirmed:false,evidence:path,notes:'',rights:'unknown',...extra});
+ // Engine project files: the engine itself and declared packages/addons, never the game's own assets.
+ if(name==='ProjectVersion.txt'){
+  const version=text.match(/m_EditorVersion:\s*(\S+)/)?.[1];
+  if(version)add('Unity','',{kind:'tool',version,notes:'Unity 에디터 버전. 사용 중인 Unity 플랜(Personal·Pro 등)과 에디터 약관을 확인하세요.'});
+  return out;
+ }
+ if(name==='project.godot'){
+  add('Godot Engine','MIT',{kind:'tool',version:text.match(/config\/features=PackedStringArray\("([\d.]+)"/)?.[1]||'',notes:'Godot 엔진은 MIT 라이선스입니다. 게임 배포 시 Godot 저작권·라이선스 고지를 포함하세요.'});
+  return out;
+ }
+ if(name==='plugin.cfg'){
+  const field=key=>text.match(new RegExp('^'+key+'\\s*=\\s*"([^"]*)"','m'))?.[1]||'';
+  if(field('name'))add(field('name'),'',{version:field('version'),notes:'Godot 애드온. 애드온 폴더의 LICENSE와 받은 곳(에셋 라이브러리 등)의 조건을 확인하세요.'});
+  return out;
+ }
  if(/\.json$/i.test(name)){
   const j=JSON.parse(text);
   if(!j||typeof j!=='object')return out;
-  if(name==='package.json'){
+  if(name==='manifest.json'&&j.dependencies&&Object.keys(j.dependencies).some(k=>/^com\./.test(k))){
+   for(const [dep,version] of Object.entries(j.dependencies))add(dep,'',{version:String(version),notes:/^com\.unity\./.test(dep)?'Unity 패키지 선언. Unity 공식 패키지는 Unity Companion License 등 Unity 약관이 적용될 수 있습니다. 패키지 문서의 라이선스를 확인하세요.':'Unity 패키지 선언. 패키지 제공처의 라이선스를 확인하세요.'});
+  }else if(name==='package.json'){
    add(j.name||path,j.license,{version:j.version||'',evidence:[path,j.homepage,typeof j.repository==='string'?j.repository:j.repository?.url].filter(v=>typeof v==='string'&&v).join('\n')});
    for(const [dep,version] of Object.entries({...j.dependencies,...j.devDependencies,...j.optionalDependencies,...j.peerDependencies}))add(dep,'',{version:String(version),notes:'의존성 선언만 발견. 버전 범위·실제 배포 여부·의존성 라이선스는 미확인.'});
   }else if(name==='package-lock.json'){

@@ -67,3 +67,16 @@ test('a font OFL.txt is read as a license file',()=>{
  assert.ok(isReadable('Fonts/OFL.txt'));
  assert.equal(parseFile('Fonts/OFL.txt','Copyright 2026\nThis Font Software is licensed under the SIL Open Font License, Version 1.1.')[0].license,'OFL-1.1');
 });
+test('Unity and Godot project files list the engine and declared packages',()=>{
+ const unity=parseFile('ProjectSettings/ProjectVersion.txt','m_EditorVersion: 2022.3.10f1\nm_EditorVersionWithRevision: 2022.3.10f1 (ff3792e53c62)');
+ assert.deepEqual(unity.map(a=>[a.name,a.kind,a.version]),[['Unity','tool','2022.3.10f1']]);
+ const packages=parseFile('Packages/manifest.json',JSON.stringify({dependencies:{'com.unity.render-pipelines.universal':'14.0.11','com.cysharp.unitask':'https://github.com/Cysharp/UniTask.git'}}));
+ assert.deepEqual(packages.map(a=>a.name),['com.unity.render-pipelines.universal','com.cysharp.unitask']);
+ assert.match(packages[0].notes,/Unity Companion License/);
+ // A generic web manifest is not a Unity package list.
+ assert.equal(parseFile('manifest.json',JSON.stringify({name:'app',icons:[]})).length,0);
+ const godot=parseFile('project.godot','config_version=5\n[application]\nconfig/name="My Game"\nconfig/features=PackedStringArray("4.2", "Forward Plus")');
+ assert.deepEqual(godot.map(a=>[a.name,a.kind,a.license,a.version]),[['Godot Engine','tool','MIT','4.2']]);
+ assert.deepEqual(parseFile('addons/dialogic/plugin.cfg','[plugin]\nname="Dialogic"\nversion="2.0"\nauthor="x"').map(a=>[a.name,a.version]),[['Dialogic','2.0']]);
+ for(const p of ['ProjectSettings/ProjectVersion.txt','project.godot','addons/x/plugin.cfg'])assert.ok(isReadable(p),p);
+});

@@ -83,7 +83,7 @@ export async function createReportPdf(project,{includeOriginals=false}={}) {
  // PDFKit's own wrapper needs about a space more room than widthOfString reports, or it re-breaks after '/'.
  const wrapped=(value,w=width)=>wrapPdfText(value,t=>doc.widthOfString(t),w-1-doc.widthOfString('  '));
  const text=(value,size=9,color='#263e38')=>{doc.fontSize(size).fillColor(color).text(wrapped(value),42,doc.y,{width,lineGap:2,paragraphGap:3});};
- const heading=(value,size=12,color='#086f64')=>{room(55);doc.moveDown(.4);text(value,size,color);doc.moveDown(.2);};
+ const heading=(value,size=12,color='#1f2f2a')=>{room(55);doc.moveDown(.4);text(value,size,color);doc.moveDown(.2);};
  text(data.name,18);text('IDOL License WORKBENCH · '+new Date().toLocaleDateString('ko-KR',{timeZone:'Asia/Seoul'}),8);
  if(data.conclusion){
   const c=data.conclusion;
@@ -123,7 +123,7 @@ export async function createReportPdf(project,{includeOriginals=false}={}) {
  for(const [kind,title] of commonGroups){
   const notes=layout.common.filter(note=>note.kind===kind&&!minorNote.test(note.text));
   if(!notes.length)continue;
-  drawBlock({value:title,size:13,color:'#086f64'});
+  drawBlock({value:title,size:13,color:'#1f2f2a'});
   for(const note of notes)drawBlock({value:'• '+note.text+' (해당 항목: '+noteNames(note.names)+')',size:8.5});
   doc.y+=6;
  }
@@ -134,7 +134,7 @@ export async function createReportPdf(project,{includeOriginals=false}={}) {
   doc.y+=6;
  }
  for(const [i,item] of layout.items.entries()){
-  const blocks=[{value:`${i+1}. ${item.name}`,size:12,color:'#086f64'},{value:item.status+' — '+item.reason,size:9,color:verdictColor(item.status)}];
+  const blocks=[{value:`${i+1}. ${item.name}`,size:12,color:'#1f2f2a'},{value:item.status+' — '+item.reason,size:9,color:verdictColor(item.status)}];
   if(item.status===statuses.conflict)blocks.push({value:conflictNextAction});
   for(const [title,values] of [['지켜야 할 조건',item.conditions],['확인 필요',item.checks]]){
    if(!values.length)continue;
