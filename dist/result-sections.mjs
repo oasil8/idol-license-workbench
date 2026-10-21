@@ -60,7 +60,8 @@ function taskButton(text,a,esc){
  const action=inputForTask(text,a);
  return action&&a.id?` <button type="button" class="text-button" data-edit="${esc(a.id)}" data-field="${action.field}">${action.label}</button>`:'';
 }
-export function commonChecksMarkup(layout,esc,{buttons=true}={}){
+// The screen drops generic notes (each item's dialog still lists them); exported reports keep them as the full record.
+export function commonChecksMarkup(layout,esc,{buttons=true,keepMinor=!buttons}={}){
  const minor=layout.common.filter(note=>minorNote.test(note.text));
  return commonGroups.map(([kind,title])=>{
   const notes=layout.common.filter(note=>note.kind===kind&&!minor.includes(note));
@@ -71,7 +72,7 @@ export function commonChecksMarkup(layout,esc,{buttons=true}={}){
    }).join(''):'';
    return `<li>${esc(note.text)} (해당 항목: ${esc(noteNames(note.names))})${shortcuts}</li>`;
   }).join('')}</ul></section>`:'';
- }).join('')+(minor.length?`<details class="report-item common-checks minor-notes"><summary>그 밖의 일반 주의사항 ${minor.length}개</summary><ul>${minor.map(note=>`<li>${esc(note.text)} (해당 항목: ${esc(noteNames(note.names))})</li>`).join('')}</ul></details>`:'');
+ }).join('')+(keepMinor&&minor.length?`<details class="report-item common-checks minor-notes"><summary>그 밖의 일반 주의사항 ${minor.length}개</summary><ul>${minor.map(note=>`<li>${esc(note.text)} (해당 항목: ${esc(noteNames(note.names))})</li>`).join('')}</ul></details>`:'');
 }
 
 export function permissionMarkup(a,r,esc){

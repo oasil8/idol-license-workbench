@@ -33,7 +33,8 @@ test('common obligations stay under the obligations heading in web and exported 
   }
  }
  const html=screen(json('./fixtures/report-mixed.json'));
- assert.match(html,/minor-notes[\s\S]*금지 콘텐츠·서비스 이용 정책을 준수하세요\./);
+ assert.ok(!html.includes('금지 콘텐츠·서비스 이용 정책을 준수하세요.'));
+ assert.match(buildProjectReport(json('./fixtures/report-mixed.json')),/minor-notes[\s\S]*금지 콘텐츠·서비스 이용 정책을 준수하세요\./);
  assert.ok(!checkBlock(html).includes('금지 콘텐츠'));
 });
 

@@ -74,9 +74,13 @@ function render(){const p=project();
  const mentions=new Map(reviewAssignment(p.assignment?.documents||[]).candidates.map(c=>[c.name,c]));
  const mentionLabel=a=>{const c=mentions.get(a.name);return c?`<small class="source-role-label">${c.references.every(r=>r.role==='feedback')?'피드백에서만 언급 · 대안 후보':'문서에서 추출한 후보'}</small>`:'';};
  const query=$('search').value.toLowerCase(),filter=$('statusFilter').value;
- const rows=p.assets.filter(a=>(a.name+' '+a.license+' '+a.evidence).toLowerCase().includes(query)).filter(a=>filter==='all'||selectionOf(a)===filter);
+ const rows=p.assets.filter(a=>(a.name+' '+a.license+' '+a.evidence).toLowerCase().includes(query)).filter(a=>filter==='all'||selectionOf(a)===filter||p.assets.every(x=>selectionOf(x)==='used'));
  $('assetRows').innerHTML=rows.map(a=>`<tr><td><button class="asset-name" data-edit="${a.id}">${brandIcon(a)}${esc(a.name)}</button><small>${esc(a.version||'버전 미기록')}</small>${mentionLabel(a)}</td><td>${esc(kinds[a.kind])}</td><td><code>${esc(a.license||'미확인')}</code><small>${a.terms?'약관 기록 있음':a.evidence?.trim()?'근거 입력됨':'근거 추가 필요'}</small></td><td><select data-selection="${a.id}" aria-label="${esc(a.name)} 사용 여부">${Object.entries(selectionLabels).map(([key,label])=>`<option value="${key}" ${selectionOf(a)===key?'selected':''}>${label}</option>`).join('')}</select></td><td><button class="row-open" data-edit="${a.id}">정보·근거 수정</button></td></tr>`).join('');
- $('selectionSummary').textContent=`실제 사용 ${summary.assets.length}개 · 선택 전 ${summary.pending}개 · 대안/제외 ${p.assets.length-summary.assets.length-summary.pending}개`;
+ // Items typed in by hand are in use; the choice column only matters once a folder or document import adds candidates.
+ const choosing=p.assets.some(a=>selectionOf(a)!=='used');
+ $('assetRows').closest('table').classList.toggle('no-choice',!choosing);$('statusFilter').hidden=!choosing;
+ $('selectionHelp').textContent=choosing?'파일·문서에서 자동으로 찾은 후보가 있습니다. 실제로 쓰는 것만 ‘실제 사용’으로 고르세요. 대안·사용 안 함은 검토에서 빠집니다.':'직접 넣은 자료는 모두 사용하는 것으로 봅니다. 쓰지 않을 자료는 ‘정보·근거 수정’에서 삭제하세요.';
+ $('selectionSummary').textContent=choosing?`실제 사용 ${summary.assets.length}개 · 선택 전 ${summary.pending}개 · 대안/제외 ${p.assets.length-summary.assets.length-summary.pending}개`:'';
 
  $('empty').hidden=p.assets.length>0;$('assetRows').closest('.table-wrap').hidden=p.assets.length===0;
  if(p.assets.length&&!rows.length)$('assetRows').innerHTML='<tr><td colspan="5" class="no-results">검색 조건에 맞는 항목이 없습니다.</td></tr>';
@@ -92,7 +96,7 @@ function renderReport(){const p=project();if(!conditionsConfirmed(p)){$('reportC
  const layout=resultLayout(selectedAssets(p),p.context);
  $('reportContent').innerHTML=commonChecksMarkup(layout,esc)+layout.items.map(item=>{const {a,r}=item;return `<article class="report-item result-card"><h3 class="brand-name">${brandIcon(a)}${esc(a.name)} ${badge(r)}</h3>${compactResultMarkup(a,r,assetSources(a,p.context),esc,item)}<button class="outline" data-edit="${a.id}">정보 보완</button></article>`;}).join('');
 }
-function setView(next){if(next==='report'&&contextDraftProject===current)message('사용 조건에 미적용 변경이 있습니다. 결과는 마지막으로 적용한 조건 기준입니다.');view=next;window.scrollTo({top:0,behavior:'instant'});for(const v of ['intake','inventory','report','guide'])$(v+'View').hidden=v!==view;document.querySelectorAll('[data-view]').forEach(b=>{b.classList.toggle('active',b.dataset.view===view);if(b.dataset.view===view)b.setAttribute('aria-current','step');else b.removeAttribute('aria-current');});$('viewSubtitle').textContent={intake:'파일을 가져오거나 이름으로 검색해서 자료를 등록하세요.',inventory:'각 자료를 실제 사용, 대안 보관, 사용 안 함으로 분류하세요.',report:'',guide:'사용 순서와 결과를 읽는 방법을 확인하세요.'}[view];$('pageLabel').textContent={intake:'1. 자료 넣기',inventory:'2. 실제 사용할 것 선택',report:'3. 결과 확인',guide:'사용법·결과 안내'}[view];}
+function setView(next){if(next==='report'&&contextDraftProject===current)message('사용 조건에 미적용 변경이 있습니다. 결과는 마지막으로 적용한 조건 기준입니다.');view=next;window.scrollTo({top:0,behavior:'instant'});for(const v of ['intake','inventory','report','guide'])$(v+'View').hidden=v!==view;document.querySelectorAll('[data-view]').forEach(b=>{b.classList.toggle('active',b.dataset.view===view);if(b.dataset.view===view)b.setAttribute('aria-current','step');else b.removeAttribute('aria-current');});$('viewSubtitle').textContent={intake:'파일을 가져오거나 이름으로 검색해서 자료를 등록하세요.',inventory:'각 자료를 실제 사용, 대안 보관, 사용 안 함으로 분류하세요.',report:'',guide:'사용 순서와 결과를 읽는 방법을 확인하세요.'}[view];$('pageLabel').textContent={intake:'1. 자료 넣기',inventory:'2. 사용 조건 정하기',report:'3. 결과 확인',guide:'사용법·결과 안내'}[view];}
 $('assetRows').addEventListener('change',e=>{const id=e.target.dataset.selection;if(!id)return;const value=e.target.value;if(!Object.hasOwn(selectionLabels,value))return;transact(state=>{state.projects.find(p=>p.id===state.current).assets.find(a=>a.id===id).selection=value;});render();});
 function focusAssetInput(name){
  const field=$('assetForm').elements.namedItem(name);if(!field)return;
