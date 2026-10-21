@@ -15,7 +15,7 @@ export function projectConclusion(p){
  const purpose=c.commercial?(c.platform==='steam'?'Steam 상업 출시':platform+' (상업)'):platform;
  const actions=['conflict','review'].flatMap(status=>resultLayout(summary.assets,c).items.flatMap(({a,r,checks})=>{
   if(r.status!==status)return [];
-  return [{name:a.name,action:status==='conflict'?conflictNextAction:checks[0]||resultItems(r,outcomeReason(a,r)).checks[0]||reviewReason(r)}];
+  return [{name:a.name,action:status==='conflict'?conflictNextAction:keyAction([...checks,...resultItems(r,outcomeReason(a,r)).checks])||reviewReason(r)}];
  })).concat(p.assets.filter(a=>selectionOf(a)==='pending').map(a=>({name:a.name,action:'실제 사용 여부를 선택하세요.'})));
  return {title:purpose+': '+({conflict:'아직 불가',review:'판단 보류',conditions:'가능 (조건 이행 필요)'}[summary.status]),
   actionsTitle:'이 목적으로 쓰려면 해결할 일',actions,
@@ -23,6 +23,12 @@ export function projectConclusion(p){
   countsText:`현재 조건으로 사용 불가 ${summary.counts.conflict}개 · 판단 보류 ${summary.counts.review}개 · 사용 가능 (조건부) ${summary.counts.conditions}개 · 선택 전 ${summary.pending}개`,
   contextText:`${platform} · 상업 ${c.commercial?'예':'아니요'} · 배포 ${c.distribute?'예':'아니요'} · 수정 ${c.modified?'예':'아니요'} · 네트워크 ${c.network?'예':'아니요'}`,
   emptyText:!summary.assets.length&&!summary.pending?'실제 사용할 자료가 선택되지 않았습니다.':'',disclaimer:reportDisclaimer};
+}
+// Generic checks apply to almost every item; the to-do line should name what blocks this one.
+const genericCheck=/공식 원문이 적용되는지|허용만으로 확보되지|제3자 권리|회사·학교 업무|포함하지 않았는지|다운로드한 .* 페이지|과거 생성물|Steam 공개 범위/;
+function keyAction(checks){
+ const pick=checks.find(t=>!genericCheck.test(t))||checks[0];
+ return pick&&pick.replace(/^.*? — 자동 판정 미지원\. /,'');
 }
 export function conclusionMarkup(p,esc){
  const c=projectConclusion(p);
