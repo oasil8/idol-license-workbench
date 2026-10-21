@@ -241,7 +241,38 @@ function evaluateBase(a,c,now){
 const cleanLicense=x=> typeof x==='string'&&!['NOASSERTION','NONE'].includes(x)?x:typeof x?.type==='string'?x.type:'';
 export function isReadable(path){
  if(/(^|[\\/])(\.git|\.env[^/\\]*|\.ssh|\.aws)([\\/]|$)/i.test(path))return false;
- return /(^|\/)(package(?:-lock)?\.json|requirements[^/]*\.txt|[^/]*(?:sbom|bom)[^/]*\.json|licenses?(?:[.-][^/]*)?|copying(?:[.-][^/]*)?|notice(?:[.-][^/]*)?|ofl(?:[.-][^/]*)?|(?:readme|copyright|credits|attributions?|authors|third[-_ ]?party[-_ ]?notices?)(?:[.-][^/]*)?|ProjectVersion\.txt|project\.godot|plugin\.cfg|pyproject\.toml|Pipfile|Cargo\.toml|go\.mod|packages\.config|pom\.xml|build\.gradle(?:\.kts)?)$/i.test(path)||/\.(js|mjs|ts|tsx|jsx|py|cs|cpp|c|h|rs|go|java|json|gd|lua|hlsl|glsl|shader|cginc|compute|rpy|gml|swift|kt|rb|php|dart|cc|cxx|hpp|csproj|uproject|uplugin)$/i.test(path);
+ return /(^|\/)(package(?:-lock)?\.json|requirements[^/]*\.txt|[^/]*(?:sbom|bom)[^/]*\.json|licenses?(?:[.-][^/]*)?|copying(?:[.-][^/]*)?|notice(?:[.-][^/]*)?|ofl(?:[.-][^/]*)?|(?:readme|copyright|credits|attributions?|authors|third[-_ ]?party[-_ ]?notices?)(?:[.-][^/]*)?|ProjectVersion\.txt|project\.godot|plugin\.cfg|pyproject\.toml|Pipfile|Cargo\.toml|go\.mod|yarn\.lock|pnpm-lock\.yaml|Cargo\.lock|poetry\.lock|uv\.lock|Pipfile\.lock|go\.sum|packages\.config|pom\.xml|build\.gradle(?:\.kts)?)$/i.test(path)||/\.(js|mjs|ts|tsx|jsx|py|cs|cpp|c|h|rs|go|java|json|gd|lua|hlsl|glsl|shader|cginc|compute|rpy|gml|swift|kt|rb|php|dart|cc|cxx|hpp|csproj|uproject|uplugin)$/i.test(path);
+}
+// License texts and short names recognised in LICENSE/CREDITS/README files and image metadata.
+// Returns every distinct license found; callers fill the field only when exactly one is present.
+const ccCode=words=>'CC-BY'+(/non-?commercial|\bnc\b/i.test(words)?'-NC':'')+(/share-?alike|\bsa\b/i.test(words)?'-SA':/no-?deriv|\bnd\b/i.test(words)?'-ND':'');
+export function detectLicenses(text){
+ const t=String(text),flat=t.replace(/\s+/g,' '),found=[];
+ const has=(...patterns)=>patterns.every(p=>p.test(flat));
+ if(has(/PYTHON SOFTWARE FOUNDATION LICENSE VERSION 2/i,/royalty-free/i))found.push('PSF-2.0');
+ else if(has(/SIL OPEN FONT LICENSE[ ,]*Version 1\.1/i,/Font Software/i))found.push('OFL-1.1');
+ else if(has(/GNU AFFERO GENERAL PUBLIC LICENSE/i,/Version 3/i))found.push('AGPL-3.0-only');
+ else if(has(/GNU LESSER GENERAL PUBLIC LICENSE/i,/Version 3/i))found.push('LGPL-3.0-only');
+ else if(has(/GNU LESSER GENERAL PUBLIC LICENSE/i,/Version 2\.1/i))found.push('LGPL-2.1-only');
+ else if(has(/GNU GENERAL PUBLIC LICENSE/i,/Version 3/i))found.push('GPL-3.0-only');
+ else if(has(/GNU GENERAL PUBLIC LICENSE/i,/Version 2/i))found.push('GPL-2.0-only');
+ else if(has(/Mozilla Public License,? (?:Version|v\.?) ?2\.0/i))found.push('MPL-2.0');
+ else if(has(/Eclipse Public License\s*-?\s*v(?:ersion)? ?2\.0/i))found.push('EPL-2.0');
+ else if(has(/Boost Software License\s*-?\s*Version 1\.0/i))found.push('BSL-1.0');
+ else if(has(/provided ['‘’]as-is['‘’]/i,/altered source versions must be plainly marked/i))found.push('Zlib');
+ else if(has(/free and unencumbered software released into the public domain/i))found.push('Unlicense');
+ else if(has(/DO WHAT THE FUCK YOU WANT TO PUBLIC LICENSE/i))found.push('WTFPL');
+ else if(has(/Permission is hereby granted, free of charge/i,/permission notice shall be included/i))found.push('MIT');
+ else if(has(/copyright notice and this permission notice appear in all copies/i,/Permission to use, copy, modify,? and(?:\/or)? distribute this software/i))found.push('ISC');
+ else if(has(/Permission to use, copy, modify,? and(?:\/or)? distribute this software for any purpose with or without fee is hereby granted/i))found.push('0BSD');
+ else if(has(/Redistribution and use in source and binary forms/i)&&!/advertising materials/i.test(flat))found.push(/Neither the name|endorse or promote products/i.test(flat)?'BSD-3-Clause':'BSD-2-Clause');
+ else if(has(/Apache License/i,/Version 2\.0/i))found.push('Apache-2.0');
+ // Creative Commons by URL, full title or short name; several may appear in a credits file.
+ for(const m of t.matchAll(/creativecommons\.org\/licenses\/(by(?:-nc)?(?:-sa|-nd)?)\/(\d\.\d)/gi))found.push('CC-'+m[1].toUpperCase()+'-'+m[2]);
+ for(const m of flat.matchAll(/Creative Commons (Attribution(?:[- ]Non-?Commercial)?(?:[- ](?:Share-?Alike|No-?Derivatives|No-?Derivs))?) (\d\.\d)/gi))found.push(ccCode(m[1])+'-'+m[2]);
+ for(const m of flat.matchAll(/\bCC[- ]?(BY(?:[- ]NC)?(?:[- ](?:SA|ND))?)[- ]?(\d\.\d)\b/gi))found.push(ccCode(m[1].replace(/-/g,' '))+'-'+m[2]);
+ if(/\bCC0\b|creativecommons\.org\/publicdomain\/zero\/1\.0/i.test(flat))found.push('CC0-1.0');
+ return [...new Set(found)];
 }
 // Minimal TOML table reader for dependency tables: `name = "1.0"` or `name = { version = "1.0", ... }`.
 function tomlDependencies(text,header){
@@ -315,6 +346,41 @@ export function parseFile(path,text){
   for(const m of text.matchAll(/\b(?:implementation|api|compileOnly|runtimeOnly|testImplementation|annotationProcessor|kapt)\s*\(?\s*["']([^"':\s]+:[^"':\s]+)(?::([^"'\s]+))?["']/g))add(m[1],'',{version:m[2]||'',notes:declared});
   return out;
  }
+ // Lock files record the exact installed versions, including packages pulled in indirectly.
+ const locked='잠금 파일에 기록된 설치 버전. 라이선스는 미확인.',seenLock=new Set();
+ const lock=(dep,version)=>{const key=dep+'@'+version;if(dep&&!seenLock.has(key)){seenLock.add(key);add(dep,'',{version,notes:locked});}};
+ if(name==='yarn.lock'){
+  for(const block of text.split(/\r?\n(?=\S)/)){
+   const spec=block.split(/,|:\s*$|:\r?\n/)[0].trim().replace(/^"|"$/g,'');
+   if(!spec||spec.startsWith('#')||spec.startsWith('__metadata'))continue;
+   lock(spec.slice(0,spec.indexOf('@',1)),block.match(/^\s+version:?\s+"?([^"\s]+)"?/m)?.[1]||'');
+  }
+  return out;
+ }
+ if(name==='pnpm-lock.yaml'){
+  const section=text.split(/^packages:\s*$/m)[1]?.split(/^\S/m)[0]||'';
+  for(const m of section.matchAll(/^ {2}'?\/?((?:@[^@\s'/]+\/)?[^@\s'/]+)[@/](\d[^:'\s(]*)/gm))lock(m[1],m[2]);
+  return out;
+ }
+ if(/^(Cargo|poetry|uv)\.lock$/.test(name)){
+  for(const block of text.split(/^\[\[package\]\]\s*$/m).slice(1)){
+   const field=key=>block.match(new RegExp('^'+key+'\\s*=\\s*"([^"]*)"','m'))?.[1]||'';
+   // Cargo lists the project's own crates without a source; uv marks the project as editable or virtual.
+   if(name==='Cargo.lock'&&!/^source\s*=/m.test(block))continue;
+   if(name==='uv.lock'&&/^source\s*=\s*\{\s*(?:editable|virtual)/m.test(block))continue;
+   lock(field('name'),field('version'));
+  }
+  return out;
+ }
+ if(name==='Pipfile.lock'){
+  const j=JSON.parse(text);
+  for(const group of ['default','develop'])for(const [dep,v] of Object.entries(j?.[group]||{}))lock(dep,String(v?.version||'').replace(/^==/,''));
+  return out;
+ }
+ if(name==='go.sum'){
+  for(const m of text.matchAll(/^(\S+)\s+(v[^\s/]+)(?:\/go\.mod)?\s+h1:/gm))lock(m[1],m[2]);
+  return out;
+ }
  if(/\.(uproject|uplugin)$/i.test(name)){
   const j=JSON.parse(text);
   if(j.EngineAssociation)add('Unreal Engine','',{kind:'tool',version:String(j.EngineAssociation),notes:'Unreal Engine 버전. Unreal Engine EULA의 로열티·배포 조건을 확인하세요.'});
@@ -330,6 +396,10 @@ export function parseFile(path,text){
   }else if(name==='packages-lock.json'&&j.dependencies&&Object.keys(j.dependencies).some(k=>/^com\./.test(k))){
    // Direct packages already come from manifest.json; the lock adds what they pull in.
    for(const [dep,v] of Object.entries(j.dependencies))if(v?.depth>0)add(dep,'',{version:String(v.version||''),notes:'Unity 패키지가 함께 설치한 간접 패키지. 패키지 문서의 라이선스를 확인하세요.'});
+  }else if(name==='packages.lock.json'&&j.version&&j.dependencies){
+   // NuGet lock: dependencies grouped by target framework.
+   const seen=new Set();
+   for(const framework of Object.values(j.dependencies))for(const [dep,v] of Object.entries(framework||{})){const key=dep+'@'+v?.resolved;if(!seen.has(key)){seen.add(key);add(dep,'',{version:String(v?.resolved||''),notes:'잠금 파일에 기록된 설치 버전. 라이선스는 미확인.'});}}
   }else if(name==='vcpkg.json'){
    for(const d of Array.isArray(j.dependencies)?j.dependencies:[]){const dep=typeof d==='string'?d:d?.name;if(dep)add(dep,'',{version:typeof d==='object'&&d['version>=']||'',notes:'의존성 선언만 발견. 버전·실제 배포 여부·라이선스는 미확인.'});}
   }else if(name==='package.json'){
@@ -355,14 +425,8 @@ export function parseFile(path,text){
  const readme=/^readme/i.test(name);
  if(readme&&!/\b(?:licen[cs]ed?|attribution|credits?|royalty[- ]free|creative commons|cc[- ]by|cc0|eula)\b|라이선스|저작권|출처 표기|크레딧/i.test(text))return out;
  if(/^(readme|license|licence|copying|notice|ofl|copyright|credits|attributions?|authors|third[-_ ]?party[-_ ]?notices?)/i.test(name)){
-  let candidate='';
-  if(/PYTHON SOFTWARE FOUNDATION LICENSE VERSION 2/i.test(text)&&/royalty-free/i.test(text))candidate='PSF-2.0';
-  else if(/SIL OPEN FONT LICENSE[\s,]*Version 1\.1/i.test(text)&&/Font Software/i.test(text))candidate='OFL-1.1';
-  else if(/Permission is hereby granted, free of charge/i.test(text)&&/permission notice shall be included/i.test(text))candidate='MIT';
-  else if(/ISC License/i.test(text)&&/copyright notice and this permission notice appear in all copies/i.test(text.replace(/\s+/g,' ')))candidate='ISC';
-  else if(/Apache License/i.test(text)&&/Version 2\.0/i.test(text))candidate='Apache-2.0';
-  else if(/CC0 1\.0|creativecommons.org\/publicdomain\/zero\/1.0/i.test(text))candidate='CC0-1.0';
-  add(path,candidate,{notes:'문서 내 문구로 탐지한 후보. 여러 라이선스·수정 조항·파일별 적용 범위를 원문에서 확인하세요.'});
+  const found=detectLicenses(text);
+  add(path,found.length===1?found[0]:'',{notes:found.length>1?`여러 라이선스가 함께 있습니다(${found.join(', ')}). 자료마다 어떤 라이선스가 적용되는지 나누어 등록하세요.`:'문서 내 문구로 탐지한 후보. 여러 라이선스·수정 조항·파일별 적용 범위를 원문에서 확인하세요.'});
  }
  return out;
 }

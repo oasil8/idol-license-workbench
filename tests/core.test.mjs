@@ -94,3 +94,26 @@ test('dependency manifests of Python, Rust, Go, .NET, Java, Unreal and vcpkg are
  assert.deepEqual(names('packages-lock.json',JSON.stringify({dependencies:{'com.unity.ugui':{version:'1.0.0',depth:0},'com.unity.burst':{version:'1.8.9',depth:1}}})),['com.unity.burst']);
  for(const p of ['pyproject.toml','Pipfile','Cargo.toml','go.mod','Game.csproj','packages.config','pom.xml','build.gradle.kts','X.uproject','Y.uplugin'])assert.ok(isReadable(p),p);
 });
+test('license texts beyond MIT/Apache are recognised, and mixed credits stay blank with the list',()=>{
+ const one=(name,text)=>parseFile(name,text)[0].license;
+ assert.equal(one('LICENSE','GNU GENERAL PUBLIC LICENSE\nVersion 3, 29 June 2007'),'GPL-3.0-only');
+ assert.equal(one('COPYING','GNU LESSER GENERAL PUBLIC LICENSE\nVersion 2.1, February 1999'),'LGPL-2.1-only');
+ assert.equal(one('LICENSE','Redistribution and use in source and binary forms, with or without modification, are permitted. Neither the name of the copyright holder'),'BSD-3-Clause');
+ assert.equal(one('LICENSE','Mozilla Public License Version 2.0'),'MPL-2.0');
+ assert.equal(one('LICENSE','This is free and unencumbered software released into the public domain.'),'Unlicense');
+ assert.equal(one('Readme.txt','Licensed under Creative Commons Attribution-NonCommercial 4.0'),'CC-BY-NC-4.0');
+ // The BSD advertising clause is not auto-classified.
+ assert.equal(one('LICENSE','Redistribution and use in source and binary forms ... All advertising materials mentioning features'),'');
+ const credits=parseFile('CREDITS.txt','Jump sound CC0. Theme music CC BY 4.0 by A.')[0];
+ assert.equal(credits.license,'');assert.match(credits.notes,/CC-BY-4\.0, CC0-1\.0/);
+});
+test('lock files list exact installed versions',()=>{
+ const names=(p,t)=>parseFile(p,t).map(a=>a.name+'@'+a.version);
+ assert.deepEqual(names('yarn.lock','"@babel/core@^7.0.0", "@babel/core@^7.1.0":\n  version "7.23.2"\n\nlodash@^4.17.21:\n  version "4.17.21"\n'),['@babel/core@7.23.2','lodash@4.17.21']);
+ assert.deepEqual(names('pnpm-lock.yaml',"packages:\n  phaser@3.80.1:\n    resolution: {}\n  '@types/node@20.10.0':\n    resolution: {}\nsnapshots:\n  phaser@3.80.1: {}\n"),['phaser@3.80.1','@types/node@20.10.0']);
+ assert.deepEqual(names('Cargo.lock','[[package]]\nname = "bevy"\nversion = "0.14.0"\nsource = "registry+x"\n\n[[package]]\nname = "my_game"\nversion = "0.1.0"\n'),['bevy@0.14.0']);
+ assert.deepEqual(names('Pipfile.lock',JSON.stringify({default:{flask:{version:'==3.0.0'}}})),['flask@3.0.0']);
+ assert.deepEqual(names('go.sum','github.com/pkg/errors v0.9.1 h1:a=\ngithub.com/pkg/errors v0.9.1/go.mod h1:b=\n'),['github.com/pkg/errors@v0.9.1']);
+ assert.deepEqual(names('packages.lock.json',JSON.stringify({version:1,dependencies:{'net8.0':{'Newtonsoft.Json':{resolved:'13.0.3'}}}})),['Newtonsoft.Json@13.0.3']);
+ for(const p of ['yarn.lock','pnpm-lock.yaml','Cargo.lock','poetry.lock','uv.lock','Pipfile.lock','go.sum'])assert.ok(isReadable(p),p);
+});

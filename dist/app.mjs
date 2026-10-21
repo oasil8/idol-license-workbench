@@ -230,7 +230,8 @@ function openAsset(id,ai=false){editing=id||null;$('assetForm').dataset.licenseO
   const asset=fileAsset(path);
   if(asset)rows=[{name:f.name,...asset}];
   else if(!isReadable(path)){ignored++;const ext=(path.match(/\.([^./]+)$/)?.[1]||'확장자 없음').toLowerCase();skipped.set(ext,(skipped.get(ext)||0)+1);continue;}
-  else if(f.size>2*1024*1024||bytes+f.size>30*1024*1024){ignored++;log.push('크기 제한으로 건너뜀: '+path);continue;}
+  // Lock files of real projects are often several MB; ordinary text stays at 2MB.
+  else if(f.size>(/(^|\/)(package-lock\.json|packages(?:-lock|\.lock)\.json|yarn\.lock|pnpm-lock\.yaml|[^/]+\.lock|go\.sum)$/i.test(path)?20:2)*1024*1024||bytes+f.size>60*1024*1024){ignored++;log.push('크기 제한으로 건너뜀: '+path);continue;}
   else{try{bytes+=f.size;rows=parseFile(path,await f.text());read++;if(!rows.length&&/\.(js|mjs|ts|tsx|jsx|py|cs|cpp|c|h|rs|go|java|gd|lua|hlsl|glsl|shader|cginc|compute|rpy|gml|swift|kt|rb|php|dart|cc|cxx|hpp)$/i.test(path))unlabeled++;}catch(err){failed++;log.push('읽기/파싱 실패: '+path+' — '+err.message);continue;}}
   for(const a of rows){const identity=[a.name,a.version||'',a.license,a.evidence].join('|');if(!seen.has(identity)){if(p.assets.length>=5000){log.push('5,000개 등록 제한 도달. 나머지 항목 미등록.');break;}p.assets.push({version:'',...a,selection:'pending',id:crypto.randomUUID()});seen.add(identity);added++;}}
   if(p.assets.length>=5000)break;
