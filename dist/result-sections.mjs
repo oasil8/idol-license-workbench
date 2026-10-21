@@ -19,7 +19,7 @@ export function projectConclusion(p){
  })).concat(p.assets.filter(a=>selectionOf(a)==='pending').map(a=>({status:'pending',name:a.name,action:'실제 사용 여부를 선택하세요.'})));
  const usable=resultLayout(summary.assets,c).items.filter(({r})=>r.status==='conditions').map(({a,r})=>{
   const list=resultItems(r).conditions;
-  return {status:'conditions',name:a.name,action:list.length?list[0]+(list.length>1?` (외 조건 ${list.length-1}개)`:''):'표시된 조건을 지키면 사용할 수 있습니다.'};
+  return {status:'conditions',name:a.name,action:list.length?list[0]+(list.length>1?` (외 조건 ${list.length-1}개)`:''):'지켜야 할 조건이 없습니다. 확인사항만 점검하세요.'};
  });
  return {title:purpose+': '+({conflict:'아직 불가',review:'판단 보류',conditions:'가능 (조건 이행 필요)'}[summary.status]),
   actionsTitle:'이 목적으로 쓰려면 해결할 일',actions,usable,

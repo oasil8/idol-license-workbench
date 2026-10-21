@@ -77,3 +77,11 @@ test('round5 Blender ambiguous tool scope stays on hold with actionable reason',
  const action=projectConclusion(p).actions.find(x=>x.name==='Blender').action;
  assert.match(action,/도구 자체를 함께 배포·수정·번들/);assert.doesNotMatch(action,/정적\/동적 링크/);
 });
+test('PDF to-do column pairs each row with its own verdict when names repeat',async()=>{
+ const base={kind:'image',confirmed:true,evidence:'https://example.org/a',selection:'used'};
+ const p={name:'dup',contextConfirmed:true,context:{platform:'steam',commercial:true,distribute:true,modified:true,network:false},assets:[{...base,name:'배경 이미지',license:'CC-BY-NC-4.0'},{...base,name:'배경 이미지',license:'CC0-1.0'}]};
+ const pdf=await getDocument({data:new Uint8Array(await createReportPdf(p)),useSystemFonts:true}).promise;
+ const first=norm((await (await pdf.getPage(1)).getTextContent()).items.map(x=>x.str).join(''));
+ const usable=projectConclusion(p).usable[0].action;
+ assert.ok(first.includes(norm(usable)),'usable row keeps its own to-do');
+});

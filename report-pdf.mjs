@@ -109,7 +109,7 @@ export async function createReportPdf(project,{includeOriginals=false}={}) {
   const header_=c?['항목','판정','해야 할 일']:['항목','판정','한 줄 이유'];
   row(header_,true);
   const order=[statuses.conflict,statuses.review,statuses.conditions];
-  for(const item of [...data.items].sort((a,b)=>order.indexOf(a.status)-order.indexOf(b.status)))row([item.name,item.status,c?todo.find(t=>t.name===item.name)?.action||summaryReasonText(item.reason):summaryReasonText(item.reason)]);
+  for(const item of [...data.items].sort((a,b)=>order.indexOf(a.status)-order.indexOf(b.status)))row([item.name,item.status,c?todo.find(t=>t.name===item.name&&statuses[t.status]===item.status)?.action||summaryReasonText(item.reason):summaryReasonText(item.reason)]);
   for(const t of todo.filter(t=>t.status==='pending'))row([t.name,'선택 전',t.action]);
   doc.moveDown();
  }
