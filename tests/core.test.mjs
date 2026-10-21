@@ -80,3 +80,17 @@ test('Unity and Godot project files list the engine and declared packages',()=>{
  assert.deepEqual(parseFile('addons/dialogic/plugin.cfg','[plugin]\nname="Dialogic"\nversion="2.0"\nauthor="x"').map(a=>[a.name,a.version]),[['Dialogic','2.0']]);
  for(const p of ['ProjectSettings/ProjectVersion.txt','project.godot','addons/x/plugin.cfg'])assert.ok(isReadable(p),p);
 });
+test('dependency manifests of Python, Rust, Go, .NET, Java, Unreal and vcpkg are read',()=>{
+ const names=(path,text)=>parseFile(path,text).map(a=>a.name);
+ assert.deepEqual(names('pyproject.toml','[project]\ndependencies=["torch>=2.0","diffusers[torch]","pillow ; python_version>\'3\'"]\n[tool.poetry.dependencies]\npython="^3.10"\nrequests="^2.31"\n'),['torch','diffusers','pillow','requests']);
+ assert.deepEqual(names('Pipfile','[packages]\nflask = "*"\n[dev-packages]\npytest = "*"\n[requires]\npython_version="3.11"\n'),['flask','pytest']);
+ assert.deepEqual(names('Cargo.toml','[package]\nname="g"\n[dependencies]\nbevy = "0.14"\nserde = { version = "1" }\n[dependencies.rand]\nversion="0.8"\n'),['bevy','serde','rand']);
+ assert.deepEqual(names('go.mod','module m\nrequire (\n\tgithub.com/hajimehoshi/ebiten/v2 v2.7.0\n)\nrequire github.com/pkg/errors v0.9.1\n'),['github.com/hajimehoshi/ebiten/v2','github.com/pkg/errors']);
+ assert.deepEqual(parseFile('Game.csproj','<PackageReference Include="Newtonsoft.Json" Version="13.0.3" /><PackageReference Include="MonoGame"><Version>3.8</Version></PackageReference>').map(a=>[a.name,a.version]),[['Newtonsoft.Json','13.0.3'],['MonoGame','3.8']]);
+ assert.deepEqual(names('pom.xml','<dependency><groupId>com.badlogicgames.gdx</groupId><artifactId>gdx</artifactId><version>1.12.1</version></dependency>'),['com.badlogicgames.gdx:gdx']);
+ assert.deepEqual(names('build.gradle','implementation "com.badlogicgames.gdx:gdx:1.12"\ntestImplementation \'junit:junit:4.13.2\''),['com.badlogicgames.gdx:gdx','junit:junit']);
+ assert.deepEqual(names('MyGame.uproject',JSON.stringify({EngineAssociation:'5.3',Plugins:[{Name:'Built-in',Enabled:true},{Name:'Store',Enabled:true,MarketplaceURL:'x'}]})),['Unreal Engine','Store']);
+ assert.deepEqual(names('vcpkg.json',JSON.stringify({dependencies:['sdl2',{name:'fmt'}]})),['sdl2','fmt']);
+ assert.deepEqual(names('packages-lock.json',JSON.stringify({dependencies:{'com.unity.ugui':{version:'1.0.0',depth:0},'com.unity.burst':{version:'1.8.9',depth:1}}})),['com.unity.burst']);
+ for(const p of ['pyproject.toml','Pipfile','Cargo.toml','go.mod','Game.csproj','packages.config','pom.xml','build.gradle.kts','X.uproject','Y.uplugin'])assert.ok(isReadable(p),p);
+});

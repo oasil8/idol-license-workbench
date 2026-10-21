@@ -241,7 +241,25 @@ function evaluateBase(a,c,now){
 const cleanLicense=x=> typeof x==='string'&&!['NOASSERTION','NONE'].includes(x)?x:typeof x?.type==='string'?x.type:'';
 export function isReadable(path){
  if(/(^|[\\/])(\.git|\.env[^/\\]*|\.ssh|\.aws)([\\/]|$)/i.test(path))return false;
- return /(^|\/)(package(?:-lock)?\.json|requirements[^/]*\.txt|[^/]*(?:sbom|bom)[^/]*\.json|licenses?(?:[.-][^/]*)?|copying(?:[.-][^/]*)?|notice(?:[.-][^/]*)?|ofl(?:[.-][^/]*)?|ProjectVersion\.txt|project\.godot|plugin\.cfg)$/i.test(path)||/\.(js|mjs|ts|tsx|jsx|py|cs|cpp|c|h|rs|go|java|json)$/i.test(path);
+ return /(^|\/)(package(?:-lock)?\.json|requirements[^/]*\.txt|[^/]*(?:sbom|bom)[^/]*\.json|licenses?(?:[.-][^/]*)?|copying(?:[.-][^/]*)?|notice(?:[.-][^/]*)?|ofl(?:[.-][^/]*)?|ProjectVersion\.txt|project\.godot|plugin\.cfg|pyproject\.toml|Pipfile|Cargo\.toml|go\.mod|packages\.config|pom\.xml|build\.gradle(?:\.kts)?)$/i.test(path)||/\.(js|mjs|ts|tsx|jsx|py|cs|cpp|c|h|rs|go|java|json|gd|lua|csproj|uproject|uplugin)$/i.test(path);
+}
+// Minimal TOML table reader for dependency tables: `name = "1.0"` or `name = { version = "1.0", ... }`.
+function tomlDependencies(text,header){
+ const out=[];let inside=false;
+ for(const raw of text.split(/\r?\n/)){
+  const line=raw.trim();
+  if(line.startsWith('[')){
+   inside=header.test(line);
+   // [dependencies.serde] style: the table name is the package.
+   const sub=line.match(/^\[(?:target\..+\.)?(?:dev-|build-)?dependencies\.([^\]]+)\]$/);
+   if(sub)out.push([sub[1].replace(/"/g,''),'']);
+   continue;
+  }
+  if(!inside)continue;
+  const m=line.match(/^([A-Za-z0-9_.\-"]+)\s*=\s*(.+)$/);
+  if(m)out.push([m[1].replace(/"/g,''),m[2].match(/^"([^"]*)"/)?.[1]||m[2].match(/version\s*=\s*"([^"]*)"/)?.[1]||'']);
+ }
+ return out;
 }
 export function parseFile(path,text){
  const name=path.split('/').pop(), out=[];
@@ -261,11 +279,59 @@ export function parseFile(path,text){
   if(field('name'))add(field('name'),'',{version:field('version'),notes:'Godot 애드온. 애드온 폴더의 LICENSE와 받은 곳(에셋 라이브러리 등)의 조건을 확인하세요.'});
   return out;
  }
+ // Dependency manifests of other ecosystems: each declared package becomes a candidate with its declared version.
+ const declared='의존성 선언만 발견. 버전·실제 배포 여부·라이선스는 미확인.';
+ if(name==='pyproject.toml'){
+  // The array ends at a ']' that closes its line; extras like "pkg[gpu]" stay inside.
+  const list=text.match(/^\s*dependencies\s*=\s*\[([\s\S]*?)\]\s*$/m)?.[1]||'';
+  for(const m of list.matchAll(/"([^"]+)"|'([^']+)'/g)){const spec=m[1]||m[2];add(spec.split(/[=<>~!;\s[(]/)[0],'',{version:spec,notes:declared});}
+  for(const [dep,version] of tomlDependencies(text,/^\[tool\.poetry\.(?:dev-)?dependencies\]$|^\[tool\.poetry\.group\.[^.]+\.dependencies\]$/))if(dep!=='python')add(dep,'',{version,notes:declared});
+  return out;
+ }
+ if(name==='Pipfile'){
+  for(const [dep,version] of tomlDependencies(text,/^\[(?:dev-)?packages\]$/))add(dep,'',{version,notes:declared});
+  return out;
+ }
+ if(name==='Cargo.toml'){
+  for(const [dep,version] of tomlDependencies(text,/^\[(?:target\..+\.)?(?:dev-|build-)?dependencies\]$/))add(dep,'',{version,notes:declared});
+  return out;
+ }
+ if(name==='go.mod'){
+  for(const m of text.matchAll(/^\s*(?:require\s+)?([\w.\-/]+\.[\w.\-/]+)\s+(v[\w.\-+]+)/gm))add(m[1],'',{version:m[2],notes:declared});
+  return out;
+ }
+ if(/\.csproj$/i.test(name)||name==='packages.config'){
+  for(const m of text.matchAll(/<(?:PackageReference|package)\b([^>]*)>(?:\s*<Version>([^<]*)<\/Version>)?/g)){
+   const id=m[1].match(/\b(?:Include|id)="([^"]+)"/)?.[1];
+   if(id)add(id,'',{version:m[1].match(/\b[Vv]ersion="([^"]*)"/)?.[1]||m[2]||'',notes:declared});
+  }
+  return out;
+ }
+ if(name==='pom.xml'){
+  for(const m of text.matchAll(/<dependency>([\s\S]*?)<\/dependency>/g)){const tag=t=>m[1].match(new RegExp(`<${t}>([^<]*)</${t}>`))?.[1]||'';if(tag('artifactId'))add(tag('groupId')+':'+tag('artifactId'),'',{version:tag('version'),notes:declared});}
+  return out;
+ }
+ if(/^build\.gradle(\.kts)?$/.test(name)){
+  for(const m of text.matchAll(/\b(?:implementation|api|compileOnly|runtimeOnly|testImplementation|annotationProcessor|kapt)\s*\(?\s*["']([^"':\s]+:[^"':\s]+)(?::([^"'\s]+))?["']/g))add(m[1],'',{version:m[2]||'',notes:declared});
+  return out;
+ }
+ if(/\.(uproject|uplugin)$/i.test(name)){
+  const j=JSON.parse(text);
+  if(j.EngineAssociation)add('Unreal Engine','',{kind:'tool',version:String(j.EngineAssociation),notes:'Unreal Engine 버전. Unreal Engine EULA의 로열티·배포 조건을 확인하세요.'});
+  if(/\.uplugin$/i.test(name))add(j.FriendlyName||name.replace(/\.uplugin$/i,''),'',{version:j.VersionName||'',notes:'Unreal 플러그인. 받은 곳(Fab 등)과 그 라이선스를 확인하세요.'});
+  for(const p of Array.isArray(j.Plugins)?j.Plugins:[])if(p?.Enabled&&p.Name&&(p.MarketplaceURL||p.FabURL))add(p.Name,'',{notes:'Unreal 프로젝트에서 켠 마켓플레이스 플러그인. 구매처의 라이선스를 확인하세요.'});
+  return out;
+ }
  if(/\.json$/i.test(name)){
   const j=JSON.parse(text);
   if(!j||typeof j!=='object')return out;
   if(name==='manifest.json'&&j.dependencies&&Object.keys(j.dependencies).some(k=>/^com\./.test(k))){
    for(const [dep,version] of Object.entries(j.dependencies))add(dep,'',{version:String(version),notes:/^com\.unity\./.test(dep)?'Unity 패키지 선언. Unity 공식 패키지는 Unity Companion License 등 Unity 약관이 적용될 수 있습니다. 패키지 문서의 라이선스를 확인하세요.':'Unity 패키지 선언. 패키지 제공처의 라이선스를 확인하세요.'});
+  }else if(name==='packages-lock.json'&&j.dependencies&&Object.keys(j.dependencies).some(k=>/^com\./.test(k))){
+   // Direct packages already come from manifest.json; the lock adds what they pull in.
+   for(const [dep,v] of Object.entries(j.dependencies))if(v?.depth>0)add(dep,'',{version:String(v.version||''),notes:'Unity 패키지가 함께 설치한 간접 패키지. 패키지 문서의 라이선스를 확인하세요.'});
+  }else if(name==='vcpkg.json'){
+   for(const d of Array.isArray(j.dependencies)?j.dependencies:[]){const dep=typeof d==='string'?d:d?.name;if(dep)add(dep,'',{version:typeof d==='object'&&d['version>=']||'',notes:'의존성 선언만 발견. 버전·실제 배포 여부·라이선스는 미확인.'});}
   }else if(name==='package.json'){
    add(j.name||path,j.license,{version:j.version||'',evidence:[path,j.homepage,typeof j.repository==='string'?j.repository:j.repository?.url].filter(v=>typeof v==='string'&&v).join('\n')});
    for(const [dep,version] of Object.entries({...j.dependencies,...j.devDependencies,...j.optionalDependencies,...j.peerDependencies}))add(dep,'',{version:String(version),notes:'의존성 선언만 발견. 버전 범위·실제 배포 여부·의존성 라이선스는 미확인.'});

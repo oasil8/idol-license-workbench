@@ -219,7 +219,7 @@ function openAsset(id,ai=false){editing=id||null;$('assetForm').dataset.licenseO
 
  $('sourceLinks').innerHTML=links(sources);
  $('folderButton').onclick=()=>$('folderInput').click();$('filesButton').onclick=()=>$('filesInput').click();
- async function scan(files,p){if(busy)throw Error("다른 가져오기가 진행 중입니다.");busy=true;const log=[],total=files.length;let bytes=0,read=0,ignored=0,added=0,failed=0,unlabeled=0;
+ async function scan(files,p){if(busy)throw Error("다른 가져오기가 진행 중입니다.");busy=true;const log=[],total=files.length;let bytes=0,read=0,ignored=0,added=0,failed=0,unlabeled=0;const skipped=new Map();
  $('folderButton').disabled=$('filesButton').disabled=true;
  const seen=new Set(p.assets.map(a=>[a.name,a.version,a.license,a.evidence].join('|')));
  try{for(const f of Array.from(files).slice(0,10000)){
@@ -230,13 +230,15 @@ function openAsset(id,ai=false){editing=id||null;$('assetForm').dataset.licenseO
   const model=/\.(glb|gltf|fbx|obj|blend|stl|usd|usdz)$/i.test(path),image=/\.(png|jpg|jpeg|webp|tga|svg|gif|bmp|psd|tif|tiff|exr|hdr)$/i.test(path),audio=/\.(wav|mp3|ogg|flac|m4a|aac|aif|aiff)$/i.test(path),ai=/\.(safetensors|gguf|onnx|pt|pth)$/i.test(path),font=/\.(ttf|otf|ttc|woff2?)$/i.test(path),video=/\.(mp4|mov|webm|avi)$/i.test(path);
   const unityPackage=/\.unitypackage$/i.test(path);
   if(model||image||audio||ai||font||video||unityPackage)rows=[{name:f.name,kind:ai?'ai':model?'model':image?'image':audio?'audio':'other',license:'',evidence:path,notes:font?'글꼴 파일. 파일명만 등록. 배포처의 글꼴 라이선스(OFL 등)와 게임 포함·배포 허용을 확인하세요.':unityPackage?'Unity 패키지 파일. 받은 곳(Asset Store 등)과 그 라이선스를 확인하세요.':'파일명만 등록. 콘텐츠·권리·라이선스는 미분석.',rights:'unknown',confirmed:false}];
-  else if(!isReadable(path)){ignored++;continue;}
+  else if(!isReadable(path)){ignored++;const ext=(path.match(/\.([^./]+)$/)?.[1]||'확장자 없음').toLowerCase();skipped.set(ext,(skipped.get(ext)||0)+1);continue;}
   else if(f.size>2*1024*1024||bytes+f.size>30*1024*1024){ignored++;log.push('크기 제한으로 건너뜀: '+path);continue;}
   else{try{bytes+=f.size;rows=parseFile(path,await f.text());read++;if(!rows.length&&/\.(js|mjs|ts|tsx|jsx|py|cs|cpp|c|h|rs|go|java)$/i.test(path))unlabeled++;}catch(err){failed++;log.push('읽기/파싱 실패: '+path+' — '+err.message);continue;}}
   for(const a of rows){const identity=[a.name,a.version||'',a.license,a.evidence].join('|');if(!seen.has(identity)){if(p.assets.length>=5000){log.push('5,000개 등록 제한 도달. 나머지 항목 미등록.');break;}p.assets.push({version:'',...a,selection:'pending',id:crypto.randomUUID()});seen.add(identity);added++;}}
   if(p.assets.length>=5000)break;
   if((read+ignored)%100===0){message(`파일을 읽고 있습니다… ${read}개 텍스트 처리, ${added}개 항목 발견`);await new Promise(r=>setTimeout(r,0));}
  }
+ // Nothing is dropped silently: list what was not read, by type, so outside files can be added by hand.
+ if(skipped.size){const kinds=[...skipped].sort((a,b)=>b[1]-a[1]);log.push(`등록 대상이 아닌 파일 ${[...skipped.values()].reduce((s,n)=>s+n,0)}개 (${kinds.slice(0,10).map(([e,n])=>(e==='확장자 없음'?e:'.'+e)+' '+n+'개').join(', ')}${kinds.length>10?' 외':''}). 엔진 설정·씬 등 직접 만든 파일이면 확인할 필요가 없습니다. 외부에서 받은 파일이 있으면 직접 등록하세요.`);}
  if(unlabeled)log.push(`라이선스 표시(SPDX)가 없는 소스 파일 ${unlabeled}개는 직접 작성한 코드로 보고 등록하지 않았습니다. 다른 곳에서 복사한 코드가 있으면 직접 등록하세요.`);
  if(total>10000)log.push('선택 10,000개 초과: 초과 파일은 처리하지 않았습니다.');
  p.scan=(p.scan?p.scan+'\n':'')+`선택 ${total}개 / 텍스트 읽기 ${read}개 / 제외 ${ignored}개 / 실패 ${failed}개 / 신규 등록 ${added}개\n${log.join('\n')}\n자동 탐지는 적용 라이선스 확정이 아닙니다. 의존성 선언과 잠금 파일 항목은 근거별로 별도 등록됩니다.`;
