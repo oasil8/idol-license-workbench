@@ -1,3 +1,4 @@
+import {needsTerms,readTerms} from './third-party.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
@@ -6,9 +7,9 @@ import {reviewManual} from '../dist/manual-terms.mjs';
 import {aiResult,cleanTerms} from '../dist/ai.mjs';
 import {evaluate,validateProject} from '../dist/core.mjs';
 import {buildProjectReport} from '../dist/report.mjs';
-const text=fs.readFileSync(new URL('fixtures/real-terms/runway.txt',import.meta.url),'utf8');
+const text=readTerms(new URL('fixtures/real-terms/runway.txt',import.meta.url));
 const base={kind:'ai',provider:'other',serviceName:'Runway',scope:'output',planType:'unknown',manual:true};
-test('actual Runway output and API grants remain separate with no provider-name rule',()=>{
+test('actual Runway output and API grants remain separate with no provider-name rule',needsTerms,()=>{
  for(const serviceName of ['Runway','Renamed service']){
   assert.equal(analyzeTerms({...base,serviceName},text).status,'conditions');
   assert.equal(analyzeTerms({...base,serviceName,scope:'service'},text).status,'review');
@@ -19,7 +20,7 @@ test('actual Runway output and API grants remain separate with no provider-name 
  assert.equal(analyzeTerms({...base,scope:'weights'},text).status,'review');
  assert.equal(analyzeTerms({...base,scope:'service',apiAccessConfirmed:true},'You may use the generated outputs for commercial purposes.').status,'review');
 });
-test('API access changes invalidate stored permission and survive local validation',()=>{
+test('API access changes invalidate stored permission and survive local validation',needsTerms,()=>{
  const a={...base,scope:'service',apiAccessConfirmed:true,rights:'unknown'};
  const now=new Date('2026-10-15T03:00:00Z');
  const terms=cleanTerms(reviewManual(a,{text,sourceUrl:'https://runway.com/terms-ofuse',date:'2026-10-15',attested:true},now));
@@ -27,7 +28,7 @@ test('API access changes invalidate stored permission and survive local validati
  assert.equal(aiResult({...a,apiAccessConfirmed:false,terms},+now).status,'review');
  assert.equal(validateProject({name:'test',assets:[{...a,name:'API',terms}]},{local:true}).assets[0].apiAccessConfirmed,true);
 });
-test('explicit restrictions and separate contracts cannot be overridden by broad output permission',()=>{
+test('explicit restrictions and separate contracts cannot be overridden by broad output permission',needsTerms,()=>{
  for(const clause of ['Commercial use is prohibited.','Only paid subscribers are eligible.','A separate agreement is required for commercial use.','You may not use your Outputs for commercial purposes.','Commercial rights are limited to enterprise subscribers.','Output permission is withdrawn.'])
   assert.equal(analyzeTerms(base,text+' '+clause).status,'review',clause);
  for(const name of ['recraft','stability']){
@@ -35,7 +36,7 @@ test('explicit restrictions and separate contracts cannot be overridden by broad
   assert.equal(analyzeTerms({...base,serviceName:name},full).status,'review');
  }
 });
-test('code, model, image and audio keep license permission separate from additional rights',()=>{
+test('code, model, image and audio keep license permission separate from additional rights',needsTerms,()=>{
  const c={platform:'general',commercial:true,distribute:true,modified:false,network:false};
  for(const [kind,license] of [['code','MIT'],['model','Apache-2.0'],['image','CC-BY-4.0'],['audio','CC-BY-4.0']]){
   const a={kind,license,confirmed:true,evidence:'Official LICENSE scope checked',rights:'unknown'};
@@ -46,7 +47,7 @@ test('code, model, image and audio keep license permission separate from additio
  assert.equal(evaluate({kind:'image',license:'CC-BY-NC-4.0',confirmed:true,evidence:'scope'},c).status,'conflict');
  assert.equal(evaluate({kind:'audio',license:'CC-BY-ND-4.0',confirmed:true,evidence:'scope'}, {...c,modified:true}).status,'conflict');
 });
-test('real distribution records preserve media attribution, source exceptions and unknown rights in report',()=>{
+test('real distribution records preserve media attribution, source exceptions and unknown rights in report',needsTerms,()=>{
  const assets=JSON.parse(fs.readFileSync(new URL('fixtures/real-terms/media-cases.json',import.meta.url),'utf8'));
  const context={platform:'general',commercial:true,distribute:true,modified:false};
  assert.match(fs.readFileSync(new URL('fixtures/real-terms/lodash-license.txt',import.meta.url),'utf8'),/permission notice shall be/);

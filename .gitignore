@@ -2,3 +2,18 @@ node_modules/
 *.log
 test-*-results.txt
 scratch/
+
+# Other parties' works, kept only on the local machine (tests skip without them; logos fall back to badges).
+# Service terms snapshots:
+tests/fixtures/elevenlabs/
+tests/fixtures/runway/
+tests/fixtures/real-terms/*.html
+tests/fixtures/real-terms/meshy*.txt
+tests/fixtures/real-terms/meshy-official-web-copy.*
+tests/fixtures/real-terms/runway.txt
+tests/fixtures/real-terms/recraft.txt
+tests/fixtures/real-terms/stability.txt
+tests/fixtures/real-terms/minilm-card.txt
+# Service favicons and logos (regenerate with fetch-icons.py):
+dist/brand-icons-data.mjs
+dist/*-transparent.png

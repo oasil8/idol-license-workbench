@@ -1,3 +1,4 @@
+import {needsTerms} from './third-party.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
@@ -26,7 +27,7 @@ test('reviewed public grants distinguish output ownership, paid entitlement and 
  assert.match(aiResult({...base,provider:'other',serviceName:'Midjourney'},now).notes.join(' '),/Pro\/Mega/);
  assert.equal(aiResult({...base,provider:'anthropic',useDescription:'evaluation'},now).status,'review');
 });
-test('named Runway uses the explicit provider URL restrictions for output and API',()=>{
+test('named Runway uses the explicit provider URL restrictions for output and API',needsTerms,()=>{
  const text=fs.readFileSync(new URL('./fixtures/real-terms/runway.txt',import.meta.url),'utf8');
  const url='https://runway.com/terms-ofuse',a={...base,name:'Runway',serviceName:'Runway',provider:'other'};
  const candidate={url,verification:{url,finalUrl:url,query:'Runway',status:'matched',checkedAt:new Date().toISOString(),text}};

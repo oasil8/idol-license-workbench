@@ -1,4 +1,5 @@
-import {icons} from './brand-icons-data.mjs';
+// Service favicons are fetched locally (fetch-icons.py) and not redistributed; without them the kind badge is shown.
+const icons=await import('./brand-icons-data.mjs').then(m=>m.icons,()=>({}));
 import {normalizeAsset} from './asset-normalization.mjs';
 const aliases={openai:['openai','chatgpt','챗지피티'],anthropic:['anthropic','claude','클로드'],huggingface:['hugging face','huggingface'],gemini:['gemini','nano banana','nanobanana','제미나이','나노바나나'],github:['github copilot','copilot','깃허브'],meshy:['meshy','메시','메쉬'],tripo:['tripo','트리포'],midjourney:['midjourney','미드저니'],suno:['suno','수노'],runway:['runway','런웨이']};
 export function brandOf(asset={}){

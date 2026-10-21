@@ -1,3 +1,4 @@
+import {needsTerms} from './third-party.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {evaluate} from '../dist/core.mjs';
@@ -41,7 +42,7 @@ test('common missing-evidence jobs preserve originals, exclude inactive material
 });
 
 
-test('existing stored review is recalculated from saved verified original without overwriting it',async()=>{
+test('existing stored review is recalculated from saved verified original without overwriting it',needsTerms,async()=>{
  const fs=await import('node:fs');const text=fs.readFileSync(new URL('./fixtures/real-terms/runway.txt',import.meta.url),'utf8');
  const url='https://runway.com/terms-ofuse';
  const a={name:'Runway',serviceName:'Runway',kind:'ai',provider:'other',scope:'output',selection:'used'};

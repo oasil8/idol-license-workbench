@@ -9,8 +9,9 @@ def get(item):
   mime='image/png' if b.startswith(b'\x89PNG') else 'image/x-icon'
   return k,{'src':'data:'+mime+';base64,'+base64.b64encode(b).decode(),'source':u}
  except Exception as e: print(k,str(e));return k,None
-existing=Path('dist/brand-icons-data.mjs').read_text(encoding='utf-8')
-previous=json.loads(existing.split('export const icons=',1)[1].rstrip(';\n'))
+# The data file is local-only (gitignored); start empty on a fresh clone.
+data=Path('dist/brand-icons-data.mjs')
+previous=json.loads(data.read_text(encoding='utf-8').split('export const icons=',1)[1].rstrip(';\n')) if data.exists() else {}
 items=dict(concurrent.futures.ThreadPoolExecutor().map(get,urls.items()));items={k:v for k,v in items.items() if v}
 previous.update(items);items=previous
 open('dist/brand-icons-data.mjs','w',encoding='utf-8').write('// Official-site favicon snapshots, 2026-10-16. Identification only, not license evidence.\nexport const icons='+json.dumps(items)+';\n')
