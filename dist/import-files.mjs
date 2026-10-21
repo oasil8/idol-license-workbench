@@ -5,7 +5,7 @@ export function splitImportFiles(files){
  for(const file of files){
   const path=(file.webkitRelativePath||file.name).replaceAll('\\','/'),name=path.split('/').pop();
   if(/(^|\/)(\.git|\.env[^/]*|\.ssh|\.aws)(\/|$)/i.test(path)){ignored.push(file);continue;}
-  const reference=/^(?:licenses?|copying|notice|readme|changelog)(?:[.-].*)?$/i.test(name);
+  const reference=/^(?:licenses?|copying|notice|readme|changelog|ofl)(?:[.-].*)?$/i.test(name);
   const vendor=/(^|\/)(?:node_modules|\.venv|venv)(\/|$)/i.test(path);
   const document=!vendor&&(/\.(pdf|pptx|docx)$/i.test(name)||(!reference&&/\.(txt|md)$/i.test(name)&&!isReadable(path)));
   (document?documents:assets).push(file);

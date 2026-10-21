@@ -52,3 +52,9 @@ test('reclassifying a source does not leave a conflicting role in the registered
  assert.equal(reviewAssignment([{name:'notes.txt',text:'일반 연구 자료'}]).checklistTitle,'문서 보완 체크리스트');
  assert.equal(reviewAssignment([{name:'design.txt',text:'CAD/CAM 스케치와 주행 분석'}]).checklistTitle,'CAD/CAM 자료 보완 체크리스트');
  });
+test('game plans and feedback surface common asset sources, AI services, tools and fonts',()=>{
+ const names=reviewAssignment([{name:'기획서.md',role:'material',text:'Kenney 에셋(CC0)과 미드저니 배경. BGM은 Suno, 효과음은 Freesound CC BY 4.0. 엔진은 Godot, 글꼴은 Pretendard.'},{name:'피드백.txt',role:'feedback',text:'Midjourney 대신 Stable Diffusion, Freesound 대신 Pixabay도 괜찮습니다. 캐릭터는 Mixamo.'}]).candidates.map(c=>c.name);
+ for(const name of ['Kenney','Midjourney','Suno','Freesound','Godot','Pretendard','Stable Diffusion','Pixabay','Mixamo'])assert.ok(names.includes(name),name);
+ // Ordinary Korean words must not trigger engine or service names.
+ assert.deepEqual(reviewAssignment([{name:'n.txt',text:'고도가 높은 지역에서 수노동을 하다'}]).candidates,[]);
+});

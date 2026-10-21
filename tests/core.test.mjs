@@ -1,3 +1,4 @@
+import {readFileSync} from 'node:fs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { evaluate, commercialVerdict, parseFile, validateProject, isReadable } from '../dist/core.mjs';
@@ -55,7 +56,14 @@ test('modified ND distribution conflicts and Apache has official source',()=>{
  assert.equal(evaluate(asset('CC-BY-ND-4.0'),{...context,modified:true}).status,'conflict');
  assert.equal(evaluate(asset('Apache-2.0'),context).sources[0][1],'https://www.apache.org/licenses/LICENSE-2.0');
 });
-test('source without license is kept as unknown instead of silently omitted',()=>{
- const rows=parseFile('src/vehicle.cs','class Vehicle {}');
- assert.equal(rows.length,1);assert.equal(rows[0].license,'');
+test('unlabeled own source is not listed per file but counted in the import log',()=>{
+ // Engine projects have thousands of such files; one item each hid real candidates and hit the 5,000 cap.
+ assert.equal(parseFile('src/vehicle.cs','class Vehicle {}').length,0);
+ assert.equal(parseFile('src/vehicle.cs','// SPDX-License-Identifier: MIT\nclass Vehicle {}')[0].license,'MIT');
+ const app=readFileSync(new URL('../dist/app.mjs',import.meta.url),'utf8');
+ assert.match(app,/라이선스 표시\(SPDX\)가 없는 소스 파일 \$\{unlabeled\}개/);
+});
+test('a font OFL.txt is read as a license file',()=>{
+ assert.ok(isReadable('Fonts/OFL.txt'));
+ assert.equal(parseFile('Fonts/OFL.txt','Copyright 2026\nThis Font Software is licensed under the SIL Open Font License, Version 1.1.')[0].license,'OFL-1.1');
 });

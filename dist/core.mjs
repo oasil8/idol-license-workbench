@@ -241,7 +241,7 @@ function evaluateBase(a,c,now){
 const cleanLicense=x=> typeof x==='string'&&!['NOASSERTION','NONE'].includes(x)?x:typeof x?.type==='string'?x.type:'';
 export function isReadable(path){
  if(/(^|[\\/])(\.git|\.env[^/\\]*|\.ssh|\.aws)([\\/]|$)/i.test(path))return false;
- return /(^|\/)(package(?:-lock)?\.json|requirements[^/]*\.txt|[^/]*(?:sbom|bom)[^/]*\.json|licenses?(?:[.-][^/]*)?|copying(?:[.-][^/]*)?|notice(?:[.-][^/]*)?)$/i.test(path)||/\.(js|mjs|ts|tsx|jsx|py|cs|cpp|c|h|rs|go|java|json)$/i.test(path);
+ return /(^|\/)(package(?:-lock)?\.json|requirements[^/]*\.txt|[^/]*(?:sbom|bom)[^/]*\.json|licenses?(?:[.-][^/]*)?|copying(?:[.-][^/]*)?|notice(?:[.-][^/]*)?|ofl(?:[.-][^/]*)?)$/i.test(path)||/\.(js|mjs|ts|tsx|jsx|py|cs|cpp|c|h|rs|go|java|json)$/i.test(path);
 }
 export function parseFile(path,text){
  const name=path.split('/').pop(), out=[];
@@ -268,7 +268,7 @@ export function parseFile(path,text){
  }
  const expressions=[...text.matchAll(/SPDX-License-Identifier:\s*([^\r\n]+)/g)].map(m=>m[1].replace(/\s*\*\/\s*$/,'').trim());
  if(expressions.length){for(const expression of new Set(expressions))add(path,expression);return out;}
- if(/^(license|licence|copying|notice)/i.test(name)){
+ if(/^(license|licence|copying|notice|ofl)/i.test(name)){
   let candidate='';
   if(/PYTHON SOFTWARE FOUNDATION LICENSE VERSION 2/i.test(text)&&/royalty-free/i.test(text))candidate='PSF-2.0';
   else if(/SIL OPEN FONT LICENSE[\s,]*Version 1\.1/i.test(text)&&/Font Software/i.test(text))candidate='OFL-1.1';
@@ -278,7 +278,6 @@ export function parseFile(path,text){
   else if(/CC0 1\.0|creativecommons.org\/publicdomain\/zero\/1.0/i.test(text))candidate='CC0-1.0';
   add(path,candidate,{notes:'문서 내 문구로 탐지한 후보. 여러 라이선스·수정 조항·파일별 적용 범위를 원문에서 확인하세요.'});
  }
- if(!out.length&&/\.(js|mjs|ts|tsx|jsx|py|cs|cpp|c|h|rs|go|java)$/i.test(path))add(path,'',{notes:'소스에서 SPDX 표시를 찾지 못했습니다. 직접 작성한 코드인지, 어떤 상위 라이선스·계약이 적용되는지 확인하세요.'});
  return out;
 }
 export function validateProject(input,{local=false}={}){
