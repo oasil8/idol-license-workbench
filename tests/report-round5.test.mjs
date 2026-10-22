@@ -1,4 +1,5 @@
 import * as verdictLog from '../dist/verdict-log.mjs';
+import {planImpact} from '../dist/ai.mjs';
 import {RULE_DATE} from '../dist/core.mjs';
 import test from 'node:test';
 import vm from 'node:vm';
@@ -31,7 +32,11 @@ test('round5 shared conclusion lists only conflicts, reviews and pending in prio
   assert.deepEqual(c.actions.map(a=>a.name),expected);
   const htmls=[screen(p),buildProjectReport(p)];
   for(const html of htmls){assert.ok(html.indexOf('project-conclusion')<html.indexOf('common-checks'));}
-  for(const item of sections.resultLayout(workflow.selectedAssets(p),p.context).items.filter(i=>i.r.status==='review'))assert.equal(c.actions.find(a=>a.name===item.name).action,item.checks[0]);
+  for(const item of sections.resultLayout(workflow.selectedAssets(p),p.context).items.filter(i=>i.r.status==='review')){
+   const {a}=item,impact=planImpact(a),planFirst=a.kind==='ai'&&(!a.planType||a.planType==='unknown')&&impact.status==='affected';
+   const expected=planFirst?'생성 당시 플랜(무료/유료)을 고르세요. '+(a.provider==='tripo'?'무료 플랜 결과물은 상업 이용이 허용되지 않습니다.':impact.reason):item.checks[0];
+   assert.equal(c.actions.find(row=>row.name===item.name).action,expected);
+  }
   const pdf=await getDocument({data:new Uint8Array(await createReportPdf(p)),useSystemFonts:true}).promise;
   const pages=[];for(let i=1;i<=pdf.numPages;i++)pages.push((await (await pdf.getPage(i)).getTextContent()).items.map(x=>x.str).join(''));
   // The screen folds actions into one chip per verdict; reports keep the full list.

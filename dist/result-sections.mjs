@@ -1,7 +1,7 @@
 import {resultBodyLayout,commonGroups,minorNote,noteNames} from './result-layout.mjs';
 import {evaluate,statuses} from './core.mjs';
 import {projectSummary,selectionOf} from './workflow.mjs';
-import {reviewAge} from './official-sources.mjs';
+import {reviewAge,knownToolGuidance,officialSource} from './official-sources.mjs';
 import {candidateNotice} from './evidence-sources.mjs';
 import {normalizeAsset,assetScope} from './asset-normalization.mjs';
 import {planImpact} from './ai.mjs';
@@ -15,7 +15,7 @@ export function projectConclusion(p){
  const purpose=c.commercial?(c.platform==='steam'?'Steam 상업 출시':platform+' (상업)'):platform;
  const actions=['conflict','review'].flatMap(status=>resultLayout(summary.assets,c).items.flatMap(({a,r,checks})=>{
   if(r.status!==status)return [];
-  return [{status,name:a.name,action:status==='conflict'?conflictNextAction:keyAction([...checks,...resultItems(r,outcomeReason(a,r)).checks])||reviewReason(r)}];
+  return [{status,name:a.name,action:status==='conflict'?conflictNextAction:keyAction([...checks,...resultItems(r,outcomeReason(a,r)).checks],a)||reviewReason(r)}];
  })).concat(p.assets.filter(a=>selectionOf(a)==='pending').map(a=>({status:'pending',name:a.name,action:'실제 사용 여부를 선택하세요.'})));
  const usable=resultLayout(summary.assets,c).items.filter(({r})=>r.status==='conditions').map(({a,r})=>{
   const list=resultItems(r).conditions;
@@ -30,8 +30,13 @@ export function projectConclusion(p){
 }
 // Generic checks apply to almost every item; the to-do line should name what blocks this one.
 const genericCheck=/공식 원문이 적용되는지|허용만으로 확보되지|제3자 권리|회사·학교 업무|포함하지 않았는지|다운로드한 .* 페이지|과거 생성물|Steam 공개/;
-function keyAction(checks){
- const pick=checks.find(t=>!genericCheck.test(t))||checks[0];
+export function keyAction(checks,a={}){
+ if(a.kind==='ai'&&(!a.planType||a.planType==='unknown')&&planImpact(a).status==='affected'){
+  const explanation=officialSource(a)?.id==='tripo'?'무료 플랜 결과물은 상업 이용이 허용되지 않습니다.':planImpact(a).reason;
+  return '생성 당시 플랜(무료/유료)을 고르세요. '+explanation;
+ }
+ // Unity's tier eligibility decides the result more than its version, so its plan line comes first.
+ const pick=checks.find(t=>t.startsWith('Unity 요금제'))||checks.find(t=>!genericCheck.test(t))||checks[0];
  return pick&&pick.replace(/^.*? — 자동 판정 미지원\. /,'');
 }
 const groupLabels=[['conflict','사용 불가'],['review','판단 보류'],['conditions','사용 가능 (조건부)'],['pending','선택 전']];
@@ -96,7 +101,7 @@ export function reviewReason(r){
  t.includes('실제 MinerU 배포 버전')?'MinerU 배포 버전 필요 · 현재/과거 라이선스가 다름':
  t.includes('합산 MAU')?'조직 규모 기준·별도 상업 허가 적용 여부 필요':
  t.includes('요금제·구매 유형을 확인해')?'생성 당시 플랜·구매 유형 필요':
- t.includes('버전이 미정')||t.includes('엔진 버전을 확인해')?'실제 배포판·모델 버전 필요':
+ t.includes('버전이 미정')||t.includes('엔진 버전을 확인해')||t.startsWith('Isaac Sim은 버전·구성에 따라')?'실제 배포판·모델 버전 필요':
  t.includes('개인용과 기업/API')?'개인용 / 기업·API 중 적용 계약 필요':
  t.includes('조회 실패:')?'공식 원문 확보 실패 · 재조회 또는 직접 원문 필요':
  t.includes('공식 사이트에서 최신 약관을 열어')?'해당 이용 방식의 공식 허용 근거 필요':
@@ -157,9 +162,11 @@ export function compactResultMarkup(a,r,rows,esc,parts){
 }
 
 export function inputForTask(text,a){
+ if(/라이선스/.test(text)&&knownToolGuidance(a)?.license)return {field:'license',label:'라이선스 제안 보기'};
  if(/API.*접근 권한/.test(text)&&a.scope==='service')return {field:'apiAccessConfirmed',label:'API 권한 확인하기'};
  if(/계약 경로/.test(text)&&/copilot/i.test(a.serviceName||a.name))return {field:'contractRoute',label:'계약 경로 선택하기'};
  if(/플랜|요금제|Pro\/Mega/.test(text)&&a.kind==='ai'&&planImpact(a).status==='affected')return {field:'planType',label:'플랜 입력하기'};
+ if(/플랜|요금제/.test(text)&&a.kind==='tool')return {field:'plan',label:'플랜 입력하기'};
  if(/owner\/model|모델 ID/.test(text)&&a.provider==='huggingface')return {field:'repository',label:'모델 주소 입력하기'};
  if(/버전|배포판/.test(text))return {field:'version',label:'버전 입력하기'};
  if(/라이선스 미기록|적용 라이선스가 기록되지|적용 라이선스의 사용 허가/.test(text))return {field:'license',label:'라이선스 입력하기'};

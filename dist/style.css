@@ -207,3 +207,6 @@ form label.check{flex-direction:row;align-items:flex-start;text-align:left}form 
 .promise-items h3{font-size:12px;margin:0 0 4px}.promise-items p{font-size:12px;line-height:1.6;margin:0;color:var(--muted,#65766e);overflow-wrap:anywhere}
 .verdict-guide p{margin:5px 0}
 @media(max-width:600px){.promise-items{grid-template-columns:1fr;gap:10px}.promise-box{padding:12px}.verdict-state{font-size:10px}}
+/* The suggestion button must read as a button, like the result-card shortcuts. */
+#knownToolGuidance{display:flex;flex-wrap:wrap;align-items:center;gap:8px}#knownToolGuidance small{flex:1 1 260px;line-height:1.6}
+#applyKnownToolLicense{background:#fff;border:1px solid #8ca89f;border-radius:6px;color:#24594d;padding:6px 12px;font:inherit;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap}#applyKnownToolLicense:hover{background:#e8f1ea;border-color:#3b7053}

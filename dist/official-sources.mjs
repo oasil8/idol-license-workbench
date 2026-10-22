@@ -35,6 +35,21 @@ export function officialSource(a){
  const matches=officialNameMatches(a.serviceName||a.name);
  return matches.length===1?matches[0]:undefined;
 }
+const unityPlanAction='Unity 요금제(Personal·Pro 등) 중 조직의 매출·자금 기준에 맞는 것을 확인해 플랜 칸에 입력하세요.';
+const isaacVersionAction='Isaac Sim은 버전·구성에 따라 공개 소스(Apache-2.0)와 NVIDIA 추가 소프트웨어·자료 라이선스 적용 범위가 다릅니다. 사용하는 버전을 입력하세요.';
+// Suggestions never attest applicability or set the automatic code-license origin.
+export function knownToolGuidance(a){
+ if(!['tool','code'].includes(a.kind)||String(a.license||'').trim()||a.provider||a.aiGenerated)return;
+ const matches=officialNameMatches(a.name),source=matches.length===1?matches[0]:undefined;
+ if(!source)return;
+ const license={blender:'GPL-2.0-or-later',chrono:'BSD-3-Clause'}[source.id];
+ const text=license?`${license}. ${source.note}`:{unity:unityPlanAction,isaac:isaacVersionAction}[source.id];
+ if(text)return {license,url:source.url,text};
+}
+export function applyKnownToolLicense(a){
+ const suggestion=knownToolGuidance(a);
+ return suggestion?.license?{...a,license:suggestion.license,evidence:String(a.evidence||'').trim()?a.evidence:suggestion.url}:a;
+}
 export function reviewSourceConditions(a,c,now=Date.now(),{contractConfirmed=false}={}){
  const source=officialSource(a);if(!source)return undefined;
  const stale=now-Date.parse(source.observedOn+'T00:00:00+09:00')>90*86400000;
@@ -43,8 +58,8 @@ export function reviewSourceConditions(a,c,now=Date.now(),{contractConfirmed=fal
  const missing=[],conflicts=[];let status='review';
  const fixedLicense=['chrono','blender'].includes(source.id)&&a.confirmed&&!!a.evidence?.trim()&&['BSD-3-Clause','GPL-3.0-only','GPL-2.0-or-later'].includes(a.license);
  if((['tripo','rodin','unity'].includes(source.id)||source.id==='meshy'&&!contractConfirmed)&&(!a.planType||a.planType==='unknown')&&!a.plan)missing.push('사용하거나 생성할 당시의 요금제·구매 유형을 확인해 입력하세요.');
- if(['hunyuan','cosmos','isaac','chrono','unity','unreal','usd'].includes(source.id)&&!a.version&&!fixedLicense)missing.push('실제 사용하는 배포판·모델·엔진 버전을 확인해 입력하세요.');
- if(['hunyuan','unity','unreal'].includes(source.id)&&!reviewedRecently)missing.push('사용 지역·조직/고객 조건·배포 방식 중 적용 조건을 근거에 기록하세요.');
+ if(['hunyuan','cosmos','isaac','chrono','unity','unreal','usd'].includes(source.id)&&!a.version&&!fixedLicense)missing.push(source.id==='isaac'?isaacVersionAction:'실제 사용하는 배포판·모델·엔진 버전을 확인해 입력하세요.');
+ if(['hunyuan','unity','unreal'].includes(source.id)&&!reviewedRecently)missing.push(source.id==='unity'?unityPlanAction:'사용 지역·조직/고객 조건·배포 방식 중 적용 조건을 근거에 기록하세요.');
  if(!contractConfirmed&&['openai','anthropic'].includes(source.id)&&(!a.planType||['unknown','business'].includes(a.planType)))missing.push('개인용과 기업/API 계약 중 어떤 문서가 적용되는지 확인하세요.');
  if(!contractConfirmed&&a.kind==='model'&&a.rights!=='cleared')missing.push('입력 자료·상표·초상 등 제3자 권리가 미확인입니다.');
  if(!contractConfirmed&&!a.confirmed)missing.push('실제 사용한 버전·기능에 공식 원문이 적용되는지 확인하세요.');
