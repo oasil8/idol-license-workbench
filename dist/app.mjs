@@ -435,5 +435,3 @@ async function supplementRegisteredRepositories(){
  if(completed){render();message(`기존 자료 ${completed}개의 출처 확인을 진행했습니다. 적용 범위와 남은 확인 사항을 결과에서 확인하세요.`);}
 }
 supplementRegisteredRepositories();
-// The link version says once what it cannot do, so a blocked lookup is not mistaken for a broken app.
-if(hosted&&!$('notice').textContent)message('링크 버전입니다. 자료는 이 브라우저에만 저장됩니다. 서비스 약관 자동 조회와 웹 검색은 브라우저가 막혀 로컬 버전에서만 되고, 여기서는 공식 원문을 붙여넣어 분석합니다.');
