@@ -1,3 +1,5 @@
+import * as verdictLog from '../dist/verdict-log.mjs';
+import {RULE_DATE} from '../dist/core.mjs';
 import test from 'node:test';
 import vm from 'node:vm';
 import * as sections from '../dist/result-sections.mjs';
@@ -11,8 +13,9 @@ import {buildProjectReport} from '../dist/report.mjs';
 import {createReportPdf} from '../report-pdf.mjs';
 import {getDocument} from 'pdfjs-dist/legacy/build/pdf.mjs';
 function screen(p){
+ p=structuredClone(p);p.assets.forEach((a,i)=>a.id??=String(i));
  const app=readFileSync(new URL('../dist/app.mjs',import.meta.url),'utf8'),nodes={overall:{},reportContent:{}};
- const box={...sections,...workflow,project:()=>p,$:id=>nodes[id],assetSources,brandIcon:()=>'',badge:r=>r.status,esc:String,p,summary:workflow.projectSummary(p)};
+ const box={...verdictLog,RULE_DATE,transact:change=>{change({projects:[p]});return true;},...sections,...workflow,project:()=>p,$:id=>nodes[id],assetSources,brandIcon:()=>'',badge:r=>r.status,esc:String,p,summary:workflow.projectSummary(p)};
  vm.createContext(box);
  vm.runInContext(app.slice(app.indexOf('function renderReport(){'),app.indexOf('\nfunction setView('))+'\nrenderReport();'+app.slice(app.indexOf(' const overall=summary.status;'),app.indexOf(' renderProjects();')),box);
  return nodes.overall.innerHTML+nodes.reportContent.innerHTML;

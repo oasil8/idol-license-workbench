@@ -1,4 +1,5 @@
 import {apiFetch,hosted} from './web-api.mjs';
+import {contextKey,inputSnapshot,recordVerdict,verdictState,verdictHistoryMarkup} from './verdict-log.mjs';
 import {normalizeAsset} from './asset-normalization.mjs';
 import {isOfficialCandidate,candidateGroupsMarkup} from './source-policy.mjs';
 import {contractProfile,contractChoicesMarkup,cleanContractChoices} from './contract-review.mjs';
@@ -95,7 +96,14 @@ function render(){const p=project();
 }
 function renderReport(){const p=project();if(!conditionsConfirmed(p)){$('reportContent').innerHTML='';return;}
  const layout=resultLayout(selectedAssets(p),p.context);
- $('reportContent').innerHTML=commonChecksMarkup(layout,esc)+layout.items.map(item=>{const {a,r}=item;return `<article class="report-item result-card"><h3 class="brand-name">${brandIcon(a)}${esc(a.name)} ${badge(r)}</h3>${compactResultMarkup(a,r,assetSources(a,p.context),esc,item)}<button class="outline" data-edit="${a.id}">정보 보완</button></article>`;}).join('');
+ const context=contextKey(p.context),today=new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Seoul',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date()),updates=new Map();
+ for(const {a,r} of layout.items){
+  const stored=p.assets.find(x=>x.id===a.id),log=stored.verdictLog||[];
+  const next=recordVerdict(log,{status:r.status,reason:outcomeReason(a,r),inputs:inputSnapshot(stored),ruleDate:r.ruleDate||RULE_DATE},context,today);
+  if(next!==log)updates.set(a.id,next);
+ }
+ if(updates.size)transact(state=>{for(const a of state.projects.find(x=>x.id===p.id).assets)if(updates.has(a.id))a.verdictLog=updates.get(a.id);});
+ $('reportContent').innerHTML=commonChecksMarkup(layout,esc)+layout.items.map(item=>{const {a,r}=item,log=project().assets.find(x=>x.id===a.id).verdictLog||[],active=log.findLast(x=>x.context===context&&!x.retractedOn),stamp=active&&active.status===r.status?`<small class="verdict-state ${r.status==='review'?'provisional':'settled'}">${verdictState(r.status)} · ${esc(active.on)}</small>`:'';return `<article class="report-item result-card"><h3 class="brand-name">${brandIcon(a)}${esc(a.name)} ${badge(r)}${stamp}</h3>${compactResultMarkup(a,r,assetSources(a,p.context),esc,item)}${verdictHistoryMarkup(log,context,esc)}<button class="outline" data-edit="${a.id}">정보 보완</button></article>`;}).join('');
 }
 function setView(next){if(next==='report'&&contextDraftProject===current)message('사용 조건에 미적용 변경이 있습니다. 결과는 마지막으로 적용한 조건 기준입니다.');view=next;window.scrollTo({top:0,behavior:'instant'});for(const v of ['intake','inventory','report','guide'])$(v+'View').hidden=v!==view;document.querySelectorAll('[data-view]').forEach(b=>{b.classList.toggle('active',b.dataset.view===view);if(b.dataset.view===view)b.setAttribute('aria-current','step');else b.removeAttribute('aria-current');});$('viewSubtitle').textContent={intake:'파일을 가져오거나 이름으로 검색해서 자료를 등록하세요.',inventory:'각 자료를 실제 사용, 대안 보관, 사용 안 함으로 분류하세요.',report:'',guide:'사용 순서와 결과를 읽는 방법을 확인하세요.'}[view];$('pageLabel').textContent={intake:'1. 자료 넣기',inventory:'2. 사용 조건 정하기',report:'3. 결과 확인',guide:'사용법·결과 안내'}[view];}
 $('assetRows').addEventListener('change',e=>{const id=e.target.dataset.selection;if(!id)return;const value=e.target.value;if(!Object.hasOwn(selectionLabels,value))return;transact(state=>{state.projects.find(p=>p.id===state.current).assets.find(a=>a.id===id).selection=value;});render();});

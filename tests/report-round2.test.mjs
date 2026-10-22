@@ -1,3 +1,5 @@
+import * as verdictLog from '../dist/verdict-log.mjs';
+import {RULE_DATE} from '../dist/core.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
@@ -14,8 +16,9 @@ const norm=s=>s.replace(/\s+/g,'');
 const action='현재 사용 조건에서는 이 자료를 쓰지 마세요. 플랜·계약이나 사용 목적이 바뀌면 정보를 수정해 다시 판정하세요.';
 async function pdf(p){const doc=await getDocument({data:new Uint8Array(await createReportPdf(p)),useSystemFonts:true}).promise;let text='',links=[];for(let i=1;i<=doc.numPages;i++){const page=await doc.getPage(i);text+=(await page.getTextContent()).items.map(x=>x.str).join('');links.push(...(await page.getAnnotations()).map(x=>x.url).filter(Boolean));}return {text:norm(text),links};}
 function screen(p){
+ p=structuredClone(p);p.assets.forEach((a,i)=>a.id??=String(i));
  const app=readFileSync(new URL('../dist/app.mjs',import.meta.url),'utf8'),content={};
- const box={...sections,project:()=>p,$:()=>content,conditionsConfirmed,selectedAssets,evaluate,statuses,assetSources,brandIcon:()=>'',badge:r=>statuses[r.status],esc:String};
+ const box={...verdictLog,RULE_DATE,transact:change=>{change({projects:[p]});return true;},...sections,project:()=>p,$:()=>content,conditionsConfirmed,selectedAssets,evaluate,statuses,assetSources,brandIcon:()=>'',badge:r=>statuses[r.status],esc:String};
  vm.createContext(box);vm.runInContext(app.slice(app.indexOf('function renderReport(){'),app.indexOf('\nfunction setView('))+'\nrenderReport();',box);return content.innerHTML;
 }
 test('PDF evidence titles show their hostnames and retain link annotations',async()=>{

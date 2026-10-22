@@ -195,3 +195,15 @@ section.context-panel{padding:24px}section.context-panel .context-title{padding:
 .no-choice th:nth-child(4),.no-choice td:nth-child(4){display:none}
 .ai-extra #basicLicense>label:first-child{display:none}
 form label.check{flex-direction:row;align-items:flex-start;text-align:left}form label.check input{margin-top:4px;flex:none}
+/* Record states are distinct from the green/yellow/red decision badges. */
+.verdict-state{display:inline-block;border:1px solid #50575d;border-radius:5px;padding:2px 6px;font-size:11px;font-weight:500;line-height:1.5;color:#40474d;background:#fff;max-width:100%;overflow-wrap:anywhere}
+.verdict-state.provisional{border-color:#a28c4f;background:#fcf8e9;color:#685b36}
+.verdict-state.retracted{border-color:#a9afb3;background:#f1f2f3;color:#70777c;text-decoration:line-through}
+.verdict-history{margin:12px 0;font-size:12px;overflow-wrap:anywhere}
+.verdict-history ol{padding-left:20px}.verdict-history li{margin:12px 0}.verdict-history p{margin:4px 0}
+.result-card .brand-name{flex-wrap:wrap;overflow-wrap:anywhere}
+.promise-box{margin:0 0 16px;padding:14px 16px;border:1px solid var(--line,#dce2de);border-radius:12px;background:var(--surface,#fff)}
+.promise-box h2{font-size:14px;margin:0 0 10px}.promise-items{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
+.promise-items h3{font-size:12px;margin:0 0 4px}.promise-items p{font-size:12px;line-height:1.6;margin:0;color:var(--muted,#65766e);overflow-wrap:anywhere}
+.verdict-guide p{margin:5px 0}
+@media(max-width:600px){.promise-items{grid-template-columns:1fr;gap:10px}.promise-box{padding:12px}.verdict-state{font-size:10px}}

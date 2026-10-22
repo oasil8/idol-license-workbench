@@ -3,7 +3,18 @@ import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import {getDocument} from 'pdfjs-dist/legacy/build/pdf.mjs';
 import {createReportPdf,pdfReportData,pdfBodyLayout} from '../report-pdf.mjs';
+import {contextKey,inputSnapshot,recordVerdict} from '../dist/verdict-log.mjs';
+import {evaluate,RULE_DATE} from '../dist/core.mjs';
 const norm=s=>s.replace(/\s+/g,'');
+test('PDFs with verdict history still fit three pages and show history lines',async()=>{
+ for(const name of ['mixed','sample']){
+  const p=JSON.parse(readFileSync(new URL(`./fixtures/report-${name}.json`,import.meta.url)));
+  for(const a of p.assets){const r=evaluate(a,p.context),entry={status:r.status,reason:'기록',inputs:inputSnapshot(a),ruleDate:r.ruleDate||RULE_DATE};a.verdictLog=recordVerdict(recordVerdict([],{...entry,status:r.status==='review'?'conditions':'review'},contextKey(p.context),'2026-10-21'),entry,contextKey(p.context),'2026-10-22');}
+  const pages=await render(p),text=norm(pages.flat().map(x=>x.str).join(''));
+  assert.ok(pages.length<=3,`${name}: ${pages.length}`);
+  for(const item of pdfReportData(p).items)assert.ok(text.includes(norm(item.verdictHistory)),item.name);
+ }
+});
 export async function render(p,options){const doc=await getDocument({data:new Uint8Array(await createReportPdf(p,options)),useSystemFonts:true}).promise;const pages=[];for(let i=1;i<=doc.numPages;i++)pages.push((await (await doc.getPage(i)).getTextContent()).items);return pages;}
 test('mixed and sample PDFs fit three pages and preserve every verdict and full reason',async()=>{
  for(const name of ['mixed','sample']){

@@ -1,6 +1,7 @@
 import {resultBodyLayout as pdfBodyLayout,commonGroups,noteNames,minorNote} from './result-layout.mjs';
 import {normalizeAsset,assetScope} from './asset-normalization.mjs';
 import {evaluate,statuses,validateProject} from './core.mjs';
+import {contextKey,verdictHistorySummary} from './verdict-log.mjs';
 import {conditionsConfirmed,conditionsPrompt,selectedAssets,selectionOf,projectSummary,summaryReason} from './workflow.mjs';
 import {projectConclusion,reportDisclaimer,summaryReasonText,displaySources,resultItems,outcomeReason,conflictNextAction} from './result-sections.mjs';
 import {candidateNotice,assetSources,sourceGroup} from './evidence-sources.mjs';
@@ -61,7 +62,7 @@ export function pdfReportData(input, includeOriginals=false) {
   return {candidateNotice:candidateNotice(a),ruleDate:r.ruleDate,reviewDates:r.reviewDates,reviewWarnings:r.reviewWarnings,name:a.name,status:statuses[r.status],reason:outcomeReason(a,r),...parts,
    sources:displaySources(r,sources).map(s=>({type:s.type,recordLabel:s.recordLabel,label:s.label,url:s.url,group:sourceGroup(s),date:s.date,dateLabel:s.dateLabel,warning:s.warning,scope:s.scope,note:outcomeReason(a,r).includes(s.note)?'':s.note,clause:outcomeReason(a,r).includes(s.clause)?'':s.clause,quote:s.contractDocument?s.verification?.excerpts?.[0]?.text:''})),
    quotes:quotes.slice(0,3),extraQuotes:Math.max(0,quotes.length-3),evidence:a.evidence,
-   scope:assetScope(a)};
+   scope:assetScope(a),verdictHistory:verdictHistorySummary(a.verdictLog,contextKey(p.context))};
  });
  if(includeOriginals)for(const d of p.assignment?.documents||[])add(d.name+' · '+(d.role==='feedback'?'피드백':'검토 자료'),d.text);
  return {conclusion:projectConclusion(p),name:p.name,context:p.context,status:statuses[summary.status],reason:summaryReason(summary),usedCount:summary.assets.length,pending:summary.pending,items,originals};
@@ -143,6 +144,7 @@ export async function renderReportPdf(project,{includeOriginals=false,PDFDocumen
    if(values.length>3)blocks.push({value:`외 ${values.length-3}개 · 전체 목록은 웹 화면에 있습니다.`,size:8,color:'#65766e'});
   }
   blocks.push({value:'검토 범위: '+item.scope,size:8,color:'#65766e'});
+  if(item.verdictHistory)blocks.push({value:item.verdictHistory,size:7.5,color:'#687078'});
 
   for(const source of item.sources.slice(0,2)){
    const kind=source.recordLabel||({'reference':'공식 기록·실시간 조회 아님','supplement':'공식 기록·실시간 조회 아님','verified':'공식 주소 대조 기록','suggested':'공식 참고·적용 미확인','rule':'규칙 참고','user':'직접 입력·출처 미검증','manual':'직접 입력·출처 미검증','candidate':'공식 도메인·원문 미확인'}[source.type])||source.group;
