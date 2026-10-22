@@ -1,11 +1,23 @@
 <!doctype html>
-<html lang="ko"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>IDOL License WORKBENCH</title><link rel="stylesheet" href="./style.css"><script type="module" src="./app.mjs"></script></head>
+<html lang="ko"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>IDOL License WORKBENCH · 자료 라이선스 검토</title><meta name="description" content="게임·연구에 쓰는 코드, 에셋, AI 생성물, 소프트웨어를 등록하고 Steam 출시·연구·학회·기업 납품 등 사용 목적에 따른 사용 가능 여부와 필요한 조건을 정리하는 라이선스 검토 도구입니다."><link rel="stylesheet" href="./style.css"><script type="module" src="./app.mjs"></script></head>
 <body>
 <aside class="sidebar"><a href="#" class="brand" id="homeLink"><span class="logo">I</span><span>IDOL License<br><b>WORKBENCH</b></span></a><div class="workspace-label">LOCAL WORKSPACE</div><label for="projectSelect" class="small">프로젝트</label><select id="projectSelect"></select><div class="project-buttons"><button id="newProject" class="quiet">＋ 새 프로젝트</button><button id="manageProjects" class="quiet">프로젝트 관리</button></div><nav aria-label="주 메뉴"><button class="nav active" data-view="intake">① <span>자료 넣기</span></button><button class="nav" data-view="inventory">② <span>사용 조건 정하기</span></button><button class="nav" data-view="report">③ <span>결과 확인</span></button><button class="nav" data-view="guide">◷ <span>사용법·결과 안내</span></button></nav><div class="side-bottom"><span class="dot"></span> 이 기기에서만 처리<p>선택한 파일을 브라우저에서 읽습니다.<br>파일 외부 전송 없음<br>약관 조회·이름 검색 시 외부 연결</p><small>IDOL / v1.4</small></div></aside>
 <main><header><div class="breadcrumb">워크스페이스 <span>/</span> <span id="pageLabel">1. 자료 넣기</span></div><div class="header-actions"><button id="exportWorkspace" class="text-button">전체 백업 · 기기 이동</button><button id="importProject" class="text-button">백업 가져오기</button><button id="exportProject" class="outline">프로젝트 백업 ↗</button></div></header>
-<section class="heading"><div><div class="eyebrow">BEFORE YOU RELEASE</div><h1 id="projectTitle">새 라이선스 점검</h1><p id="viewSubtitle">검토할 자료를 추가하고, 각 항목의 근거를 보완하세요.</p></div><div class="local-tag"><span class="dot"></span> LOCAL WORKSPACE</div></section>
+<section class="heading"><div><div class="eyebrow">출시·공개 전 라이선스 검토</div><h1 id="projectTitle">새 라이선스 점검</h1><p id="viewSubtitle">검토할 자료를 파일이나 이름으로 등록해 시작하세요.</p></div><div class="local-tag"><span class="dot"></span> LOCAL WORKSPACE</div></section>
 <div id="notice" role="status" aria-live="polite"></div>
-<section id="intakeView"><aside class="promise-box" aria-labelledby="promiseTitle"><h2 id="promiseTitle">이 도구가 지키는 것</h2><div class="promise-items">
+<section id="intakeView"><details id="toolIntro" class="tool-intro" open>
+<summary><span>이 도구는? <span class="intro-summary-description">— 라이선스 검토 도구</span></span><span id="introToggleHint">접기</span></summary>
+<div class="intro-content"><h2>이 자료, 내 프로젝트에 써도 될까요?</h2>
+<p class="intro-definition">게임·연구에 쓰는 코드, 에셋, AI 생성물, 소프트웨어를 넣으면 <strong>사용 목적에 맞게 써도 되는지와 그러려면 무엇을 해야 하는지</strong> 정리해 주는 라이선스 검토 도구입니다.</p>
+<p class="intro-purposes">Steam 출시 · 연구 · 학회 · 기업 납품 등, 실제 사용 목적을 기준으로 검토합니다.</p>
+<p class="intro-example">“Tripo로 만든 3D 모델과 Unity로 Steam에 게임을 내도 될까?”</p>
+<ol class="intro-steps">
+<li><h3>① 자료 넣기</h3><p>파일을 가져오거나 이름으로 찾아 등록하세요.</p></li>
+<li><h3>② 사용 조건 정하기</h3><p>사용 목적과 배포·수정 여부를 정하세요.</p></li>
+<li><h3>③ 결과 확인</h3><p>자료별 판정과 해야 할 일을 확인하세요.</p></li>
+</ol>
+<div class="intro-outcomes" aria-label="결과 종류"><span class="badge conditions">사용 가능(조건부)</span><span class="badge review">판단 보류</span><span class="badge conflict">사용 불가</span></div>
+</div></details><aside class="promise-box" aria-labelledby="promiseTitle"><h2 id="promiseTitle">이 도구가 지키는 것</h2><div class="promise-items">
 <article><h3>파일은 밖으로 나가지 않습니다</h3><p>파일 내용은 이 브라우저(로컬 버전은 내 PC)에서만 읽습니다. 공식 약관·저장소 조회 때도 자료 이름과 주소만 보냅니다.</p></article>
 <article><h3>확실하지 않으면 보류합니다</h3><p>실제보다 관대한 결론을 내지 않습니다. 근거와 확인일을 함께 보여 줍니다.</p></article>
 <article><h3>법률 의견이 아닙니다</h3><p>검토를 돕는 기록입니다. 출시 전 최종 확인은 사람이 합니다.</p></article>

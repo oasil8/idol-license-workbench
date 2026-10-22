@@ -212,3 +212,16 @@ form label.check{flex-direction:row;align-items:flex-start;text-align:left}form 
 #applyKnownToolLicense{background:#fff;border:1px solid #8ca89f;border-radius:6px;color:#24594d;padding:6px 12px;font:inherit;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap}#applyKnownToolLicense:hover{background:#e8f1ea;border-color:#3b7053}
 
 .monetization{display:block;line-height:1.6;overflow-wrap:anywhere}.catalog-item>.monetization{padding:8px 12px;color:#42675e}
+
+/* First-visit introduction; verdict colors come from the shared badges. */
+.tool-intro{margin:0 0 16px;border:1px solid var(--line);border-radius:12px;background:#f5f9f7;overflow-wrap:anywhere}
+.tool-intro>summary{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:16px 20px;cursor:pointer;list-style:none;font-size:14px;font-weight:600;color:#315c4a}
+.tool-intro>summary::-webkit-details-marker{display:none}
+.tool-intro>summary:focus-visible{outline:2px solid #08745f;outline-offset:2px;border-radius:12px}
+#introToggleHint{flex-shrink:0;font-size:12px;color:#48725b}
+.intro-content{padding:0 24px 24px}.intro-content h2{font-size:clamp(22px,3vw,30px);line-height:1.4;margin:6px 0 16px;letter-spacing:-.03em}
+.intro-definition{font-size:17px;line-height:1.8;margin:0;color:#365640}.intro-purposes{font-size:13px;color:#536c5d;line-height:1.7;margin:8px 0 16px}
+.intro-example{font-size:15px;line-height:1.7;border-left:3px solid #49906b;padding:10px 14px;margin:0 0 20px;background:#fff;border-radius:0 8px 8px 0}
+.intro-steps{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;list-style:none;padding:0;margin:0 0 20px}.intro-steps h3{font-size:15px;margin:0 0 6px}.intro-steps p{font-size:13px;line-height:1.7;margin:0;color:#536c5d}
+.intro-outcomes{display:flex;flex-wrap:wrap;gap:8px}
+@media(max-width:760px){.tool-intro>summary{padding:14px 12px;font-size:12px}.intro-content{padding:0 16px 20px}.intro-definition{font-size:16px}.intro-steps{grid-template-columns:1fr;gap:12px}}

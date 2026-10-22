@@ -33,6 +33,22 @@ try{const saved=JSON.parse(localStorage.getItem(key)||'null');if(saved){if(!Arra
 catch{message('저장 데이터를 읽을 수 없습니다. 원본 저장값은 자동 덮어쓰지 않았습니다. 백업을 가져오거나 새 기록을 저장하세요.',true);}
 if(!projects.length){const p=fresh('새 라이선스 점검');projects.push(p);current=p.id;}
 const project=()=>projects.find(p=>p.id===current);
+function setupIntroduction(){
+ const details=$('toolIntro'),hint=$('introToggleHint'),storageKey='license-workbench-intro-open';
+ let preference=null,renderedOpen=details.open;
+ try{const saved=localStorage.getItem(storageKey);if(saved==='true'||saved==='false')preference=saved==='true';}catch{}
+ details.ontoggle=()=>{
+  // Automatic project defaults must not become a saved user preference.
+  if(details.open===renderedOpen)return;
+  preference=renderedOpen=details.open;hint.textContent=details.open?'접기':'펼치기';
+  try{localStorage.setItem(storageKey,String(preference));}catch{}
+ };
+ return assetCount=>{
+  renderedOpen=preference??assetCount===0;
+  details.open=renderedOpen;hint.textContent=renderedOpen?'접기':'펼치기';
+ };
+}
+const renderIntroduction=setupIntroduction();
 function save(){try{localStorage.setItem(key,JSON.stringify({projects,trash,index:projects.findIndex(p=>p.id===current)}));storageFailed=false;return true;}catch{storageFailed=true;message('브라우저 저장 공간에 저장하지 못했습니다. 전체 백업을 내려받으세요. 현재 변경은 메모리에만 있으며 새로고침하면 사라집니다.',true);return false;}}
 function transact(change){
  const state={projects,trash,current};
@@ -66,6 +82,7 @@ function assessment(a,showDecision=true){
  ${commercial.notes.length||details?`<details class="assessment-evidence"><summary>상세 근거 · 약관 · 원문</summary>${list(commercial.notes)}${details}</details>`:''}`;
 }
 function render(){const p=project();
+ renderIntroduction(p.assets.length);
  $('projectSelect').innerHTML=projects.map(x=>`<option value="${x.id}" ${x.id===current?'selected':''}>${esc(x.name)}</option>`).join('');
  if(contextDraftProject&&contextDraftProject!==current){contextDraft=undefined;contextDraftProject='';$('contextPending').textContent='';}
  renderContextConfirmation(p,contextDraftProject===current&&contextDraft||p.context);
