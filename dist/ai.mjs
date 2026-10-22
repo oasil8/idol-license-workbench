@@ -2,7 +2,8 @@ import {officialDomains,isOfficialCandidate} from './source-policy.mjs';
 import {officialRecord,officialNameMatches} from './official-sources.mjs';
 import {contractProfile} from './contract-review.mjs';
 import {analyzeTerms,pastOutputCheck,thirdPartyCheck} from './terms-analysis.mjs';
-export const providerNames={openai:'OpenAI / ChatGPT · 개인용',anthropic:'Anthropic / Claude · 개인용',meshy:'Meshy',tripo:'Tripo',huggingface:'Hugging Face 모델',other:'다른 서비스 · 수동 검토'};
+import {providerNames} from './provider-names.mjs';
+export {providerNames} from './provider-names.mjs';
 export function queryKey(a){return JSON.stringify([a.provider||'',a.planType||'unknown',a.scope||'output',a.repository||'',...(a.contractRoute?['contract:'+a.contractRoute]:[]),...(a.apiAccessConfirmed===true?['api-access-confirmed']:[]),...(a.serviceName||a.outputType||a.useDescription?[a.serviceName||'',a.outputType||'',a.useDescription||'']:[])]);}
 const officialTermsUrls={
  tripo:['https://www.tripo3d.ai/help/privacy-policy/how-to-use-tripo-models-commercially'],

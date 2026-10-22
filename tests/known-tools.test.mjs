@@ -1,3 +1,4 @@
+import {monetizationMarkup} from '../dist/monetization.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import * as official from '../dist/official-sources.mjs';
@@ -61,12 +62,12 @@ test('form shows a suggestion below license and fills fields only on an explicit
  assert.ok(html.indexOf('id="knownToolGuidance"')<html.indexOf('name="evidence"'));
  let a=asset('Blender'),updates=0;
  const fields={license:{value:''},evidence:{value:''},confirmed:{checked:false}};
- const nodes={assetForm:{elements:fields},knownToolGuidance:{},knownToolGuidanceText:{},applyKnownToolLicense:{}};
- const box={$:id=>nodes[id],formAsset:()=>a,knownToolGuidance:official.knownToolGuidance,applyKnownToolLicense:official.applyKnownToolLicense,updateForm:()=>updates++};
+ const nodes={monetizationGuidance:{},assetForm:{elements:fields},knownToolGuidance:{},knownToolGuidanceText:{},applyKnownToolLicense:{}};
+ const box={monetizationMarkup,esc:s=>s,$:id=>nodes[id],formAsset:()=>a,knownToolGuidance:official.knownToolGuidance,applyKnownToolLicense:official.applyKnownToolLicense,updateForm:()=>updates++};
  vm.createContext(box);
  const render=app.slice(app.indexOf('function updateForm(){')+'function updateForm(){'.length,app.indexOf("$('contractPanel').hidden"));
  const draw=()=>vm.runInContext('{'+render+'}',box);
- draw();assert.equal(fields.license.value,'');assert.equal(nodes.knownToolGuidance.hidden,false);assert.equal(nodes.applyKnownToolLicense.hidden,false);
+ draw();assert.match(nodes.monetizationGuidance.innerHTML,/수익화:.*2026-10-22/);assert.equal(fields.license.value,'');assert.equal(nodes.knownToolGuidance.hidden,false);assert.equal(nodes.applyKnownToolLicense.hidden,false);
  const start=app.indexOf("$('applyKnownToolLicense').onclick="),end=app.indexOf("$('applyCategoryAdvice').onclick",start);
  vm.runInContext(app.slice(start,end),box);nodes.applyKnownToolLicense.onclick();
  assert.equal(fields.license.value,'GPL-2.0-or-later');assert.equal(fields.evidence.value,official.officialRecord('blender').url);assert.equal(fields.confirmed.checked,false);assert.equal(updates,1);

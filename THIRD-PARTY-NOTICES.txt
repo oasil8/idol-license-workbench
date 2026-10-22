@@ -2240,3 +2240,7 @@ THE SOFTWARE.
 
 
 Windows Malgun Gothic font is loaded from the local operating system for PDF embedding. No Windows font file is redistributed in the source ZIP. Other servers may configure IDOL_PDF_FONT to an appropriately licensed Korean TTF/OTF.
+
+Simple Icons 16.35.0 — CC0-1.0 (https://simpleicons.org/).
+브랜드 아이콘의 상표는 각 소유자에게 있으며 식별 목적으로 사용합니다.
+생성: node tools/build-simple-icons.mjs → dist/brand-icons-simple.mjs (로컬 파비콘이 없으면 사용).

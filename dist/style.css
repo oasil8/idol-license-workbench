@@ -210,3 +210,5 @@ form label.check{flex-direction:row;align-items:flex-start;text-align:left}form 
 /* The suggestion button must read as a button, like the result-card shortcuts. */
 #knownToolGuidance{display:flex;flex-wrap:wrap;align-items:center;gap:8px}#knownToolGuidance small{flex:1 1 260px;line-height:1.6}
 #applyKnownToolLicense{background:#fff;border:1px solid #8ca89f;border-radius:6px;color:#24594d;padding:6px 12px;font:inherit;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap}#applyKnownToolLicense:hover{background:#e8f1ea;border-color:#3b7053}
+
+.monetization{display:block;line-height:1.6;overflow-wrap:anywhere}.catalog-item>.monetization{padding:8px 12px;color:#42675e}

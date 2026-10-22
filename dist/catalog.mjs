@@ -1,3 +1,7 @@
+import {records,codeLicenseRecords} from './official-sources.mjs';
+import {providerNames} from './provider-names.mjs';
+import {sourceNames,storeSources} from './license-normalization.mjs';
+import {definitions} from './assignment.mjs';
 // Search suggestions describe a registration route, never a license clearance.
 export const catalog=[
  ['tripo','Tripo','트리포 3d 차량 모델','ai','tripo'],
@@ -271,6 +275,38 @@ export const referenceCatalog=[
  }
 ];
 catalog.push(...referenceCatalog);
+// Evaluation uses the original recommendation vocabulary; discovery must not change verdicts.
+const recommendationCatalog=catalog.map(x=>({...x}));
+const software=[
+ ['unity','Unity','유니티'],['unreal','Unreal Engine','언리얼'],['godot','Godot','고도 엔진 고도엔진'],
+ ['blender','Blender','블렌더'],['isaacsim','NVIDIA Isaac Sim','아이작 심'],
+ ['claude-code','Claude Code','클로드 코드','ai','anthropic'],['codex','Codex','코덱스','ai','openai'],
+ ['cursor','Cursor','커서'],['maya','Maya','마야'],['houdini','Houdini','후디니'],['krita','Krita','크리타'],
+ ['gimp','GIMP','김프'],['aseprite','Aseprite','에이스프라이트'],['audacity','Audacity','오다시티'],
+ ['fmod','FMOD',''],['wwise','Wwise',''],['substance','Substance 3D Painter','섭스턴스'],
+ ['zbrush','ZBrush','지브러시'],['photoshop','Photoshop','포토샵'],
+ ['vscode','Visual Studio Code','VS Code 비주얼 스튜디오 코드'],['pytorch','PyTorch','파이토치','code']
+].map(([id,name,aliases,kind='tool',provider=''])=>({id,name,aliases,kind,provider}));
+const key=name=>name.normalize('NFKC').toLowerCase().trim();
+function add(item){
+ const existing=catalog.find(x=>key(x.name)===key(item.name)||x.id===item.id);
+ if(existing){existing.aliases=[existing.aliases,item.aliases].filter(Boolean).join(' ');return;}
+ catalog.push({aliases:'',provider:'',...item});
+}
+software.forEach(add);
+for(const [name,kind,provider] of definitions)add({id:'detected-'+key(name).replace(/[^a-z0-9]+/g,'-'),name,kind,provider});
+for(const r of [...records,...codeLicenseRecords]){
+ const existing=catalog.find(x=>r.names.some(n=>key(n)===key(x.name)));
+ add({id:existing?.id||r.id,name:existing?.name||r.names[0],aliases:r.names.join(' '),kind:existing?.kind||r.kinds?.[0]||'tool',url:r.url});
+}
+for(const [provider,name] of Object.entries(providerNames)){
+ const existing=catalog.find(x=>provider==='other'?x.id==='other-ai':x.provider===provider);
+ add({id:existing?.id||'provider-'+provider,name:existing?.name||name,aliases:name,kind:'ai',provider});
+}
+for(const name of new Set([...sourceNames,...storeSources.map(([,name])=>name)])){
+ const existing=catalog.find(x=>key(x.name)===key(name));
+ add({id:existing?.id||'source-'+key(name).replace(/[^a-z0-9]+/g,'-'),name,kind:existing?.kind||({Freesound:'audio','Epidemic Sound':'audio',GitHub:'code',Mixamo:'model',Sketchfab:'model','Unity Asset Store':'model',Fab:'model'}[name]||'image')});
+}
 export const catalogGroup=(item,category='')=>category&&categoriesOf(item).includes(category)?category:categoriesOf(item)[0];
 
 // Recommend identity/category only; never infer an output/API/model usage scope.
@@ -279,7 +315,7 @@ export function categoryRecommendation(a){
  const name=String(a.name||'').normalize('NFKC').trim().toLowerCase();
  if(name.length<2)return;
  const generic=new Set(['code','model','car','image','audio','data','tool','other-ai']);
- const matches=catalog.filter(x=>!generic.has(x.id)&&([x.name.toLowerCase(),...x.aliases.toLowerCase().split(/\s+/)]).includes(name));
+ const matches=recommendationCatalog.filter(x=>!generic.has(x.id)&&([x.name.toLowerCase(),...x.aliases.toLowerCase().split(/\s+/)]).includes(name));
  if(matches.length!==1||matches[0].kind===a.kind)return;
  return matches[0];
 }

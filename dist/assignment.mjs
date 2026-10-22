@@ -1,4 +1,4 @@
-const definitions=[
+export const definitions=[
  ['Tripo','ai','tripo','model',/\btripo(?:\s*ai)?\b|트리포/iu],
  ['Rodin','ai','other','model',/\brodin\b|로딘/iu],
  ['Hunyuan3D','ai','other','model',/\bhunyuan\s*3d(?:[-\s]*\d+(?:\.\d+)*)?\b|훈위안|혼위안/iu],

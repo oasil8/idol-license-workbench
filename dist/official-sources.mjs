@@ -1,7 +1,7 @@
 import {normalizeAsset} from './asset-normalization.mjs';
 // Curated public-source observations, reviewed 2026-10-15; never user/project data.
 const observedOn='2026-10-15';
-const records=[
+export const records=[
  ['midjourney',['Midjourney','미드저니'],'Midjourney 이용약관','https://docs.midjourney.com/hc/en-us/articles/32083055291277-Terms-of-Service','Rights You Give to Midjourney; Your Rights','매출 조건과 Pro/Mega 플랜, 직접 생성 여부를 확인하세요.','직접 생성한 출력물 · 추가 조건 별도'],
  ['elevenlabs',['ElevenLabs'],'ElevenLabs 일반 약관 (non-EEA)','https://elevenlabs.io/terms-of-use','Free User / Paid User; Output / Models','무료 서비스는 비상업 용도, 유료 구독은 상업 용도를 허용하는 조항이 있습니다. 금지 이용 정책·서비스별 추가 약관과 실제 계약 적용 범위는 별도입니다.','일반 서비스 계약 · 지역·구독·제품별 조건 구분'],
  ['copilot',['GitHub Copilot','깃허브 코파일럿'],'GitHub Copilot 적용 계약 안내','https://docs.github.com/en/site-policy/github-terms/github-terms-for-additional-products-and-features','GitHub Copilot — purchasing route','개인용은 GitHub ToS J, GitHub 직접 기업 구매는 Generative AI Services Terms, Microsoft 구매는 Microsoft Product Terms. 출력물의 제3자 라이선스 확인 필요.','구매 경로별 계약 · 코드 출력물과 API 제공 구분'],

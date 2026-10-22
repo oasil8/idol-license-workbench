@@ -11,7 +11,7 @@ const clear=dir=>{for(const name of readdirSync(dir)){const p=join(dir,name);sta
 if(existsSync(out))clear(out);
 mkdirSync(join(out,'vendor','cmaps'),{recursive:true});mkdirSync(join(out,'fonts'));
 
-// Logos and other parties' files are local-only and stay out of the published site.
+// Local favicons and reference images stay private; generated CC0 Simple Icons are included.
 const skip=/^(brand-icons-data\.mjs|.*-transparent\.png)$/;
 for(const name of readdirSync(join(root,'dist')))if(!skip.test(name))copy(join('dist',name),name);
 const vendor={'jszip.min.js':'jszip/dist/jszip.min.js','pdf.mjs':'pdfjs-dist/build/pdf.mjs','pdf.worker.mjs':'pdfjs-dist/build/pdf.worker.mjs','mammoth.browser.min.js':'mammoth/mammoth.browser.min.js','pdfkit.standalone.js':'pdfkit/js/pdfkit.standalone.js'};

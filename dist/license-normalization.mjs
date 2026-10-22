@@ -1,3 +1,10 @@
+export const storeSources=[
+  [/^unity\s+asset\s+store\b/i,'Unity Asset Store'],[/^fab\b/i,'Fab'],
+  [/^unreal\s+engine\b/i,'Unreal Engine'],[/^epic\s+content\b/i,'Epic Content'],
+  [/^pixabay\b/i,'Pixabay'],[/^unsplash\b/i,'Unsplash'],[/^pexels\b/i,'Pexels'],
+  [/^adobe\s+stock\b/i,'Adobe Stock'],[/^envato\b/i,'Envato'],
+  [/^epidemic\s+sound\b/i,'Epidemic Sound'],[/^itch\.io\b/i,'itch.io'],[/^mixamo\b/i,'Mixamo']
+ ];
 // Match entire names and explicit source wrappers; never discard unknown qualifiers.
 const nameKey=value=>value.toLowerCase().replace(/\b(?:the|license|licence|version)\b/g,'').replace(/\bv(?=\s*\d)/g,'').replace(/[\s,-]+/g,'');
 const aliases=new Map([
@@ -37,13 +44,7 @@ export function licenseClarification(license){
  if(key==='royaltyfree')return ['Royalty Free 계약 범위 미확인','판매처의 라이선스 원문에서 게임 판매·배포 허용 범위와 제한 조건을 확인해 입력하세요.'];
  if(['무료','무료배포','상업용무료','상업적무료','무료사용','free','freeforcommercialuse','freetouse'].includes(key))return ['무료 배포 표시 · 이용 조건 미확인','무료 배포는 이용 허락과 다르므로, 배포처의 라이선스 원문에서 상업 이용·게임 포함·재배포 허용 여부를 확인해 입력하세요.'];
  if(key==='boost')return ['Boost 라이선스 버전 미확인','Boost 배포판에 적용된 라이선스 원문과 버전을 확인해 입력하세요.'];
- const store=[
-  [/^unity\s+asset\s+store\b/i,'Unity Asset Store'],[/^fab\b/i,'Fab'],
-  [/^unreal\s+engine\b/i,'Unreal Engine'],[/^epic\s+content\b/i,'Epic Content'],
-  [/^pixabay\b/i,'Pixabay'],[/^unsplash\b/i,'Unsplash'],[/^pexels\b/i,'Pexels'],
-  [/^adobe\s+stock\b/i,'Adobe Stock'],[/^envato\b/i,'Envato'],
-  [/^epidemic\s+sound\b/i,'Epidemic Sound'],[/^itch\.io\b/i,'itch.io'],[/^mixamo\b/i,'Mixamo']
- ].find(([pattern])=>pattern.test(license));
+ const store=storeSources.find(([pattern])=>pattern.test(license));
  if(store)return [`판매처 라이선스(${license})`,`구매·다운로드 당시 ${store[1]} 라이선스 원문을 저장하고, 게임에 포함해 판매·배포하는 것이 허용되는지와 단독 재배포 금지 조건을 확인하세요.`];
 }
 
@@ -54,7 +55,7 @@ const creationAliases=new Map([
  ...['구매함','구매','Purchased','Paid asset','LicenseRef-Purchased'].map(s=>[s.toLowerCase().replace(/\s/g,''),'LicenseRef-Purchased'])
 ]);
 const permissive=new Set(['MIT','BSD-2-Clause','BSD-3-Clause','ISC','Apache-2.0','Zlib','BSL-1.0','0BSD','Unlicense','CC0-1.0']);
-const sourceNames=['Kenney','Freesound','Google Fonts','Sketchfab','OpenGameArt','itch.io','GitHub','Poly Haven','ambientCG','Pixabay','Unsplash','Pexels'];
+export const sourceNames=['Kenney','Freesound','Google Fonts','Sketchfab','OpenGameArt','itch.io','GitHub','Poly Haven','ambientCG','Pixabay','Unsplash','Pexels'];
 function sourceLicense(value){
  for(const source of sourceNames){
   const escaped=source.replace(/[.*+?^${}()|[\]\\]/g,'\\$&').replace(/ /g,'\\s+');

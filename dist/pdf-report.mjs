@@ -117,9 +117,9 @@ export async function renderReportPdf(project,{includeOriginals=false,PDFDocumen
  const drawBlock=({value,size=8.5,color='#263e38',link,box})=>{
   const pad=box?6:0,w=width-pad*2;
   doc.fontSize(size);const valueWrapped=wrapped(value,w),height=doc.heightOfString(valueWrapped,{width:w,lineGap:1})+2+pad*2;
-  room(height);
+  room(height+(box?5:0));
   if(box)doc.save().rect(42,doc.y,width,height).fill('#e8efec').restore();
-  doc.fillColor(color).text(valueWrapped,42+pad,doc.y+pad,{width:w,lineGap:1,link});doc.y+=2+pad;
+  doc.fillColor(color).text(valueWrapped,42+pad,doc.y+pad,{width:w,lineGap:1,link});doc.y+=2+pad+(box?5:0);
  };
  for(const [kind,title] of commonGroups){
   const notes=layout.common.filter(note=>note.kind===kind&&!minorNote.test(note.text));
@@ -153,7 +153,7 @@ export async function renderReportPdf(project,{includeOriginals=false,PDFDocumen
   if(item.sources.length>2)blocks.push({value:`외 ${item.sources.length-2}개 · 전체 근거는 웹 화면에 있습니다.`,size:7.5,color:'#65766e'});
   if(item.candidateNotice)blocks.push({value:item.candidateNotice,size:8,color:'#65766e'});
   if(!item.sources.length&&item.evidence)blocks.push({value:'입력 근거: '+item.evidence,size:8});
-  const height=blocks.reduce((total,b)=>{doc.fontSize(b.size||8.5);return total+doc.heightOfString(wrapped(b.value),{width,lineGap:1})+2+(b.box?12:0);},0)+14;
+  const height=blocks.reduce((total,b)=>{doc.fontSize(b.size||8.5);return total+doc.heightOfString(wrapped(b.value,width-(b.box?12:0)),{width:width-(b.box?12:0),lineGap:1})+2+(b.box?17:0);},0)+14;
   if(height<doc.page.height-84)room(height);
   doc.y+=12;
   for(const block of blocks)drawBlock(block);
