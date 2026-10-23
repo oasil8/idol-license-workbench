@@ -50,7 +50,7 @@ for(const [site,names,url,extra] of [
    for(const patch of [{confirmed:false},{confirmed:undefined},{evidence:''},{evidence:'  '}]){
     const r=evaluate({...asset,license,...patch},context);
     assert.equal(r.status,'review');
-    assert.ok(r.blockers.some(t=>t.includes('라이선스 적용 범위와 근거')));
+    assert.ok(r.blockers.some(t=>t.includes('라이선스가 이 자료에 적용되는지와 근거')));
    }
    for(const distribute of [undefined,null,'true',0])assert.equal(evaluate({...asset,license},{...context,distribute}).status,'review');
    assert.equal(evaluate({...asset,license,kind:'tool'},context).status,'review');

@@ -133,6 +133,8 @@ npm test      # 자동 테스트 (node --test)
 사용한 오픈소스(PDF.js, Mammoth, JSZip, PDFKit)의 고지는 [`THIRD-PARTY-NOTICES.txt`](THIRD-PARTY-NOTICES.txt)에 있습니다.
 `tests/fixtures`의 약관 원문 스냅샷은 각 서비스의 저작물이며 테스트 용도로만 보관합니다.
 
+Lobe Icons 1.98.0 — MIT (https://github.com/lobehub/lobe-icons).
 Simple Icons 16.35.0 — CC0-1.0 (https://simpleicons.org/).
-브랜드 아이콘의 상표는 각 소유자에게 있으며 식별 목적으로 사용합니다.
-생성: node tools/build-simple-icons.mjs → dist/brand-icons-simple.mjs (로컬 파비콘이 없으면 사용).
+로고와 상표는 각 소유자의 것이며 제품을 가리키는 용도로만 사용하고, 요청 시 제거합니다.
+생성: node tools/build-simple-icons.mjs → dist/brand-icons-simple.mjs. Lobe의 컬러 SVG를 우선하며 없으면 단색 SVG를 사용합니다.
+로컬·링크 버전 모두 같은 생성 파일을 사용합니다. 기존 파비콘 파일과 fetch-icons.py는 보관하지만 앱에서는 사용하지 않습니다.

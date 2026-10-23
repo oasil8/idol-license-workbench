@@ -44,7 +44,7 @@ test('Unity preserves application confirmation, evidence and conservative scope 
   for(const patch of [{confirmed:false},{confirmed:undefined},{evidence:''}]){
    const r=evaluate({...asset,license,...patch},context);
    assert.equal(r.status,'review');
-   assert.ok(r.blockers.some(t=>t.includes('라이선스 적용 범위와 근거')));
+   assert.ok(r.blockers.some(t=>t.includes('라이선스가 이 자료에 적용되는지와 근거')));
   }
   // EULA 2.3.1 covers use on the user's own computers, so not distributing is no riskier than distributing.
   assert.equal(evaluate({...asset,license},{...context,distribute:false}).status,'conditions');

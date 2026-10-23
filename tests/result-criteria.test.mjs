@@ -10,7 +10,7 @@ test('known obligations do not force review for MPL internal use and unchanged B
  assert.equal(evaluate({...a,license:'CC-BY-SA-4.0'},{...c,distribute:true,modified:true}).status,'conditions');
 });
 test('permission still requires applicable evidence and explicit restrictions remain conflicts',()=>{
- const missing=evaluate({...a,license:'MIT',confirmed:false},c);assert.equal(missing.status,'review');assert.ok(missing.blockers.some(x=>x.includes('적용 범위')));
+ const missing=evaluate({...a,license:'MIT',confirmed:false},c);assert.equal(missing.status,'review');assert.ok(missing.blockers.some(x=>x.includes('라이선스가 이 자료에 적용되는지와 근거')));
  assert.equal(evaluate({...a,license:'CC-BY-NC-4.0'},c).status,'conflict');
  assert.equal(evaluate({...a,license:'MIT'},c).status,'conditions');assert.deepEqual(evaluate({...a,license:'MIT'},c).blockers,[]);
  assert.equal(evaluate({...a,license:'MPL-2.0'},{...c,distribute:undefined}).status,'review');

@@ -1,4 +1,3 @@
-import {needsIcons} from './third-party.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {brandIcon,brandOf} from '../dist/brand-icons.mjs';
@@ -6,7 +5,7 @@ import {buildProjectReport} from '../dist/report.mjs';
 test('non-AI materials ignore an old service identity in live result icons',()=>{
  assert.equal(brandOf({kind:'code',name:'lodash',provider:'other',serviceName:'Runway'}),'');
 });
-test('service icons use bundled images and unknown names retain a neutral fallback',needsIcons,()=>{
+test('service icons use bundled images and unknown names retain a neutral fallback',()=>{
  assert.match(brandIcon({name:'Meshy',kind:'ai'}),/src="data:image/);
  assert.match(brandIcon({name:'Hugging Face 모델',kind:'ai'}),/src="data:image/);
  assert.equal(brandOf({name:'nanobanana',kind:'ai'}),'gemini');
@@ -15,10 +14,10 @@ test('service icons use bundled images and unknown names retain a neutral fallba
  assert.match(brandIcon({name:'Unknown',kind:'audio'}),/♪/);
  assert.match(brandIcon({name:'lodash',kind:'code'}),/aria-hidden="true" data-label="&lt;\/&gt;"><\/span>$/);
 });
-test('exported service icons remain embedded and do not require external image requests',needsIcons,()=>{
+test('exported service icons remain embedded and do not require external image requests',()=>{
  const html=buildProjectReport({contextConfirmed:true,name:'Icon test',context:{},assets:[{name:'Meshy',kind:'ai',selection:'used'}]});
  assert.match(html,/<img class="brand-icon" src="data:image/);
  assert.doesNotMatch(html,/<img[^>]*src="https?:/);
 });
 
-test('user supplied OpenAI and Midjourney logos are embedded',needsIcons,()=>{for(const name of ['OpenAI / ChatGPT','Midjourney'])assert.match(brandIcon({name,kind:'ai'}),/src="data:image\/png;base64,/);});
+test('official OpenAI and Midjourney SVG logos are embedded',()=>{for(const name of ['OpenAI / ChatGPT','Midjourney'])assert.match(brandIcon({name,kind:'ai'}),/src="data:image\/svg\+xml,/);});

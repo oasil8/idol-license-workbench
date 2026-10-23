@@ -27,8 +27,9 @@ export const catalog=[
 export const categoryNames={ai:'AI · 서비스 · API',code:'코드 · 오픈소스 · 도구',model:'모델 · 가중치 · 3D',image:'이미지 · 디자인',audio:'음악 · 음성',data:'데이터셋'};
 export function categoriesOf(item){return [...new Set([item.id==='huggingface'?'model':item.kind==='tool'?'code':item.kind,...({nanobanana:['image'],midjourney:['image'],suno:['audio'],copilot:['code']}[item.id]||[])])];}
 export function searchCatalog(query='',aiOnly=false){
- const words=query.normalize('NFKC').toLowerCase().trim().split(/\s+/).filter(Boolean);
- return catalog.filter(x=>(!aiOnly||x.kind==='ai')&&words.every(w=>(x.name+' '+x.aliases+' '+categoriesOf(x).map(k=>categoryNames[k]).join(' ')).normalize('NFKC').toLowerCase().includes(w)));
+ const term=query.normalize('NFKC').toLowerCase().trim().replace(/\s+/g,' '),words=term.split(' ').filter(Boolean);
+ const rank=x=>!term?4:key(x.name)===term?0:(x.exactAliases||[]).some(a=>key(a)===term)?1:x.aliases.split(/\s+/).some(a=>key(a)===term)?2:key(x.name).startsWith(term)?3:4;
+ return catalog.filter(x=>(!aiOnly||x.kind==='ai')&&words.every(w=>(x.name+' '+x.aliases+' '+categoriesOf(x).map(k=>categoryNames[k]).join(' ')).normalize('NFKC').toLowerCase().includes(w))).sort((a,b)=>rank(a)-rank(b));
 }
 
 // Reference entries identify projects, not permissions or an installed version.
@@ -286,18 +287,18 @@ const software=[
  ['fmod','FMOD',''],['wwise','Wwise',''],['substance','Substance 3D Painter','섭스턴스'],
  ['zbrush','ZBrush','지브러시'],['photoshop','Photoshop','포토샵'],
  ['vscode','Visual Studio Code','VS Code 비주얼 스튜디오 코드'],['pytorch','PyTorch','파이토치','code']
-].map(([id,name,aliases,kind='tool',provider=''])=>({id,name,aliases,kind,provider}));
+].map(([id,name,aliases,kind='tool',provider=''])=>({id,name,aliases,exactAliases:[aliases],kind,provider}));
 const key=name=>name.normalize('NFKC').toLowerCase().trim();
 function add(item){
  const existing=catalog.find(x=>key(x.name)===key(item.name)||x.id===item.id);
- if(existing){existing.aliases=[existing.aliases,item.aliases].filter(Boolean).join(' ');return;}
+ if(existing){existing.aliases=[existing.aliases,item.aliases].filter(Boolean).join(' ');existing.exactAliases=[...(existing.exactAliases||[]),...(item.exactAliases||[])];return;}
  catalog.push({aliases:'',provider:'',...item});
 }
 software.forEach(add);
 for(const [name,kind,provider] of definitions)add({id:'detected-'+key(name).replace(/[^a-z0-9]+/g,'-'),name,kind,provider});
 for(const r of [...records,...codeLicenseRecords]){
  const existing=catalog.find(x=>r.names.some(n=>key(n)===key(x.name)));
- add({id:existing?.id||r.id,name:existing?.name||r.names[0],aliases:r.names.join(' '),kind:existing?.kind||r.kinds?.[0]||'tool',url:r.url});
+ add({id:existing?.id||r.id,name:existing?.name||r.names[0],aliases:r.names.join(' '),exactAliases:r.names,kind:existing?.kind||r.kinds?.[0]||'tool',url:r.url});
 }
 for(const [provider,name] of Object.entries(providerNames)){
  const existing=catalog.find(x=>provider==='other'?x.id==='other-ai':x.provider===provider);

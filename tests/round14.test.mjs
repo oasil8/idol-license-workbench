@@ -1,17 +1,12 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {catalog,searchCatalog,categoriesOf,categoryRecommendation} from '../dist/catalog.mjs';
-import {readFileSync} from 'node:fs';
+import {brandIcon} from '../dist/brand-icons.mjs';
 import {records,codeLicenseRecords,officialRecord} from '../dist/official-sources.mjs';
 import {providerNames} from '../dist/ai.mjs';
 import {definitions} from '../dist/assignment.mjs';
 import {sourceNames,storeSources} from '../dist/license-normalization.mjs';
 import {monetizationInfo,monetizationMarkup} from '../dist/monetization.mjs';
-// Isolate the missing-local-data case without modifying the private favicon file.
-const iconSource=readFileSync(new URL('../dist/brand-icons.mjs',import.meta.url),'utf8')
- .replace(/const icons=await import[^\n]+/, 'const icons={};')
- .replace(/from '(\.\/[^']+)'/g,(_,path)=>`from '${new URL('../dist/'+path,import.meta.url).href}'`);
-const {brandIcon}=await import('data:text/javascript;base64,'+Buffer.from(iconSource).toString('base64'));
 
 const products=['Unity','Unreal Engine','Godot','Blender','NVIDIA Isaac Sim','Claude Code','Codex','Cursor','Maya','Houdini','Krita','GIMP','Aseprite','Audacity','FMOD','Wwise','Substance 3D Painter','ZBrush','Photoshop','Visual Studio Code','PyTorch'];
 test('round14 software and Korean aliases are available offline',()=>{
@@ -34,7 +29,7 @@ test('monetization preserves supplied facts and original inaccessible records',(
  for(const name of ['Unity','Godot','Blender','NVIDIA Isaac Sim','Meshy','Claude Code','Claude'])assert.equal(monetizationInfo({name}).checkedOn,'2026-10-22');
  for(const [name,id] of [['Tripo','tripo'],['Unreal Engine','unreal'],['Codex','openai']]){
   const info=monetizationInfo({name}),r=officialRecord(id);
-  assert.equal(info.summary,r.note);assert.equal(info.checkedOn,r.observedOn);assert.deepEqual(info.urls,[r.url]);
+  assert.equal(info.summary,id==='tripo'?'유료 플랜에서 직접 생성한 Tripo 모델은 상업 이용·수정·배포가 허용됩니다. 공식 안내에서 무료 플랜 결과물의 상업 이용 권리는 부여되지 않습니다.':r.note);assert.equal(info.checkedOn,r.observedOn);assert.deepEqual(info.urls,[r.url]);
  }
  const unity=monetizationInfo({name:'Unity'}).summary;
  for(const value of ['$200,000','$200,001','$24,999,999','$2,310','$210','$25,000,000','$1,000,000','Unity 6 이하'])assert.ok(unity.includes(value),value);
@@ -42,7 +37,7 @@ test('monetization preserves supplied facts and original inaccessible records',(
  assert.deepEqual(monetizationInfo({name:'Cursor'}),{summary:'공식 라이선스에서 확인 필요',urls:[]});
  assert.match(monetizationMarkup({name:'Blender'},s=>s),/href="https:\/\/www.blender.org\/about\/license\/"/);
 });
-test('Simple Icons cover requested brands and absent brands keep badges',()=>{
+test('official SVG icons cover software and AI brands',()=>{
  for(const name of ['Unreal Engine','Godot','NVIDIA Isaac Sim','Maya','Houdini','Krita','GIMP','Aseprite','Audacity','FMOD','Cursor','PyTorch','Claude'])assert.match(brandIcon({name,kind:'tool'}),/data:image\/svg\+xml/);
- for(const name of ['Codex','Meshy','Tripo','Midjourney','Runway'])assert.match(brandIcon({name,kind:'ai'}),/brand-fallback/);
+ for(const name of ['Codex','Meshy','Tripo','Midjourney','Runway'])assert.match(brandIcon({name,kind:'ai'}),/data:image\/svg\+xml/);
 });

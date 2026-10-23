@@ -72,7 +72,7 @@ export function commonChecksMarkup(layout,esc,{buttons=true,keepMinor=!buttons}=
   const notes=layout.common.filter(note=>note.kind===kind&&!minor.includes(note));
   return notes.length?`<section class="report-item common-checks"><h3>${title}</h3><ul>${notes.map(note=>{
    const shortcuts=buttons?layout.items.filter(item=>note.sourceTexts.some(text=>item.allTasks.includes(text))).map(item=>{
-    const button=taskButton(note.text,item.a,esc);
+    const button=note.sourceTexts.filter(text=>item.allTasks.includes(text)).map(text=>taskButton(text,item.a,esc)).find(Boolean);
     return button?` <span>${esc(item.name)}:${button}</span>`:'';
    }).join(''):'';
    return `<li>${esc(note.text)} (해당 항목: ${esc(noteNames(note.names))})${shortcuts}</li>`;
@@ -107,7 +107,7 @@ export function reviewReason(r){
  t.includes('공식 사이트에서 최신 약관을 열어')?'해당 이용 방식의 공식 허용 근거 필요':
  t.includes('도구의 라이선스·구독 플랜에서 제작물')?'적용 라이선스가 기록되지 않았습니다.':
  t.includes('적용 라이선스의 사용 허가')?'적용 라이선스가 기록되지 않았습니다.':
- t.includes('라이선스 적용 범위와 근거')?'이 자료에 대한 라이선스 적용 미확인':
+ t.includes('라이선스가 이 자료에 적용되는지와 근거')?'이 자료에 대한 라이선스 적용 미확인':
  t.includes('도구 자체를 함께 배포')?'도구 자체의 배포·번들 여부 미확인':
  t.includes('소스 제공·재링크')?'결합·배포 범위와 소스 제공 방법 미확인':
  t.includes('지원하지 않는 라이선스')?'지원하지 않는 라이선스·개별 계약':t);

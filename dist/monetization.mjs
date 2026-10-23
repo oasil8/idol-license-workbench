@@ -16,7 +16,7 @@ export function monetizationInfo(asset={}){
  if(entry)return {summary:entry.summary,urls:entry.urls,checkedOn};
  const previous={tripo:['tripo','트리포'],unreal:['unreal engine','unreal','언리얼'],openai:['codex','코덱스','openai','openai / chatgpt','chatgpt']} ;
  const id=Object.keys(previous).find(id=>previous[id].includes(name));
- if(id){const record=officialRecord(id);return {summary:record.note,urls:[record.url],checkedOn:record.observedOn,previous:true};}
+ if(id){const record=officialRecord(id);return {summary:id==='tripo'?'유료 플랜에서 직접 생성한 Tripo 모델은 상업 이용·수정·배포가 허용됩니다. 공식 안내에서 무료 플랜 결과물의 상업 이용 권리는 부여되지 않습니다.':record.note,urls:[record.url],checkedOn:record.observedOn,previous:true};}
  return {summary:'공식 라이선스에서 확인 필요',urls:[]};
 }
 export function monetizationMarkup(asset,esc){
