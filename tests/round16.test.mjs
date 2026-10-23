@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {brandIcon,brandOf} from '../dist/brand-icons.mjs';
 import {catalog,searchCatalog} from '../dist/catalog.mjs';
-import {resultLayout} from '../dist/result-sections.mjs';
+import {resultLayout,commonChecksMarkup} from '../dist/result-sections.mjs';
 import {resultBodyLayout,minorNote} from '../dist/result-layout.mjs';
 import {monetizationInfo} from '../dist/monetization.mjs';
 import {safeSvg} from '../tools/build-simple-icons.mjs';
@@ -32,10 +32,28 @@ test('round16 application checks merge names but preserve input and obligations'
  assert.match(check.text,/구매 증빙/);assert.deepEqual(items,before);
  assert.deepEqual(layout.items.flatMap(i=>i.conditions),texts);
 });
-test('round16 six Steam tools have at most five common checks',()=>{
- const assets=['tripo','blender','isaacsim','unity','claude-code','codex'].map(id=>catalog.find(a=>a.id===id));
- const layout=resultLayout(assets,{platform:'steam',commercial:true,distribute:true,modified:true,network:false});
- assert.ok(layout.common.filter(n=>n.kind==='check'&&!minorNote.test(n.text)).length<=5);
+for(const [platform,commercial] of [['steam',true],['research',false]])test('round17 six '+platform+' tools merge purpose-aware license checks and preserve originals and shortcuts',()=>{
+ const assets=['tripo','blender','isaacsim','unity','claude-code','codex'].map(id=>({...catalog.find(a=>a.id===id),selection:'used'}));
+ const context={platform,commercial,distribute:true,modified:true,network:false};
+ const before=structuredClone(assets),judgments=assets.map(a=>evaluate(a,context));
+ const layout=resultLayout(assets,context),checks=layout.common.filter(n=>n.kind==='check');
+ assert.ok(checks.filter(n=>!minorNote.test(n.text)).length<=5);
+ assert.ok(checks.every(n=>!n.text.includes('상업 이용')));
+ const licenseChecks=checks.filter(n=>n.sourceTexts.some(t=>t.startsWith('도구의 라이선스·구독 플랜')));
+ assert.equal(licenseChecks.length,1);
+ const merged=licenseChecks[0],original='도구의 라이선스·구독 플랜에서 제작물을 '+(commercial?'상업적으로':'현재 목적으로')+' 이용할 수 있는지 확인하고 라이선스를 입력하세요.';
+ assert.match(merged.text,/현재 목적의 이용 허용/);
+ assert.ok(merged.sourceTexts.includes(original));assert.ok(merged.sourceTexts.includes(application));
+ assert.equal(checks.filter(n=>/현재 목적의 이용 허용|도구의 라이선스·구독 플랜/.test(n.text)).length,1);
+ assert.equal(checks.length,5);
+ const html=commonChecksMarkup(layout,String);
+ for(const item of layout.items){
+  assert.ok(html.includes('data-edit="'+item.a.id+'" data-field='),item.name);
+  const dialog=compactResultMarkup(item.a,item.r,[],String);
+  for(const note of layout.common)for(const text of note.sourceTexts)if(item.allTasks.includes(text))assert.ok(dialog.includes(text),item.name+': '+text);
+ }
+ assert.deepEqual(pdfBodyLayout(pdfReportData({name:'Six tools',context,contextConfirmed:true,assets}).items).common,layout.common);
+ assert.deepEqual(assets,before);assert.deepEqual(assets.map(a=>evaluate(a,context)),judgments);
 });
 test('round16 Tripo repeats recorded free and paid permissions with original date',()=>{
  const info=monetizationInfo({name:'Tripo'});
