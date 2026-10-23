@@ -31,25 +31,28 @@ test('cases group relevant materials once and omit an empty section',()=>{
  assert.equal((html.match(/위반하면 어떤 일이 생기나요/g)||[]).length,1);
 });
 test('default context preserves every verdict, condition and check across the existing matrix',()=>{
- for(const c of contexts)for(const a of assets)assert.deepEqual(evaluate(a,{...c,region:'',organizationPolicy:false}),evaluate(a,c));
+ for(const region of ['', 'kr','eu','uk','us','other','invalid'])for(const c of contexts)for(const a of assets)assert.deepEqual(evaluate(a,{...c,region,organizationPolicy:false}),evaluate(a,c));
  for(const c of contexts)assert.deepEqual(resultLayout(assets,{...c,region:'',organizationPolicy:false}),resultLayout(assets,c));
 });
-test('organization checkbox adds only a common check and region identifies history',()=>{
+test('organization checkbox stays active while legacy region does not identify history',()=>{
  const p=project([gpl]);const c={...context,region:'kr',organizationPolicy:true};
  assert.deepEqual(evaluate(gpl,c),evaluate(gpl,context));
  assert.ok(resultLayout([gpl],c).common.some(n=>n.text===organizationCheck));
  assert.ok(!resultLayout([gpl],context).common.some(n=>n.text===organizationCheck));
- assert.match(projectConclusion({...p,context:c}).contextText,/사용 지역 한국/);
+ assert.doesNotMatch(projectConclusion({...p,context:c}).contextText,/사용 지역/);
  assert.doesNotMatch(projectConclusion(p).contextText,/사용 지역/);
- assert.equal(contextKey({...context,region:'',organizationPolicy:false}),contextKey(context));
+ assert.equal(contextKey(c),'steam|true|true|false|false');
  const log=recordVerdict([],{status:'review',reason:'확인',inputs:inputSnapshot(gpl),ruleDate:'2026-10-16'},contextKey(c),'2026-10-23');
  assert.equal(cleanVerdictLog(log)[0].context,contextKey(c));
+ const oldLog=log.map(x=>({...x,context:x.context+'|kr',status:'conflict'}));
+ assert.deepEqual(cleanVerdictLog(oldLog),[]); // Region-based verdicts cannot be carried into current history.
 });
 test('PDF prints cases after cards, links sources and preserves the closing paragraph',async()=>{
  const calls=[];
  class Capture extends PDFDocument {text(value,x,y,options){calls.push({value,options});return super.text(value,x,y,options);}}
  const p={...project([gpl,nc,ai]),context:{...context,region:'kr',organizationPolicy:true}};
  const bytes=await renderReportPdf(p,{PDFDocument:Capture,font:process.env.IDOL_PDF_FONT||'web/fonts/NanumGothic-Regular.ttf'});
+ assert.ok(!calls.some(c=>String(c.value).includes('사용 지역 한국')));
  const index=calls.findIndex(c=>c.value==='참고: 위반 시 사례');assert.ok(index>0);
  assert.ok(calls.findIndex(c=>c.value===reportDisclaimer)>index);
  assert.ok(calls.some(c=>c.value===organizationCheck));
@@ -67,26 +70,26 @@ test('new browser module is served and included by the site build copy rule',()=
 
 const context={platform:'steam',commercial:true,distribute:true,modified:false,network:false};
 const hunyuan={name:'Hunyuan3D 2.0',kind:'model',version:'2.0',selection:'used'};
-test('Hunyuan 2.0 excludes recorded territories and preserves other blockers',()=>{
- for(const region of ['kr','eu','uk'])assert.equal(evaluate(hunyuan,{...context,region}).status,'conflict');
- for(const region of ['','other'])assert.equal(evaluate(hunyuan,{...context,region}).status,'review');
- const us=reviewSourceConditions(hunyuan,{...context,region:'us'});
- assert.ok(!us.blockers.some(t=>t.includes('사용 지역')));
- assert.ok(us.blockers.some(t=>t.includes('조직/고객')));
- assert.equal(evaluate(hunyuan,{...context,region:'us'}).status,'review');
- assert.notEqual(evaluate({...hunyuan,version:'2.1'},{...context,region:'kr'}).status,'conflict');
- assert.notEqual(evaluate({...hunyuan,kind:'ai',scope:'service'},{...context,region:'kr'}).status,'conflict');
- for(const region of ['kr','eu','uk']){
-  const r=evaluate(hunyuan,{...context,region});
-  assert.ok(r.conflicts.includes(`이 라이선스의 허용 지역에서 ${{kr:'한국',eu:'EU',uk:'영국'}[region]}이 제외됩니다.`));
-  assert.ok(r.sources.some(([,url])=>url==='https://github.com/Tencent-Hunyuan/Hunyuan3D-2/blob/main/LICENSE'));
+test('Hunyuan 2.0 ignores legacy regions and preserves unspecified-region review guidance',()=>{
+ for(const region of ['', 'kr','eu','uk','us','other','invalid']){
+  const c={...context,region};
+  assert.equal(evaluate(hunyuan,c).status,'review');
+  assert.deepEqual(evaluate(hunyuan,c),evaluate(hunyuan,context));
+  assert.ok(reviewSourceConditions(hunyuan,c).blockers.includes('사용 지역·조직/고객 조건·배포 방식 중 적용 조건을 근거에 기록하세요.'));
+  for(const variant of [{...hunyuan,version:'2.1'},{...hunyuan,kind:'ai',scope:'service'}])assert.deepEqual(evaluate(variant,c),evaluate(variant,context));
  }
 });
-test('context values survive validation and backup round trip',()=>{
+
+test('old projects and backups discard region while preserving organization policy',()=>{
  const p={name:'지역',context:{...context,region:'kr',organizationPolicy:true},assets:[hunyuan]};
- const restored=validateWorkspace(JSON.parse(JSON.stringify({type:'license-workbench-workspace',schemaVersion:1,projects:[validateProject(p)],trash:[]}))).projects[0];
- assert.equal(restored.context.region,'kr');assert.equal(restored.context.organizationPolicy,true);
- assert.equal(validateProject({...p,context}).context.region,'');
+ const backup=projects=>JSON.parse(JSON.stringify({type:'license-workbench-workspace',schemaVersion:1,projects,trash:projects}));
+ const imported=validateWorkspace(backup([p]));
+ const restored=validateWorkspace(backup(imported.projects)).projects[0];
+ for(const item of [validateProject(p),imported.projects[0],imported.trash[0],restored]){
+  assert.equal(Object.hasOwn(item.context,'region'),false);
+  assert.equal(item.context.organizationPolicy,true);
+  assert.equal(evaluate(item.assets[0],item.context).status,'review');
+ }
  assert.equal(validateProject({...p,context}).context.organizationPolicy,false);
- assert.equal(validateProject({...p,context:{...context,region:'invalid',organizationPolicy:'true'}}).context.region,'');
+ for(const region of ['invalid',null,123,{value:'kr'}])assert.equal(Object.hasOwn(validateProject({...p,context:{...context,region}}).context,'region'),false);
 });

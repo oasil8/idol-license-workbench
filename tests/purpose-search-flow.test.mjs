@@ -28,15 +28,15 @@ test('purpose defaults, actual checkboxes and overall/export results agree acros
 });
 test('context edits remain drafts until Apply, preserving existing per-material rights',()=>{
  const code=fs.readFileSync(new URL('../dist/app.mjs',import.meta.url),'utf8');
- const ids=Object.fromEntries(['platform','region','organizationPolicy','commercial','distribute','modified','network','contextConfirmationNotice','contextPending','rightsConditions','applyContext','homeLink'].map(k=>[k,{value:k==='platform'?'research':'',checked:false,textContent:''}]));
+ const ids=Object.fromEntries(['platform','organizationPolicy','commercial','distribute','modified','network','contextConfirmationNotice','contextPending','rightsConditions','applyContext','homeLink'].map(k=>[k,{value:k==='platform'?'research':'',checked:false,textContent:''}]));
  const state={current:'p',projects:[{id:'p',context:purposeDefaults('research'),assets:[{id:'one',rights:'unknown'}]}]},rights={dataset:{rights:'one'},value:'cleared'};
  let saved=0,rendered=0,view='report';
  const box={contextConfirmationNotice,project:()=>state.projects[0],cleanContractChoices,workingContractChoices:{},$:id=>ids[id],current:'p',contextDraftProject:'',contextDraft:undefined,rightsDraft:{},purposeDefaults,document:{querySelectorAll:()=>[rights]},transact:fn=>{saved++;fn(state);return true;},render:()=>rendered++,message:()=>{},setView:v=>view=v};
  vm.createContext(box);vm.runInContext(code.slice(code.indexOf('function readContextDraft()'),code.indexOf('function formAsset()')),box);
  ids.platform.value='enterprise';ids.platform.onchange();assert.equal(saved,0);assert.equal(state.projects[0].context.commercial,false);assert.equal(ids.commercial.checked,true);
- ids.region.value='kr';ids.region.onchange();ids.organizationPolicy.checked=true;ids.organizationPolicy.onchange();assert.equal(saved,0);
+ ids.organizationPolicy.checked=true;ids.organizationPolicy.onchange();assert.equal(saved,0);
  ids.commercial.checked=false;ids.commercial.onchange();ids.applyContext.onclick();assert.equal(saved,1);assert.equal(rendered,1);assert.equal(state.projects[0].context.commercial,false);assert.equal(state.projects[0].context.distribute,true);assert.equal(state.projects[0].assets[0].rights,'unknown');
- assert.equal(state.projects[0].context.region,'kr');assert.equal(state.projects[0].context.organizationPolicy,true);
+ assert.equal(Object.hasOwn(state.projects[0].context,'region'),false);assert.equal(state.projects[0].context.organizationPolicy,true);
  ids.homeLink.onclick({preventDefault(){}});assert.equal(view,'intake');
 });
 

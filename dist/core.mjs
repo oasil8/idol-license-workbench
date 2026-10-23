@@ -437,7 +437,7 @@ export function validateProject(input,{local=false}={}){
  const bool=(v,f=false)=>{if(v===undefined)return f;if(typeof v!=='boolean')throw Error('확인 상태는 true/false여야 합니다.');return v;};
  const c=input.context||{};
  const platform=['general','steam','enterprise','conference','research'].includes(c.platform)?c.platform:'general';
- return {id:crypto.randomUUID(),demo:input.demo===true,contextConfirmed:input.contextConfirmed===true,name:str(input.name,200),context:{platform,commercial:bool(c.commercial,true),distribute:bool(c.distribute,true),modified:bool(c.modified),network:bool(c.network),region:['kr','eu','uk','us','other'].includes(c.region)?c.region:'',organizationPolicy:c.organizationPolicy===true},assets:input.assets.map(a=>{
+ return {id:crypto.randomUUID(),demo:input.demo===true,contextConfirmed:input.contextConfirmed===true,name:str(input.name,200),context:{platform,commercial:bool(c.commercial,true),distribute:bool(c.distribute,true),modified:bool(c.modified),network:bool(c.network),organizationPolicy:c.organizationPolicy===true},assets:input.assets.map(a=>{
   // 'font' existed briefly (981d38b, reverted); read such saved items as 'other' instead of rejecting the whole store.
   if(a?.kind==='font')a={...a,kind:'other'};
   if(!a||!a.name||!kinds[a.kind||'code'])throw Error('항목 이름 또는 종류가 올바르지 않습니다.');

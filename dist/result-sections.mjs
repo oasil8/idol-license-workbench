@@ -25,7 +25,7 @@ export function projectConclusion(p){
   actionsTitle:'이 목적으로 쓰려면 해결할 일',actions,usable,
   conditionsText:summary.counts.conditions?(actions.length?`나머지 ${summary.counts.conditions}개는`:`${summary.counts.conditions}개 모두`)+' 표시된 조건을 지키면 사용할 수 있습니다.':'',
   countsText:`현재 조건으로 사용 불가 ${summary.counts.conflict}개 · 판단 보류 ${summary.counts.review}개 · 사용 가능 (조건부) ${summary.counts.conditions}개 · 선택 전 ${summary.pending}개`,
-  contextText:`${platform} · 상업 ${c.commercial?'예':'아니요'} · 배포 ${c.distribute?'예':'아니요'} · 수정 ${c.modified?'예':'아니요'} · 네트워크 ${c.network?'예':'아니요'}${c.region?' · 사용 지역 '+({kr:'한국',eu:'EU',uk:'영국',us:'미국',other:'기타'}[c.region]||''):''}`,
+  contextText:`${platform} · 상업 ${c.commercial?'예':'아니요'} · 배포 ${c.distribute?'예':'아니요'} · 수정 ${c.modified?'예':'아니요'} · 네트워크 ${c.network?'예':'아니요'}`,
   emptyText:!summary.assets.length&&!summary.pending?'실제 사용할 자료가 선택되지 않았습니다.':'',disclaimer:reportDisclaimer};
 }
 // Generic checks apply to almost every item; the to-do line should name what blocks this one.
