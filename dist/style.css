@@ -226,7 +226,13 @@ form label.check{flex-direction:row;align-items:flex-start;text-align:left}form 
 .intro-outcomes{display:flex;flex-wrap:wrap;gap:8px}
 @media(max-width:760px){.tool-intro>summary{padding:14px 12px;font-size:12px}.intro-content{padding:0 16px 20px}.intro-definition{font-size:16px}.intro-steps{grid-template-columns:1fr;gap:12px}}
 
-.sidebar-backups{display:flex;flex-direction:column;flex-shrink:0;gap:0;margin-top:auto;padding-top:24px}
-.sidebar-backups h2{font-size:12px;font-weight:600;color:#9cb7b4;margin:0 0 4px}
-.sidebar-backups .quiet{display:block;width:100%;margin:0;white-space:normal;overflow-wrap:anywhere;line-height:1.5;padding:12px 0}
+.sidebar-backups{display:flex;flex-direction:column;flex-shrink:0;gap:8px;margin-top:auto;padding:12px;background:#203c3f;border-radius:10px;min-width:0}
+.sidebar-backups h2{font-size:14px;font-weight:700;color:#f1f7f5;margin:0}
+.sidebar-backups .backup-note{font-size:11px;line-height:1.6;color:#c3d1d0;margin:0 0 2px;overflow-wrap:anywhere}
+.sidebar-backups .backup-button{display:block;width:100%;min-width:0;margin:0;padding:10px 9px;border:1px solid #7a9999;border-radius:7px;background:#193336;color:#f1f7f5;text-align:left;font-size:13px;line-height:1.5;white-space:normal;overflow-wrap:anywhere}
+.sidebar-backups .backup-button span{display:block;font-weight:600}
+.sidebar-backups .backup-button small{display:block;margin-top:4px;font-size:11px;line-height:1.6;color:#c3d1d0}
+.sidebar-backups .backup-button:hover{background:#2d5053;border-color:#b3cfca}
+.sidebar-backups .backup-button:focus-visible{outline:3px solid #bcedd6;outline-offset:2px;background:#2d5053}
+@media(max-width:760px){.sidebar-backups{margin-top:20px}}
 .side-bottom{margin-top:20px}
