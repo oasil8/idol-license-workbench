@@ -15,7 +15,10 @@ const slugs='blender unity unrealengine godotengine nvidia claude anthropic gith
 const data=Object.fromEntries(slugs.map(slug=>{
  const icon=Object.values(icons).find(icon=>icon.slug===slug);
  assert.ok(icon?.path&&/^[0-9A-F]{6}$/i.test(icon.hex),slug);
- return [slug,`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path fill="#${icon.hex}" d="${icon.path}"/></svg>`];
+ const rgb=icon.hex.match(/../g).map(x=>parseInt(x,16)/255).map(x=>x<=.04045?x/12.92:((x+.055)/1.055)**2.4);
+ const luminance=rgb[0]*.2126+rgb[1]*.7152+rgb[2]*.0722;
+ const fill=1.05/(luminance+.05)<1.5?'1f2f2a':icon.hex;
+ return [slug,`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path fill="#${fill}" d="${icon.path}"/></svg>`];
 }));
 const lobeRoot=new URL('../node_modules/@lobehub/icons-static-svg/',import.meta.url);
 assert.equal(JSON.parse(readFileSync(new URL('package.json',lobeRoot))).version,'1.98.0');

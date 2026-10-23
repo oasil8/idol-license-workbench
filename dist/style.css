@@ -22,7 +22,7 @@ main{max-width:1560px}.heading{padding:28px 0}.heading .eyebrow{display:none}.he
 @media(max-width:1150px){.add-panel{align-items:flex-start;flex-direction:column}.report-toolbar{align-items:flex-start;flex-direction:column}.results-heading{align-items:flex-start;flex-direction:column;gap:7px}}
 @media(max-width:760px){.heading h1{font-size:23px}.context-panel>summary{flex-wrap:wrap;gap:8px;padding:16px}.context-panel strong{order:3;width:100%;font-size:13px}.context-edit{margin-left:auto}.add-panel{padding:20px}.add-actions{width:100%}.add-actions button{flex:1}.result-card>summary{padding:17px;flex-wrap:wrap;gap:12px}.result-name{flex-basis:100%}.expand-hint{margin-left:auto}.result-detail{padding:17px}.stats{grid-template-columns:1fr 1fr}.stat{padding:14px}.overall{padding:22px}.overall h2{font-size:24px}}
 
-.form-section{border:1px solid #dce7df;border-radius:10px;padding:20px;margin:16px 0}.form-section h3{display:flex;align-items:center;gap:10px;margin:0 0 18px;font-size:17px}.form-section h3>span{display:grid;place-items:center;width:26px;height:26px;border-radius:50%;background:#dfefe6;color:#276647;font-size:13px}.section-intro{font-size:13px;color:#536d5e;margin:0 0 16px}.ai-mode .asset-type{display:none}#aiSetup{margin-top:16px}#extraFields,#assessmentDetails,#rawTextDetails{margin-top:18px;border-top:1px solid #dbe6df;padding-top:15px}#extraFields>summary,#assessmentDetails>summary,#rawTextDetails>summary{font-size:13px;color:#416e55;font-weight:600;margin-bottom:12px}.decision-preview{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:16px;background:#f3f7f4;border-radius:7px;margin-top:18px;font-size:13px}.dialog-actions{position:sticky;bottom:-28px;background:#fff;padding:16px 0;margin-top:10px;border-top:1px solid #d8e5dc;z-index:2}.file-help{font-size:12px;margin:12px 0;color:#617665}#manualTerms{padding:16px;background:#f8fbf9}.input-state{font-size:12px;color:#536e5e;background:#f0f5f1;padding:6px 9px;border-radius:5px}@media(max-width:760px){.form-section{padding:16px}.dialog-actions{bottom:-22px}}
+.form-section{border:1px solid #dce7df;border-radius:10px;padding:20px;margin:16px 0}.form-section h3{display:flex;align-items:center;gap:10px;margin:0 0 18px;font-size:17px}.form-section h3>span{display:grid;place-items:center;width:26px;height:26px;border-radius:50%;background:#dfefe6;color:#276647;font-size:13px}.section-intro{font-size:13px;color:#536d5e;margin:0 0 16px}.ai-mode .asset-type{display:block}#aiSetup{margin-top:16px}#extraFields,#assessmentDetails,#rawTextDetails{margin-top:18px;border-top:1px solid #dbe6df;padding-top:15px}#extraFields>summary,#assessmentDetails>summary,#rawTextDetails>summary{font-size:13px;color:#416e55;font-weight:600;margin-bottom:12px}.decision-preview{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:16px;background:#f3f7f4;border-radius:7px;margin-top:18px;font-size:13px}.dialog-actions{position:sticky;bottom:-28px;background:#fff;padding:16px 0;margin-top:10px;border-top:1px solid #d8e5dc;z-index:2}.file-help{font-size:12px;margin:12px 0;color:#617665}#manualTerms{padding:16px;background:#f8fbf9}.input-state{font-size:12px;color:#536e5e;background:#f0f5f1;padding:6px 9px;border-radius:5px}@media(max-width:760px){.form-section{padding:16px}.dialog-actions{bottom:-22px}}
 
 /* Search-first registration, with details available on demand. */
 .catalog-panel{background:#fff;border:1px solid var(--line,#dde2de);border-radius:14px;padding:22px;margin:0 0 20px}.catalog-panel>label{font-size:18px;font-weight:700}.catalog-panel>input{width:100%;margin:12px 0;font-size:17px;padding:14px}.catalog-results{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-bottom:12px}.catalog-choice{text-align:left;white-space:normal;background:#f7f9f7;border:1px solid #e0e6e1;border-radius:9px;padding:12px;cursor:pointer}.catalog-choice:hover,.catalog-choice:focus-visible{background:#e8f1ea;border-color:#3b7053}.catalog-choice strong,.catalog-choice small{display:block}.catalog-choice small{margin-top:5px;color:#617067;font-size:11px}.provider-results{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}.catalog-panel>small{color:#68746d}.add-panel{margin-bottom:10px}.brand{font-size:14px}@media(max-width:1000px){.catalog-results{grid-template-columns:repeat(2,minmax(0,1fr))}}@media(max-width:520px){.catalog-results,.provider-results{grid-template-columns:1fr}}
@@ -47,8 +47,7 @@ main{max-width:1560px}.heading{padding:28px 0}.heading .eyebrow{display:none}.he
  #assetRows tr{display:grid;grid-template-columns:minmax(0,1fr);padding:16px;border-top:1px solid var(--line)}
  #assetRows td{display:block;padding:6px 0;border:0;overflow-wrap:anywhere}
  #assetRows td:nth-child(2)::before{content:'종류: ';color:#617b69}
- #assetRows td:nth-child(3)::before{content:'라이선스: ';color:#617b69}
- #assetRows td:nth-child(4)::before{content:'사용 여부';display:block;margin-bottom:8px;color:#365640}
+ #assetRows td:nth-child(3)::before{content:'사용 여부';display:block;margin-bottom:8px;color:#365640}
  #assetRows select{width:100%;min-height:44px;padding:8px;border:1px solid var(--line);border-radius:6px;background:#fff}
  #assetRows .row-open{min-height:44px;text-decoration:underline}
 }
@@ -192,8 +191,8 @@ section.context-panel{padding:24px}section.context-panel .context-title{padding:
 .verdict-group ul{margin:10px 0 4px;padding-left:20px;font-size:14px;line-height:1.7}
 .minor-notes>summary{cursor:pointer;font-size:14px;color:#4f6656}
 .guide-steps{margin:18px 0 8px;padding-left:20px;font-size:14px;line-height:1.8;color:#405f4b}.guide-steps li{margin:4px 0}
-.no-choice th:nth-child(4),.no-choice td:nth-child(4){display:none}
-.ai-extra #basicLicense>label:first-child{display:none}
+#inventoryView .no-choice th:nth-child(3),#inventoryView .no-choice td:nth-child(3){display:none}
+
 form label.check{flex-direction:row;align-items:flex-start;text-align:left}form label.check input{margin-top:4px;flex:none}
 /* Record states are distinct from the green/yellow/red decision badges. */
 .verdict-state{display:inline-block;border:1px solid #50575d;border-radius:5px;padding:2px 6px;font-size:11px;font-weight:500;line-height:1.5;color:#40474d;background:#fff;max-width:100%;overflow-wrap:anywhere}
@@ -236,3 +235,21 @@ form label.check{flex-direction:row;align-items:flex-start;text-align:left}form 
 .sidebar-backups .backup-button:focus-visible{outline:3px solid #bcedd6;outline-offset:2px;background:#2d5053}
 @media(max-width:760px){.sidebar-backups{margin-top:20px}}
 .side-bottom{margin-top:20px}
+
+/* Four inventory columns; the optional usage column keeps its existing rule. */
+#inventoryView table{width:100%;table-layout:fixed}
+#inventoryView th:first-child{width:42%}
+#inventoryView th:nth-child(2){width:20%}
+#inventoryView th:nth-child(3){width:20%}
+#inventoryView th:last-child{width:18%}
+#inventoryView .no-choice th:first-child{width:55%}
+#inventoryView .no-choice th:nth-child(2){width:23%}
+#inventoryView .no-choice th:last-child{width:22%}
+#assetRows td{overflow-wrap:anywhere}
+#assetRows .row-open{white-space:normal}
+.plan-inputs{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+#assetNextSteps{padding-left:20px;line-height:1.7;font-size:13px}
+#assetForm .search-privacy{font-size:12px;line-height:1.6;color:#536d5e}
+#extraLicenseSlot:empty,#extraPlanSlot:empty,#extraVersionSlot:empty,#requiredVersionSlot:empty{display:none}
+#deleteAsset{color:#697772;text-decoration:underline}
+@media(max-width:760px){.plan-inputs{grid-template-columns:1fr}#inventoryView th{width:auto}#assetRows td:nth-child(4){padding-top:10px}#assetRows .row-open{width:100%;text-align:left}}

@@ -310,6 +310,15 @@ for(const name of new Set([...sourceNames,...storeSources.map(([,name])=>name)])
 }
 export const catalogGroup=(item,category='')=>category&&categoriesOf(item).includes(category)?category:categoriesOf(item)[0];
 
+// Registration identity only. Do not use discovery matches to change saved verdicts.
+export function exactCatalogItem(name){
+ const term=String(name||'').trim().toLowerCase();if(!term)return;
+ const named=catalog.filter(x=>x.name.toLowerCase()===term);
+ if(named.length===1)return named[0];
+ const matches=catalog.filter(x=>[...(x.exactAliases||[]),...x.aliases.split(/\s+/)].some(alias=>alias.toLowerCase()===term));
+ if(matches.length===1)return matches[0];
+}
+
 // Recommend identity/category only; never infer an output/API/model usage scope.
 export function categoryRecommendation(a){
  if(a.provider||a.license?.trim())return;
