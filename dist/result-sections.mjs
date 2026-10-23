@@ -73,10 +73,11 @@ export function commonChecksMarkup(layout,esc,{buttons=true,keepMinor=!buttons}=
   const notes=layout.common.filter(note=>note.kind===kind&&!minor.includes(note));
   return notes.length?`<section class="report-item common-checks"><h3>${title}</h3><ul>${notes.map(note=>{
    const shortcuts=buttons?layout.items.filter(item=>note.sourceTexts.some(text=>item.allTasks.includes(text))).map(item=>{
-    const button=note.sourceTexts.filter(text=>item.allTasks.includes(text)).map(text=>taskButton(text,item.a,esc)).find(Boolean);
-    return button?` <span>${esc(item.name)}:${button}</span>`:'';
-   }).join(''):'';
-   return `<li>${esc(note.text)}${note.names.length?' (해당 항목: '+esc(noteNames(note.names))+')':''}${shortcuts}</li>`;
+    const action=note.sourceTexts.filter(text=>item.allTasks.includes(text)).map(text=>inputForTask(text,item.a)).find(Boolean);
+    return action&&item.a.id?`<button type="button" class="common-shortcut" data-edit="${esc(item.a.id)}" data-field="${action.field}">${esc(item.name)} · ${esc(action.label.replace(/하기$/,''))}</button>`:'';
+   }).filter(Boolean):[];
+   const shortcutMarkup=shortcuts.length?`<div class="common-shortcuts">${shortcuts.slice(0,4).join('')}${shortcuts.length>4?`<details class="common-shortcuts-more"><summary class="common-shortcut">+${shortcuts.length-4}개</summary><div class="common-shortcuts">${shortcuts.slice(4).join('')}</div></details>`:''}</div>`:'';
+   return `<li>${esc(note.text)}${note.names.length?' (해당 항목: '+esc(noteNames(note.names))+')':''}${shortcutMarkup}</li>`;
   }).join('')}</ul></section>`:'';
  }).join('')+(keepMinor&&minor.length?`<details class="report-item common-checks minor-notes"><summary>그 밖의 일반 주의사항 ${minor.length}개</summary><ul>${minor.map(note=>`<li>${esc(note.text)} (해당 항목: ${esc(noteNames(note.names))})</li>`).join('')}</ul></details>`:'');
 }

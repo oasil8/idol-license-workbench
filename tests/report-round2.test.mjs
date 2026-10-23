@@ -52,7 +52,7 @@ test('shared plan checks preserve a shortcut for each asset and do not mutate pr
  const p=fixture('sample'),a=p.assets.find(a=>a.name==='Midjourney');
  p.assets=[{...a,id:'first',name:'Midjourney',serviceName:'Midjourney'},{...a,id:'second',name:'Midjourney copy',serviceName:'Midjourney'}];
  const before=JSON.stringify(p),judgments=p.assets.map(a=>evaluate(a,p.context)),html=screen(p),common=html.slice(0,html.indexOf('<article'));
- for(const id of ['first','second'])assert.ok(common.includes(`data-edit="${id}" data-field="planType">플랜 입력하기`));
+ for(const [id,name] of [['first','Midjourney'],['second','Midjourney copy']])assert.ok(common.includes(`data-edit="${id}" data-field="planType">${name} · 플랜 입력`));
  assert.equal(JSON.stringify(p),before);assert.deepEqual(p.assets.map(a=>evaluate(a,p.context)),judgments);
  assert.equal(screen({...p,contextConfirmed:false}),'');
 });

@@ -212,6 +212,12 @@ form label.check{flex-direction:row;align-items:flex-start;text-align:left}form 
 
 .monetization{display:block;line-height:1.6;overflow-wrap:anywhere}.catalog-item>.monetization{padding:8px 12px;color:#42675e}
 
+.common-shortcuts{display:flex;flex-wrap:wrap;align-items:flex-start;gap:6px;margin-top:6px;min-width:0;max-width:100%}
+.common-shortcuts .common-shortcut{display:block;max-width:100%;min-width:0;padding:4px 8px;border:1px solid #c6d8cc;border-radius:12px;background:#f3f7f4;color:#365b4d;font-size:12px;line-height:1.5;white-space:normal;overflow-wrap:anywhere;text-align:left;cursor:pointer}
+.common-shortcuts-more{min-width:0;max-width:100%}.common-shortcuts-more[open]{flex-basis:100%}.common-shortcuts-more>summary{width:fit-content;list-style:none}.common-shortcuts-more>summary::-webkit-details-marker{display:none}
+.common-shortcut:hover{background:#e8f1ea}.common-shortcut:focus-visible{outline:3px solid #20b5a2;outline-offset:3px}
+@media print{.common-shortcuts{display:none!important}}
+
 /* First-visit introduction; verdict colors come from the shared badges. */
 .tool-intro{margin:0 0 16px;border:1px solid var(--line);border-radius:12px;background:#f5f9f7;overflow-wrap:anywhere}
 .tool-intro>summary{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:16px 20px;cursor:pointer;list-style:none;font-size:14px;font-weight:600;color:#315c4a}
