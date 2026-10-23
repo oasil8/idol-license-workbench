@@ -121,19 +121,43 @@ export async function renderReportPdf(project,{includeOriginals=false,PDFDocumen
   if(box)doc.save().rect(42,doc.y,width,height).fill('#e8efec').restore();
   doc.fillColor(color).text(valueWrapped,42+pad,doc.y+pad,{width:w,lineGap:1,link});doc.y+=2+pad+(box?5:0);
  };
+ // Measure body and attribution separately at the same indented width used for drawing.
+ const commonNote=note=>{
+  const size=minorNote.test(note.text)?7.5:8.5,w=width-12,options={width:w,lineGap:1};
+  doc.fontSize(size);const body=wrapped(note.text,w),bodyHeight=doc.heightOfString(body,options);
+  doc.fontSize(7);const names=wrapped('(해당 항목: '+noteNames(note.names)+')',w),namesHeight=doc.heightOfString(names,options);
+  return {body,names,size,options,height:bodyHeight+2+namesHeight+5};
+ };
+ const drawCommonNote=note=>{
+  room(note.height);
+  const y=doc.y;
+  doc.fontSize(note.size).fillColor(note.size===7.5?'#65766e':'#263e38').text('•',42,y,{lineBreak:false});
+  doc.text(note.body,54,y,note.options);
+  doc.fontSize(7).fillColor('#65766e').text(note.names,54,doc.y+2,note.options);
+  doc.y+=5;
+ };
+ const commonHeading=(title,size,first,gap=0)=>{
+  doc.fontSize(size);
+  room(gap+doc.heightOfString(wrapped(title),{width,lineGap:1})+8+first.height);
+  doc.y+=gap;
+  drawBlock({value:title,size,color:'#65766e'});doc.y+=6;
+ };
  for(const [kind,title] of commonGroups){
   const notes=layout.common.filter(note=>note.kind===kind&&!minorNote.test(note.text));
   if(!notes.length)continue;
-  drawBlock({value:title,size:13,color:'#1f2f2a'});
-  for(const note of notes)drawBlock({value:'• '+note.text+' (해당 항목: '+noteNames(note.names)+')',size:8.5});
+  const measured=notes.map(commonNote);
+  commonHeading(title,13,measured[0]);
+  for(const note of measured)drawCommonNote(note);
   doc.y+=6;
  }
  const minor=layout.common.filter(note=>minorNote.test(note.text));
  if(minor.length){
-  drawBlock({value:'그 밖의 일반 주의사항',size:9,color:'#65766e'});
-  for(const note of minor)drawBlock({value:'• '+note.text+' (해당 항목: '+noteNames(note.names)+')',size:7.5,color:'#65766e'});
+  const measured=minor.map(commonNote);
+  commonHeading('그 밖의 일반 주의사항',9,measured[0],12);
+  for(const note of measured)drawCommonNote(note);
   doc.y+=6;
  }
+ if(layout.common.length)doc.y+=10;
  for(const [i,item] of layout.items.entries()){
   const blocks=[{value:`${i+1}. ${item.name}`,size:12,color:'#1f2f2a',box:true},{value:item.status+' — '+item.reason,size:9,color:verdictColor(item.status)}];
   if(item.status===statuses.conflict)blocks.push({value:conflictNextAction});
