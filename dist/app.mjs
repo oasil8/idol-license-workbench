@@ -1,3 +1,4 @@
+import {violationCasesMarkup} from './violation-cases.mjs';
 import {apiFetch,hosted} from './web-api.mjs';
 import {contextKey,inputSnapshot,recordVerdict,verdictState,verdictHistoryMarkup} from './verdict-log.mjs';
 import {normalizeAsset} from './asset-normalization.mjs';
@@ -27,7 +28,7 @@ import {deduplicate,projectFingerprint} from './projects.mjs';
 const $=id=>document.getElementById(id), esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const key='license-workbench-v1';let projects=[],trash=[],current,editing=null,view='intake',busy=false,workingContractChoices={},workingTerms,termsBusy=false,migrated=false,manualDirty=false,documentLocations=[],extractionBusy=false,dialogGeneration=0,storageFailed=false,workingCandidates=[],searchGeneration=0,verifyBusy=false;
 let contextDraftProject='',contextDraft;
-const fresh=name=>({id:crypto.randomUUID(),name,contextConfirmed:false,context:{platform:'general',commercial:true,distribute:true,modified:false,network:false},assets:[],scan:''});
+const fresh=name=>({id:crypto.randomUUID(),name,contextConfirmed:false,context:{platform:'general',commercial:true,distribute:true,modified:false,network:false,region:'',organizationPolicy:false},assets:[],scan:''});
 function message(text,error=false){if(storageFailed&&!error){text='최근 저장에 실패했습니다. 저장 상태를 확인하세요. '+text;error=true;}$('notice').textContent=text;$('notice').className=error?'error':'success';}
 try{const saved=JSON.parse(localStorage.getItem(key)||'null');if(saved){if(!Array.isArray(saved.projects)||saved.projects.length>50)throw Error('저장 형식 오류');const loaded=saved.projects.map(p=>validateProject(p,{local:true})),selected=loaded[Math.min(saved.index||0,loaded.length-1)];const unique=deduplicate(loaded);projects=unique.projects;trash=Array.isArray(saved.trash)?saved.trash.map(p=>({...validateProject(p,{local:true}),deletedAt:p.deletedAt||new Date().toISOString()})):[];trash.push(...unique.removed.map(p=>({...p,deletedAt:new Date().toISOString()})));current=projects.find(p=>selected&&projectFingerprint(p)===projectFingerprint(selected))?.id||projects[0]?.id;if(unique.removed.length){migrated=true;message(`동일 내용의 중복 프로젝트 ${unique.removed.length}개를 휴지통으로 이동했습니다. 필요하면 복원할 수 있습니다.`);}}}
 catch{message('저장 데이터를 읽을 수 없습니다. 원본 저장값은 자동 덮어쓰지 않았습니다. 백업을 가져오거나 새 기록을 저장하세요.',true);}
@@ -86,8 +87,8 @@ function render(){const p=project();
  $('projectSelect').innerHTML=projects.map(x=>`<option value="${x.id}" ${x.id===current?'selected':''}>${esc(x.name)}</option>`).join('');
  if(contextDraftProject&&contextDraftProject!==current){contextDraft=undefined;contextDraftProject='';$('contextPending').textContent='';}
  renderContextConfirmation(p,contextDraftProject===current&&contextDraft||p.context);
- $('projectTitle').textContent=p.name;const purpose={general:'일반 이용 · 직접 설정',steam:'Steam 출시',enterprise:'기업 사용·납품',conference:'학회·논문 공개',research:'연구 프로젝트'}[p.context.platform];const flags=[['commercial','상업 목적'],['distribute','외부 배포'],['modified','자료 수정'],['network','네트워크 서비스']].filter(([key])=>p.context[key]).map(([,label])=>label);const contextText=purpose+' · '+(flags.join(' · ')||'추가 조건 없음');$('contextSummary').textContent=contextText;
- for(const field of ['platform','commercial','distribute','modified','network']){if(field==='platform')$(field).value=(contextDraftProject===current&&contextDraft||p.context)[field];else $(field).checked=(contextDraftProject===current&&contextDraft||p.context)[field];}
+ $('projectTitle').textContent=p.name;const purpose={general:'일반 이용 · 직접 설정',steam:'Steam 출시',enterprise:'기업 사용·납품',conference:'학회·논문 공개',research:'연구 프로젝트'}[p.context.platform];const flags=[['commercial','상업 목적'],['distribute','외부 배포'],['modified','자료 수정'],['network','네트워크 서비스']].filter(([key])=>p.context[key]).map(([,label])=>label);if(p.context.region)flags.push('사용 지역 '+({kr:'한국',eu:'EU',uk:'영국',us:'미국',other:'기타'}[p.context.region]));const contextText=purpose+' · '+(flags.join(' · ')||'추가 조건 없음');$('contextSummary').textContent=contextText;
+ for(const field of ['platform','region','commercial','distribute','modified','network','organizationPolicy']){if(field==='platform'||field==='region')$(field).value=(contextDraftProject===current&&contextDraft||p.context)[field];else $(field).checked=(contextDraftProject===current&&contextDraft||p.context)[field];}
  const summary=projectSummary(p),counts=summary.counts;
 
  $('assetCount').textContent=p.assets.length;$('scanLog').textContent=p.scan||'아직 선택한 파일이 없습니다.';
@@ -121,7 +122,7 @@ function renderReport(){const p=project();if(!conditionsConfirmed(p)){$('reportC
   if(next!==log)updates.set(a.id,next);
  }
  if(updates.size)transact(state=>{for(const a of state.projects.find(x=>x.id===p.id).assets)if(updates.has(a.id))a.verdictLog=updates.get(a.id);});
- $('reportContent').innerHTML=commonChecksMarkup(layout,esc)+layout.items.map(item=>{const {a,r}=item,log=project().assets.find(x=>x.id===a.id).verdictLog||[],active=log.findLast(x=>x.context===context&&!x.retractedOn),stamp=active&&active.status===r.status?`<small class="verdict-state ${r.status==='review'?'provisional':'settled'}">${verdictState(r.status)} · ${esc(active.on)}</small>`:'';return `<article class="report-item result-card"><h3 class="brand-name">${brandIcon(a)}${esc(a.name)} ${badge(r)}${stamp}</h3>${compactResultMarkup(a,r,assetSources(a,p.context),esc,item)}${verdictHistoryMarkup(log,context,esc)}<button class="outline" data-edit="${a.id}">정보 보완</button></article>`;}).join('');
+ $('reportContent').innerHTML=commonChecksMarkup(layout,esc)+violationCasesMarkup(layout.items,esc)+layout.items.map(item=>{const {a,r}=item,log=project().assets.find(x=>x.id===a.id).verdictLog||[],active=log.findLast(x=>x.context===context&&!x.retractedOn),stamp=active&&active.status===r.status?`<small class="verdict-state ${r.status==='review'?'provisional':'settled'}">${verdictState(r.status)} · ${esc(active.on)}</small>`:'';return `<article class="report-item result-card"><h3 class="brand-name">${brandIcon(a)}${esc(a.name)} ${badge(r)}${stamp}</h3>${compactResultMarkup(a,r,assetSources(a,p.context),esc,item)}${verdictHistoryMarkup(log,context,esc)}<button class="outline" data-edit="${a.id}">정보 보완</button></article>`;}).join('');
 }
 function setView(next){if(next==='report'&&contextDraftProject===current)message('사용 조건에 미적용 변경이 있습니다. 결과는 마지막으로 적용한 조건 기준입니다.');view=next;window.scrollTo({top:0,behavior:'instant'});for(const v of ['intake','inventory','report','guide'])$(v+'View').hidden=v!==view;document.querySelectorAll('[data-view]').forEach(b=>{b.classList.toggle('active',b.dataset.view===view);if(b.dataset.view===view)b.setAttribute('aria-current','step');else b.removeAttribute('aria-current');});$('viewSubtitle').textContent={intake:'파일을 가져오거나 이름으로 검색해서 자료를 등록하세요.',inventory:'각 자료를 실제 사용, 대안 보관, 사용 안 함으로 분류하세요.',report:'',guide:'사용 순서와 결과를 읽는 방법을 확인하세요.'}[view];$('pageLabel').textContent={intake:'1. 자료 넣기',inventory:'2. 사용 조건 정하기',report:'3. 결과 확인',guide:'사용법·결과 안내'}[view];}
 $('assetRows').addEventListener('change',e=>{const id=e.target.dataset.selection;if(!id)return;const value=e.target.value;if(!Object.hasOwn(selectionLabels,value))return;transact(state=>{state.projects.find(p=>p.id===state.current).assets.find(a=>a.id===id).selection=value;});render();});
@@ -134,11 +135,11 @@ $('reportContent').onclick=e=>{const b=e.target.closest('[data-edit]');if(b){ope
 
 document.querySelectorAll('[data-view]').forEach(b=>b.onclick=()=>setView(b.dataset.view));
 
-function readContextDraft(){return {platform:$('platform').value,...Object.fromEntries(['commercial','distribute','modified','network'].map(k=>[k,$(k).checked]))};}
+function readContextDraft(){return {platform:$('platform').value,region:$('region').value,...Object.fromEntries(['commercial','distribute','modified','network','organizationPolicy'].map(k=>[k,$(k).checked]))};}
 function renderContextConfirmation(p,context){const notice=$('contextConfirmationNotice');notice.textContent=contextConfirmationNotice(p,context);notice.hidden=!notice.textContent;}
 function markContextDraft(){contextDraftProject=current;contextDraft=readContextDraft();renderContextConfirmation(project(),contextDraft);$('contextPending').textContent='아직 적용하지 않은 변경입니다.';}
 $('platform').onchange=()=>{const defaults=purposeDefaults($('platform').value);for(const k of ['commercial','distribute','modified','network'])$(k).checked=defaults[k];markContextDraft();};
-for(const k of ['commercial','distribute','modified','network'])$(k).onchange=markContextDraft;
+for(const k of ['region','commercial','distribute','modified','network','organizationPolicy'])$(k).onchange=markContextDraft;
 $('applyContext').onclick=()=>{
  const context=readContextDraft();
  const ok=transact(state=>{const p=state.projects.find(x=>x.id===state.current);p.context=context;p.contextConfirmed=true;});

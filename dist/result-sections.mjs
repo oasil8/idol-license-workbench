@@ -25,7 +25,7 @@ export function projectConclusion(p){
   actionsTitle:'이 목적으로 쓰려면 해결할 일',actions,usable,
   conditionsText:summary.counts.conditions?(actions.length?`나머지 ${summary.counts.conditions}개는`:`${summary.counts.conditions}개 모두`)+' 표시된 조건을 지키면 사용할 수 있습니다.':'',
   countsText:`현재 조건으로 사용 불가 ${summary.counts.conflict}개 · 판단 보류 ${summary.counts.review}개 · 사용 가능 (조건부) ${summary.counts.conditions}개 · 선택 전 ${summary.pending}개`,
-  contextText:`${platform} · 상업 ${c.commercial?'예':'아니요'} · 배포 ${c.distribute?'예':'아니요'} · 수정 ${c.modified?'예':'아니요'} · 네트워크 ${c.network?'예':'아니요'}`,
+  contextText:`${platform} · 상업 ${c.commercial?'예':'아니요'} · 배포 ${c.distribute?'예':'아니요'} · 수정 ${c.modified?'예':'아니요'} · 네트워크 ${c.network?'예':'아니요'}${c.region?' · 사용 지역 '+({kr:'한국',eu:'EU',uk:'영국',us:'미국',other:'기타'}[c.region]||''):''}`,
   emptyText:!summary.assets.length&&!summary.pending?'실제 사용할 자료가 선택되지 않았습니다.':'',disclaimer:reportDisclaimer};
 }
 // Generic checks apply to almost every item; the to-do line should name what blocks this one.
@@ -59,7 +59,7 @@ export function resultLayout(assets,context){
  return resultBodyLayout(assets.map(a=>{
   const r=evaluate(a,context),parts=resultItems(r,outcomeReason(a,r));
   return {a,r,name:a.name,status:statuses[r.status],allTasks:[...parts.conditions,...parts.checks],...parts};
- }));
+ }),context);
 }
 
 function taskButton(text,a,esc){
@@ -76,7 +76,7 @@ export function commonChecksMarkup(layout,esc,{buttons=true,keepMinor=!buttons}=
     const button=note.sourceTexts.filter(text=>item.allTasks.includes(text)).map(text=>taskButton(text,item.a,esc)).find(Boolean);
     return button?` <span>${esc(item.name)}:${button}</span>`:'';
    }).join(''):'';
-   return `<li>${esc(note.text)} (해당 항목: ${esc(noteNames(note.names))})${shortcuts}</li>`;
+   return `<li>${esc(note.text)}${note.names.length?' (해당 항목: '+esc(noteNames(note.names))+')':''}${shortcuts}</li>`;
   }).join('')}</ul></section>`:'';
  }).join('')+(keepMinor&&minor.length?`<details class="report-item common-checks minor-notes"><summary>그 밖의 일반 주의사항 ${minor.length}개</summary><ul>${minor.map(note=>`<li>${esc(note.text)} (해당 항목: ${esc(noteNames(note.names))})</li>`).join('')}</ul></details>`:'');
 }

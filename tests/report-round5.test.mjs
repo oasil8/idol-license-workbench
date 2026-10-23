@@ -1,3 +1,4 @@
+import {violationCasesMarkup} from '../dist/violation-cases.mjs';
 import * as verdictLog from '../dist/verdict-log.mjs';
 import {planImpact} from '../dist/ai.mjs';
 import {RULE_DATE} from '../dist/core.mjs';
@@ -16,7 +17,7 @@ import {getDocument} from 'pdfjs-dist/legacy/build/pdf.mjs';
 function screen(p){
  p=structuredClone(p);p.assets.forEach((a,i)=>a.id??=String(i));
  const app=readFileSync(new URL('../dist/app.mjs',import.meta.url),'utf8'),nodes={overall:{},reportContent:{}};
- const box={...verdictLog,RULE_DATE,transact:change=>{change({projects:[p]});return true;},...sections,...workflow,project:()=>p,$:id=>nodes[id],assetSources,brandIcon:()=>'',badge:r=>r.status,esc:String,p,summary:workflow.projectSummary(p)};
+ const box={violationCasesMarkup,...verdictLog,RULE_DATE,transact:change=>{change({projects:[p]});return true;},...sections,...workflow,project:()=>p,$:id=>nodes[id],assetSources,brandIcon:()=>'',badge:r=>r.status,esc:String,p,summary:workflow.projectSummary(p)};
  vm.createContext(box);
  vm.runInContext(app.slice(app.indexOf('function renderReport(){'),app.indexOf('\nfunction setView('))+'\nrenderReport();'+app.slice(app.indexOf(' const overall=summary.status;'),app.indexOf(' renderProjects();')),box);
  return nodes.overall.innerHTML+nodes.reportContent.innerHTML;

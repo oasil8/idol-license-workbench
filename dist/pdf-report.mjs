@@ -1,3 +1,4 @@
+import {projectViolationCases,caseDisclaimer} from './violation-cases.mjs';
 import {resultBodyLayout as pdfBodyLayout,commonGroups,minorNote} from './result-layout.mjs';
 import {normalizeAsset,assetScope} from './asset-normalization.mjs';
 import {evaluate,statuses,validateProject} from './core.mjs';
@@ -65,7 +66,7 @@ export function pdfReportData(input, includeOriginals=false) {
    scope:assetScope(a),verdictHistory:verdictHistorySummary(a.verdictLog,contextKey(p.context))};
  });
  if(includeOriginals)for(const d of p.assignment?.documents||[])add(d.name+' · '+(d.role==='feedback'?'피드백':'검토 자료'),d.text);
- return {conclusion:projectConclusion(p),name:p.name,context:p.context,status:statuses[summary.status],reason:summaryReason(summary),usedCount:summary.assets.length,pending:summary.pending,items,originals};
+ return {cases:projectViolationCases(summary.assets.map(a=>({a,r:evaluate(a,p.context)}))),conclusion:projectConclusion(p),name:p.name,context:p.context,status:statuses[summary.status],reason:summaryReason(summary),usedCount:summary.assets.length,pending:summary.pending,items,originals};
 }
 
 export {resultBodyLayout as pdfBodyLayout} from './result-layout.mjs';
@@ -110,7 +111,7 @@ export async function renderReportPdf(project,{includeOriginals=false,PDFDocumen
   for(const t of todo.filter(t=>t.status==='pending'))row([t.name,'선택 전',t.action]);
   doc.moveDown();
  }
- const layout=pdfBodyLayout(data.items);
+ const layout=pdfBodyLayout(data.items,data.context);
  // Measure the same wrapped blocks we draw, keeping ordinary cards on one page.
  // box: a shaded band so each item's title stands apart without borrowing a verdict colour.
  const drawBlock=({value,size=8.5,color='#263e38',link,box})=>{
@@ -124,7 +125,7 @@ export async function renderReportPdf(project,{includeOriginals=false,PDFDocumen
  const commonNote=note=>{
   const size=minorNote.test(note.text)?7.5:8.5,w=width-12,options={width:w,lineGap:1};
   doc.fontSize(size);const body=wrapped(note.text,w),bodyHeight=doc.heightOfString(body,options);
-  doc.fontSize(7);const names=wrapped('(해당 항목: '+note.names.join(', ')+')',w),namesHeight=doc.heightOfString(names,options);
+  doc.fontSize(7);const names=note.names.length?wrapped('(해당 항목: '+note.names.join(', ')+')',w):'',namesHeight=doc.heightOfString(names,options);
   return {body,names,size,options,height:bodyHeight+2+namesHeight+5};
  };
  const drawCommonNote=note=>{
@@ -132,7 +133,7 @@ export async function renderReportPdf(project,{includeOriginals=false,PDFDocumen
   const y=doc.y;
   doc.fontSize(note.size).fillColor(note.size===7.5?'#65766e':'#263e38').text('•',42,y,{lineBreak:false});
   doc.text(note.body,54,y,note.options);
-  doc.fontSize(7).fillColor('#65766e').text(note.names,54,doc.y+2,note.options);
+  if(note.names)doc.fontSize(7).fillColor('#65766e').text(note.names,54,doc.y+2,note.options);
   doc.y+=5;
  };
  const commonHeading=(title,size,first,gap=0)=>{
@@ -193,6 +194,15 @@ export async function renderReportPdf(project,{includeOriginals=false,PDFDocumen
   if(height<doc.page.height-84)room(height);
   doc.y+=12;
   for(const block of blocks)drawBlock(block);
+ }
+ if(data.cases?.length){
+  heading('참고: 위반 시 사례',11);
+  for(const c of data.cases){
+   drawBlock({value:(c.pdfTitle||c.title)+' — '+c.summary,size:8});
+   for(const e of c.entries)drawBlock({value:(e.pdfText||e.text)+(e.url?' [출처]':''),size:7.5,link:e.url?new URL(e.url).href:undefined});
+   drawBlock({value:'해당 자료: '+c.names.join(', '),size:7.5});
+  }
+  drawBlock({value:caseDisclaimer,size:7.5});
  }
  // Separate the report-wide closing statement from the final material card.
  doc.fontSize(8);

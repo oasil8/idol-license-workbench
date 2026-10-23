@@ -1,3 +1,4 @@
+import {violationCasesMarkup} from '../dist/violation-cases.mjs';
 import test from 'node:test';
 import vm from 'node:vm';
 import {readFileSync} from 'node:fs';
@@ -87,7 +88,7 @@ test('render records only used assets, saves only changes, keeps judgments, and 
  const before=p.assets.map(a=>evaluate(a,p.context));
  const state={projects:[p],trash:[],current:'p'},node={};let saves=0;
  const source=readFileSync(new URL('../dist/app.mjs',import.meta.url),'utf8');
- const box={...history,...sections,...workflow,assetSources,RULE_DATE,project:()=>state.projects[0],$:()=>node,esc:String,brandIcon:()=>'',badge:r=>r.status,
+ const box={violationCasesMarkup,...history,...sections,...workflow,assetSources,RULE_DATE,project:()=>state.projects[0],$:()=>node,esc:String,brandIcon:()=>'',badge:r=>r.status,
   Date:class extends Date{constructor(){super('2026-10-21T15:00:00.000Z');}},
   transact:change=>{workflow.commitChange(state,change,()=>{saves++;return true;});return true;}};
  vm.createContext(box);vm.runInContext(source.slice(source.indexOf('function renderReport(){'),source.indexOf('\nfunction setView(')),box);

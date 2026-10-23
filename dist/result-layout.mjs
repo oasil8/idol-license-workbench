@@ -21,7 +21,8 @@ const checkGroups=[
 ];
 
 // Common notes keep the bucket they came from: an obligation never becomes a check.
-export function resultBodyLayout(items){
+export const organizationCheck='소속 기관의 소프트웨어·AI·외부 자료 사용 규정과 승인 절차를 확인하세요.';
+export function resultBodyLayout(items,context={}){
  const uses=new Map();
  for(const item of items)for(const [bucket,texts] of [['condition',item.conditions],['check',item.checks]])for(const text of texts){
   const merge=text.includes('제3자 권리')&&text.includes('확인'),kind=merge?'check':bucket;
@@ -32,6 +33,7 @@ export function resultBodyLayout(items){
   if(!note.sourceTexts.includes(text))note.sourceTexts.push(text);
  }
  const common=[...uses.values()].filter(({text,names})=>names.length>1||/제3자 권리|과거 생성물|Steam 공개|금지 콘텐츠|직접 입력.*출처/.test(text));
+ if(context.organizationPolicy)common.push({kind:'check',text:organizationCheck,names:[],sourceTexts:[]});
  const sharedIn=kind=>new Set(common.filter(n=>n.kind===kind).flatMap(n=>n.sourceTexts)),order=[statuses.conflict,statuses.review,statuses.conditions];
  const sharedConditions=sharedIn('condition'),sharedChecks=sharedIn('check');
  const isShared=(set,t)=>set.has(t)||(t.includes('제3자 권리')&&t.includes('확인')&&sharedChecks.has(t));

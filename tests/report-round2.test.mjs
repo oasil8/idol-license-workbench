@@ -1,3 +1,4 @@
+import {violationCasesMarkup} from '../dist/violation-cases.mjs';
 import * as verdictLog from '../dist/verdict-log.mjs';
 import {RULE_DATE} from '../dist/core.mjs';
 import test from 'node:test';
@@ -18,7 +19,7 @@ async function pdf(p){const doc=await getDocument({data:new Uint8Array(await cre
 function screen(p){
  p=structuredClone(p);p.assets.forEach((a,i)=>a.id??=String(i));
  const app=readFileSync(new URL('../dist/app.mjs',import.meta.url),'utf8'),content={};
- const box={...verdictLog,RULE_DATE,transact:change=>{change({projects:[p]});return true;},...sections,project:()=>p,$:()=>content,conditionsConfirmed,selectedAssets,evaluate,statuses,assetSources,brandIcon:()=>'',badge:r=>statuses[r.status],esc:String};
+ const box={violationCasesMarkup,...verdictLog,RULE_DATE,transact:change=>{change({projects:[p]});return true;},...sections,project:()=>p,$:()=>content,conditionsConfirmed,selectedAssets,evaluate,statuses,assetSources,brandIcon:()=>'',badge:r=>statuses[r.status],esc:String};
  vm.createContext(box);vm.runInContext(app.slice(app.indexOf('function renderReport(){'),app.indexOf('\nfunction setView('))+'\nrenderReport();',box);return content.innerHTML;
 }
 test('PDF evidence titles show their hostnames and retain link annotations',async()=>{
