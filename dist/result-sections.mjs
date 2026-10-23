@@ -15,7 +15,7 @@ export function projectConclusion(p){
  const purpose=c.commercial?(c.platform==='steam'?'Steam 상업 출시':platform+' (상업)'):platform;
  const actions=['conflict','review'].flatMap(status=>resultLayout(summary.assets,c).items.flatMap(({a,r,checks})=>{
   if(r.status!==status)return [];
-  return [{status,name:a.name,action:status==='conflict'?conflictNextAction:keyAction([...checks,...resultItems(r,outcomeReason(a,r)).checks],a)||reviewReason(r)}];
+  return [{status,name:a.name,action:status==='conflict'?conflictNextAction:keyAction([...checks,...resultItems(r,outcomeReason(a,r)).checks],a,c)||reviewReason(r)}];
  })).concat(p.assets.filter(a=>selectionOf(a)==='pending').map(a=>({status:'pending',name:a.name,action:'실제 사용 여부를 선택하세요.'})));
  const usable=resultLayout(summary.assets,c).items.filter(({r})=>r.status==='conditions').map(({a,r})=>{
   const list=resultItems(r).conditions;
@@ -30,9 +30,10 @@ export function projectConclusion(p){
 }
 // Generic checks apply to almost every item; the to-do line should name what blocks this one.
 const genericCheck=/공식 원문이 적용되는지|허용만으로 확보되지|제3자 권리|회사·학교 업무|포함하지 않았는지|다운로드한 .* 페이지|과거 생성물|Steam 공개/;
-export function keyAction(checks,a={}){
+export function keyAction(checks,a={},context={}){
  if(a.kind==='ai'&&(!a.planType||a.planType==='unknown')&&planImpact(a).status==='affected'){
-  const explanation=officialSource(a)?.id==='tripo'?'무료 플랜 결과물은 상업 이용이 허용되지 않습니다.':planImpact(a).reason;
+  const tripo=officialSource(a)?.id==='tripo';
+  const explanation=tripo&&context.commercial?'무료 플랜 결과물은 상업 이용이 허용되지 않습니다.':tripo?planImpact(a).reason.replace('상업 이용 권한','이용 조건'):planImpact(a).reason;
   return '생성 당시 플랜(무료/유료)을 고르세요. '+explanation;
  }
  // Unity's tier eligibility decides the result more than its version, so its plan line comes first.
@@ -113,7 +114,8 @@ export function reviewReason(r){
  t.includes('지원하지 않는 라이선스')?'지원하지 않는 라이선스·개별 계약':t);
  const specific=reasons.filter(t=>!t.includes('제3자 권리가 미확인')&&!t.includes('실제 사용한 버전·기능에 공식 원문'));
  const concise=specific.includes('적용 라이선스가 기록되지 않았습니다.')?specific.filter(t=>t!=='이 자료에 대한 라이선스 적용 미확인'):specific;
- return [...new Set(concise.length?concise:reasons)].slice(0,2).join(' · ')||'필수 근거 확인 필요';
+ const selected=[...new Set(concise.length?concise:reasons)].slice(0,2);
+ return (selected.length>1?selected.map(t=>t.replace(/\.\s*$/,'')):selected).join(' · ')||'필수 근거 확인 필요';
 }
 
 // The verdict badge sits beside the reason everywhere, so the reason carries no verdict prefix.

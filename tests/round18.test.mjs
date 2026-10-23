@@ -53,12 +53,13 @@ test('common heading and note move together when the remaining page space is too
  const project=JSON.parse(readFileSync(new URL('./fixtures/report-mixed.json',import.meta.url)));
  let page=0;const calls=[];
  class PageEndPDF extends PDFDocument{
-  addPage(...args){const result=super.addPage(...args);if(++page===2)this.y=770;return result;}
+  addPage(...args){page++;return super.addPage(...args);}
+  moveDown(...args){const result=super.moveDown(...args);if(page===1)this.y=770;return result;}
   text(value,x,y,options){const result=super.text(value,x,y,options);calls.push({value,page,y,end:this.y});return result;}
  }
  await renderReportPdf(project,{PDFDocument:PageEndPDF,font:process.env.IDOL_PDF_FONT||'C:/Windows/Fonts/malgun.ttf'});
  const heading=calls.findIndex(c=>c.value==='공통 확인사항');
- assert.ok(calls[heading].page>=3);
+ assert.equal(calls[heading].page,2);
  assert.equal(calls[heading].page,calls[heading+3].page);
  for(const call of calls.filter(c=>c.value.startsWith('(해당 항목:')))assert.ok(call.end<=797.89);
 });
@@ -70,7 +71,7 @@ test('wrapped common note lines keep the same hanging indent in the generated PD
  const data=await renderReportPdf(project,{PDFDocument:NarrowPDF,font:process.env.IDOL_PDF_FONT||'C:/Windows/Fonts/malgun.ttf'});
  const loadingTask=getDocument({data}),pdf=await loadingTask.promise;
  let checked=false;
- for(let i=2;i<=pdf.numPages;i++){
+ for(let i=1;i<=pdf.numPages;i++){
   const {items}=await (await pdf.getPage(i)).getTextContent();
   const start=items.findIndex(x=>x.str.replace(/\s/g,'').includes('공식원문에서실제'));
   if(start<0)continue;

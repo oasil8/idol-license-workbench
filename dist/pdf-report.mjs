@@ -1,4 +1,4 @@
-import {resultBodyLayout as pdfBodyLayout,commonGroups,noteNames,minorNote} from './result-layout.mjs';
+import {resultBodyLayout as pdfBodyLayout,commonGroups,minorNote} from './result-layout.mjs';
 import {normalizeAsset,assetScope} from './asset-normalization.mjs';
 import {evaluate,statuses,validateProject} from './core.mjs';
 import {contextKey,verdictHistorySummary} from './verdict-log.mjs';
@@ -111,7 +111,6 @@ export async function renderReportPdf(project,{includeOriginals=false,PDFDocumen
   doc.moveDown();
  }
  const layout=pdfBodyLayout(data.items);
- if(data.items.length)doc.addPage();
  // Measure the same wrapped blocks we draw, keeping ordinary cards on one page.
  // box: a shaded band so each item's title stands apart without borrowing a verdict colour.
  const drawBlock=({value,size=8.5,color='#263e38',link,box})=>{
@@ -125,7 +124,7 @@ export async function renderReportPdf(project,{includeOriginals=false,PDFDocumen
  const commonNote=note=>{
   const size=minorNote.test(note.text)?7.5:8.5,w=width-12,options={width:w,lineGap:1};
   doc.fontSize(size);const body=wrapped(note.text,w),bodyHeight=doc.heightOfString(body,options);
-  doc.fontSize(7);const names=wrapped('(해당 항목: '+noteNames(note.names)+')',w),namesHeight=doc.heightOfString(names,options);
+  doc.fontSize(7);const names=wrapped('(해당 항목: '+note.names.join(', ')+')',w),namesHeight=doc.heightOfString(names,options);
   return {body,names,size,options,height:bodyHeight+2+namesHeight+5};
  };
  const drawCommonNote=note=>{
@@ -142,6 +141,19 @@ export async function renderReportPdf(project,{includeOriginals=false,PDFDocumen
   doc.y+=gap;
   drawBlock({value:title,size,color:'#65766e'});doc.y+=6;
  };
+ // Continue after the summary only when the headings and first two notes fit.
+ let openingHeight=0,openingCount=0;
+ const sections=[...commonGroups.map(([kind,title])=>({title,size:13,gap:0,notes:layout.common.filter(n=>n.kind===kind&&!minorNote.test(n.text))})),
+  {title:'그 밖의 일반 주의사항',size:9,gap:12,notes:layout.common.filter(n=>minorNote.test(n.text))}];
+ for(const section of sections){
+  if(!section.notes.length)continue;
+  doc.fontSize(section.size);
+  openingHeight+=section.gap+doc.heightOfString(wrapped(section.title),{width,lineGap:1})+8;
+  for(const note of section.notes){openingHeight+=commonNote(note).height;if(++openingCount===2)break;}
+  if(openingCount===2)break;
+  openingHeight+=6;
+ }
+ if(openingCount)room(openingHeight);
  for(const [kind,title] of commonGroups){
   const notes=layout.common.filter(note=>note.kind===kind&&!minorNote.test(note.text));
   if(!notes.length)continue;
@@ -182,9 +194,13 @@ export async function renderReportPdf(project,{includeOriginals=false,PDFDocumen
   doc.y+=12;
   for(const block of blocks)drawBlock(block);
  }
- // A disclaimer that no longer fits goes in the bottom margin instead of opening a page by itself.
- if(doc.y+16>doc.page.height-44){const bottom=doc.page.margins.bottom;doc.page.margins.bottom=0;doc.fontSize(8).fillColor('#65766e').text(reportDisclaimer,42,doc.page.height-40,{width:width-60,lineBreak:false});doc.page.margins.bottom=bottom;}
- else text(reportDisclaimer,8,'#65766e');
+ // Separate the report-wide closing statement from the final material card.
+ doc.fontSize(8);
+ room(26+doc.heightOfString(wrapped(reportDisclaimer),{width,lineGap:1})+2);
+ doc.y+=16;
+ doc.save().strokeColor('#c7d4cf').moveTo(42,doc.y).lineTo(42+width,doc.y).stroke().restore();
+ doc.y+=10;
+ drawBlock({value:reportDisclaimer,size:8,color:'#65766e'});
  if(includeOriginals){
   doc.addPage();heading('부록 · 전체 보관 원문',15);
   text('앱에 저장된 원문과 검토 기록의 발췌를 포함합니다. 실시간 조회한 원문이 아니며 출처와 적용 범위를 확인하세요.',9);

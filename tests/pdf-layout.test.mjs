@@ -25,7 +25,7 @@ test('mixed and sample PDFs fit three pages and preserve every verdict and full 
   assert.doesNotMatch(text,/추가항목없음|원문발췌:/);
   assert.ok(text.includes('해당항목:'));
   const layout=pdfBodyLayout(data.items);
-  const detailText=norm(pages.slice(1).flat().map(x=>x.str).join(''));
+  const detailText=text.slice(text.indexOf(norm('공통 확인사항')));
   let previous=-1;
   for(const [index,item] of layout.items.entries()){
    const position=detailText.indexOf(norm(`${index+1}. ${item.name}`));assert.ok(position>previous);previous=position;
