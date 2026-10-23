@@ -49,5 +49,5 @@ test('page metadata and intake introduction explain the tool before the promise 
  assert.ok(content);assert.ok(html.indexOf(content)<html.indexOf('class="promise-box"'));
  for(const label of ['① 자료 넣기','② 사용 조건 정하기','③ 결과 확인','Tripo','Unity','Steam','소프트웨어','연구','학회','기업 납품'])assert.ok(content.includes(label),label);
  for(const [status,label] of [['conditions','사용 가능(조건부)'],['review','판단 보류'],['conflict','사용 불가']])assert.ok(content.includes(`class="badge ${status}">${label}`));
- assert.match(content,/<summary>[\s\S]*이 도구는\?/);
+ assert.match(content,/<summary>[\s\S]*이 웹은 라이선스 검토를 위한 도구입니다\./);
 });
